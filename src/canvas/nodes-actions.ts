@@ -1,7 +1,8 @@
-import type { Menu } from "obsidian";
+import { Notice, type Menu } from "obsidian";
 import type { CanvasConnection, CanvasViewCanvas } from "obsidian-typings";
 import type CanvasContextPlugin from "src/main.js";
 import { canvasGraphWalker } from "./walker.js";
+import { inference } from "src/llm/llm.js";
 
 // type CanvasDataEdgeConnection = "bottom" | "top" | "left" | "right";
 // interface CanvasDataNode {
@@ -46,6 +47,19 @@ export default class NodeActions {
 						canvasGraphWalker(node.id, node.canvas.data, this.ctx.app)
 							.then((messages) => {
 								console.log({ messages });
+								inference(messages)
+									.then((response) => {
+										console.log("LLM response:", response);
+										new Notice(
+											"LLM response received. Check console for details.",
+										);
+									})
+									.catch((error) => {
+										console.error("Inference error:", error);
+										new Notice(
+											"Error during LLM inference. Check console for details.",
+										);
+									});
 							})
 							.catch((error) => {
 								console.error("Walker error:", error);

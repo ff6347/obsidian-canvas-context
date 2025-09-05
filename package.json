@@ -49,8 +49,10 @@
 		]
 	},
 	"dependencies": {
+		"@ai-sdk/openai-compatible": "1.0.15",
 		"@mermaid-js/mermaid-cli": "11.9.0",
 		"ai": "5.0.33",
-		"obsidian-typings": "4.49.0"
+		"obsidian-typings": "4.49.0",
+		"zod": "4.1.5"
 	}
 }
