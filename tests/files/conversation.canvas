@@ -1,0 +1,25 @@
+{
+	"nodes":[
+		{"id":"e4e03f61759a2bfc","type":"file","file":"system-prompt.md","x":-280,"y":-900,"width":400,"height":400,"color":"6"},
+		{"id":"08e09e9bd062336d","type":"file","file":"user-what-is-ml.md","x":-120,"y":-200,"width":400,"height":400,"color":"3"},
+		{"id":"c7ba5da2409b4339","type":"file","file":"assistant-ml-explanation.md","x":-120,"y":400,"width":400,"height":400,"color":"2"},
+		{"id":"46303ff0af7baa0e","type":"file","file":"user-supervised-learning.md","x":-480,"y":1160,"width":400,"height":400,"color":"3"},
+		{"id":"958153a7514573f4","type":"file","file":"user-about-deep-learning.md","x":367,"y":1120,"width":400,"height":400,"color":"3"},
+		{"id":"631f9f8983b01add","type":"file","file":"context-deep-learning-guide.md","x":1302,"y":713,"width":400,"height":400},
+		{"id":"5f8d3f03fe32941b","type":"file","file":"assistant-supervised-learning.md","x":-180,"y":1980,"width":840,"height":400,"color":"2"},
+		{"id":"ac146d88ae9e71ef","type":"file","file":"context-ml-basics.md","x":703,"y":-1123,"width":400,"height":400},
+		{"id":"ff4ee08c2509f17b","type":"file","file":"reference-wikipedia-ml.md","x":940,"y":-300,"width":400,"height":400},
+		{"id":"9856ace4cf6e0ede","x":-1320,"y":1040,"width":250,"height":307,"color":"6","type":"text","text":"---\n\n---\n---\nrole: user\n\n---\nCards can also be used. For short content. Even though obsidian does not parse the frontmatter?"}
+	],
+	"edges":[
+		{"id":"a5dc25fa3e725f9d","fromNode":"e4e03f61759a2bfc","fromSide":"bottom","toNode":"08e09e9bd062336d","toSide":"top"},
+		{"id":"33ec88d3b966f613","fromNode":"ff4ee08c2509f17b","fromSide":"bottom","toNode":"08e09e9bd062336d","toSide":"right"},
+		{"id":"08da16d34b92f814","fromNode":"08e09e9bd062336d","fromSide":"bottom","toNode":"c7ba5da2409b4339","toSide":"top"},
+		{"id":"f9dd60d587fc4de4","fromNode":"c7ba5da2409b4339","fromSide":"bottom","toNode":"958153a7514573f4","toSide":"top"},
+		{"id":"20fc1d95d1f17d29","fromNode":"c7ba5da2409b4339","fromSide":"bottom","toNode":"46303ff0af7baa0e","toSide":"top"},
+		{"id":"3eb1d758f90fe8b9","fromNode":"46303ff0af7baa0e","fromSide":"bottom","toNode":"5f8d3f03fe32941b","toSide":"top"},
+		{"id":"f5ac024bf174948b","fromNode":"631f9f8983b01add","fromSide":"bottom","toNode":"958153a7514573f4","toSide":"right"},
+		{"id":"2485e4f134257942","fromNode":"ac146d88ae9e71ef","fromSide":"bottom","toNode":"e4e03f61759a2bfc","toSide":"right"},
+		{"id":"1f7655338c3a4c3f","fromNode":"9856ace4cf6e0ede","fromSide":"right","toNode":"46303ff0af7baa0e","toSide":"left"}
+	]
+}

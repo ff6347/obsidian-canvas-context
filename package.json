@@ -1,0 +1,56 @@
+{
+	"name": "obsidian-canvas-context",
+	"version": "0.1.0",
+	"description": "",
+	"main": "main.js",
+	"scripts": {
+		"dev": "node esbuild.config.js",
+		"build": "node esbuild.config.js --production",
+		"test": "vitest",
+		"test:ui": "vitest --ui",
+		"test:watch": "vitest --watch",
+		"test:coverage": "vitest --coverage",
+		"typecheck": "npx tsc --noEmit"
+	},
+	"keywords": [],
+	"author": "ff6347 <hash@ff6347.email>",
+	"license": "MIT",
+	"packageManager": "pnpm@10.15.1",
+	"type": "module",
+	"private": true,
+	"devDependencies": {
+		"@types/node": "24.3.0",
+		"@vitest/ui": "3.2.4",
+		"builtin-modules": "5.0.0",
+		"esbuild": "0.25.9",
+		"eslint": "9.34.0",
+		"happy-dom": "18.0.1",
+		"jsdom": "26.1.0",
+		"obsidian": "1.8.7",
+		"typescript": "5.9.2",
+		"vitest": "3.2.4"
+	},
+	"prettier": {
+		"tabWidth": 2,
+		"semi": true,
+		"singleQuote": false,
+		"useTabs": true,
+		"printWidth": 80,
+		"overrides": [
+			{
+				"files": [
+					"*.yml",
+					"*.yaml"
+				],
+				"options": {
+					"useTabs": false
+				}
+			}
+		]
+	},
+	"dependencies": {
+		"@mermaid-js/mermaid-cli": "11.9.0",
+		"ai": "5.0.33",
+		"obsidian-typings": "4.49.0"
+	}
+}
