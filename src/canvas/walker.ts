@@ -1,6 +1,7 @@
 import type { ModelMessage } from "ai";
 import type { CanvasViewData } from "obsidian-typings";
 import { App, TFile, getFrontMatterInfo } from "obsidian";
+import matter from "gray-matter";
 
 export async function canvasGraphWalker(
 	currentNodeId: string,
@@ -20,11 +21,6 @@ export async function canvasGraphWalker(
 		contextNodes.push(...horizontalNodes);
 	}
 
-	// Build messages in priority order:
-	// 1. System prompts first
-	// 2. Parent chain + their horizontal context
-	// 3. Target node last
-
 	// Combine all relevant node IDs
 	const allNodeIds = [...parentChain, ...contextNodes];
 
@@ -41,15 +37,17 @@ export async function canvasGraphWalker(
 			if (content) {
 				const allowedRoles = ["system", "user", "assistant"];
 				const validRole = role && allowedRoles.includes(role) ? role : "user";
-				
+
 				// Check if this is horizontal context (not in parent chain)
-				const isHorizontalContext = contextNodes.includes(nodeId) && !parentChain.includes(nodeId);
-				
+				const isHorizontalContext =
+					contextNodes.includes(nodeId) && !parentChain.includes(nodeId);
+
 				// Wrap horizontal context content
-				const finalContent = isHorizontalContext && validRole === "user" 
-					? `<additional-document>\n${content}\n</additional-document>`
-					: content;
-				
+				const finalContent =
+					isHorizontalContext && validRole === "user"
+						? `<additional-document>\n${content}\n</additional-document>`
+						: content;
+
 				// Create properly typed message based on role
 				let message: ModelMessage;
 				if (validRole === "system") {
@@ -127,8 +125,12 @@ async function getNodeContentAndRole(
 ): Promise<{ role: string | null; content: string | null }> {
 	// Handle different node types
 	if (node.type === "text") {
-		// Skip text nodes for now - user would need to maintain frontmatter manually
-		return { role: null, content: null };
+		// Parse text nodes with frontmatter support
+		const parsed = matter(node.text || "");
+		return {
+			role: parsed.data.role || "user", // Default to user role
+			content: parsed.content.trim() || null,
+		};
 	} else if (node.type === "file") {
 		// For file nodes, use metadata cache for frontmatter and cachedRead for content
 		try {
