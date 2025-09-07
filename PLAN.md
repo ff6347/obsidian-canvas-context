@@ -359,7 +359,7 @@ src/
 
 ## Current Progress (Updated)
 
-### ✅ Completed This Session
+### ✅ Completed This Session (Canvas Text Card Implementation)
 1. **Canvas Tree Walking Rules**: Defined simplified branching logic
    - Walk UP the parent chain (main conversation thread)
    - Include horizontal context from all nodes in parent chain
@@ -392,27 +392,64 @@ src/
    - Role validation with fallback to "user" for invalid roles
    - Horizontal context wrapped in `<additional-document>` tags for LLM clarity
 
-6. **Canvas Walker Testing**: Complete test suite with bug fixes
+6. **Canvas Walker Testing**: Complete test suite with all fixes implemented
    - Fixed parent chain walking bug (no longer includes child nodes)
    - Test coverage for all walker scenarios: linear chains, horizontal context, branching
    - Proper CanvasViewDataEdge type definitions with fromNode, toNode, fromSide, toSide
    - Mock setup for Obsidian API components (TFile, metadata cache, vault operations)
-   - All tests passing with correct behavior validation
+   - Fixed TFile mock constructor issue (path parameter missing)
+   - Fixed import issue (using mock TFile instead of real Obsidian TFile in tests)
+   - All 14 tests passing with correct behavior validation
+
+7. **Canvas Text Card Support Implementation**: Full integration with canvas workflow
+   - **Gray-matter Integration**: Added frontmatter parsing for canvas text nodes
+   - **Text Node Processing**: Canvas text cards now supported alongside file nodes
+   - **Default Role Assignment**: Cards without frontmatter default to `role: "user"`
+   - **LLM Response Node Creation**: Automatic creation of assistant response nodes on canvas
+   - **Canvas API Integration**: Uses proper Obsidian Canvas API (getData, importData, requestFrame)
+   - **Visual Positioning**: Response nodes positioned below source with bottom-to-top connections
+   - **Color Coding**: Assistant response nodes use color "3" for visual distinction
+   - **Status Bar Loading**: Shows "Running inference..." with spinner during LLM calls
+   - **Frontmatter Format**: Assistant responses include proper YAML frontmatter with empty lines
+
+8. **Enhanced User Experience**: Streamlined canvas-native workflow
+   - **Drag-and-Drop Support**: Users can create text cards by dragging from connectors
+   - **Mixed Node Types**: Supports both file nodes and text cards in same canvas
+   - **Automatic Edge Creation**: Connects response nodes to source nodes
+   - **Enhanced Loading Indicators**: Status bar with animated spinner, pulsing background, and fade-pulse text effects
+
+9. **Loading UX Implementation**: Comprehensive visual feedback system
+   - **Status Bar Integration**: Non-blocking loading indicator in familiar location
+   - **Multiple Animation Layers**: Background pulse (2s), text fade-pulse (1.5s), spinner rotation (0.8s)
+   - **Enhanced Visibility**: Larger spinner (14px), bold text (font-weight 500), accent color highlights
+   - **User-Centered Design**: Rejected modal and floating approaches for subtle status bar enhancement
 
 ### 🎯 Ready for Next Session
-1. **Canvas Parser Implementation**: Read .canvas JSON files and parse structure
-2. **Basic Obsidian Plugin Structure**: Context menu integration, settings panel
-3. **Ollama Integration**: HTTP client for local LLM calls
-4. **Response Node Creation**: Generate and position LLM responses on canvas
+1. **Settings Panel Implementation**: Configuration UI for LLM providers (Ollama/LMStudio)
+2. **Advanced Context Features**: Preview context before sending, debug visualization
+3. **Error Handling Improvements**: Better error messages, retry mechanisms
+4. **Performance Optimization**: Large canvas handling, context caching
 
 ### 📋 Technical Decisions Made
-- **Text Nodes**: Excluded from processing to avoid manual frontmatter maintenance burden
-- **Frontmatter Extraction**: Uses Obsidian's built-in `getFrontMatterInfo()` and metadata cache
+- **Text Node Support**: ✅ NOW SUPPORTED - Canvas text cards integrated with gray-matter frontmatter parsing
+- **Frontmatter Extraction**: Uses Obsidian's built-in `getFrontMatterInfo()` for files + gray-matter for text nodes
+- **Default Role Assignment**: Text cards without frontmatter default to `role: "user"`
 - **Message Ordering**: System prompts first, then conversation messages (proper LLM API format)
 - **Context Wrapping**: Horizontal context wrapped in `<additional-document>` tags for clarity
 - **Role Validation**: Only allows "system", "user", "assistant" with fallback to "user"
 - **Edge Structure**: Canvas edges require fromNode, toNode (node IDs), fromSide, toSide (attachment points)
 - **Parent Chain Algorithm**: Fixed to only walk UP (exclude children), properly distinguish horizontal context
+- **Response Node Positioning**: Below source nodes with bottom-to-top connections (not right-to-left)
+- **Visual Distinction**: Assistant response nodes use color "3" for easy identification
+- **Canvas API Usage**: Proper `getData()` → `importData()` → `requestFrame()` workflow
+- **Color System**: Canvas colors use string numbers ("1", "2", "3", etc.) - **Note: Hex colors also supported**
 - **Test Coverage**: Comprehensive testing ensures walker behavior matches design specifications
+- **Loading UX Strategy**: Status bar with enhanced animations over modal/floating approaches
+- **Animation Timing**: Layered animations (background 2s, text 1.5s, spinner 0.8s) for maximum visibility
 
-This simplified approach focuses on core value: spatial context building with LLMs, without unnecessary complexity.
+### 💡 Future Enhancement Notes
+- **Hex Color Support**: Canvas also supports hex color values (e.g., `"color": "#ff6b6b"`) for more precise color control
+- **Alternative Color Options**: Could implement user-configurable colors for different node roles
+- **Color Theming**: Could match colors to Obsidian theme or user preferences
+
+This approach successfully combines file-based and canvas-native workflows, giving users flexibility to use either markdown files or quick text cards for LLM conversations.
