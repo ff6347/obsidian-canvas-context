@@ -1,0 +1,38 @@
+# This workflow will do a clean install of node dependencies, build the source code and run tests
+name: Node.js CI
+permissions:
+  contents: write
+  packages: write
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    env:
+      CI: true
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: jdx/mise-action@v2
+      - run: pnpm install
+      - run: pnpm run build --if-present
+      - run: pnpm run test  --if-present
+  release:
+    name: semantic-release
+    needs: [build]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: jdx/mise-action@v2
+        with:
+          github_token: ${{ secrets.GH_TOKEN }}
+      - run: |
+          pnpm install
+          pnpm exec semantic-release --ci
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
