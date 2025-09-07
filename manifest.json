@@ -1,11 +1,11 @@
 {
 	"id": "canvas-context",
 	"name": "Canvas Context",
-	"version": "0.1.0",
 	"author": "ff6347",
 	"authorUrl": "https://fabianmoronzirfas.me",
-	"fundingUrl": "https://fabianmoronzirfas.me",
+	"fundingUrl": "https://github.com/sponsors/ff6347",
 	"description": "Use the canvas as a context machine",
-	"minAppVersion": "1.0.0",
-	"isDesktopOnly": true
+	"minAppVersion": "1.1.0",
+	"isDesktopOnly": true,
+	"version": "1.0.0-beta.1"
 }

@@ -6,6 +6,7 @@ permissions:
 on:
   push:
     branches: [main, beta]
+    tags: ["*"]
   pull_request:
     branches: [main, beta]
 
@@ -33,6 +34,16 @@ jobs:
           github_token: ${{ secrets.GH_TOKEN }}
       - run: |
           pnpm install
+          node version-bump.js
+          pnpm run build
           pnpm exec semantic-release --ci
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+      
+      - name: Upload plugin assets to release
+        if: github.ref_type == 'tag'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+        run: |
+          tag="${GITHUB_REF#refs/tags/}"
+          gh release upload "$tag" main.js manifest.json styles.css versions.json --clobber
