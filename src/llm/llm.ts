@@ -1,5 +1,5 @@
 import { generateText, type ModelMessage } from "ai";
-import { lmstudio } from "./lmstudio.js";
+import { lmstudio } from "./lmstudio.ts";
 const MODEL_NAME = "openai/gpt-oss-20b";
 
 export async function inference(messages: ModelMessage[]): Promise<string> {

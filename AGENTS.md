@@ -4,9 +4,15 @@
 This is an Obsidian plugin that transforms canvas into a spatial context-aware LLM interface. Canvas nodes become conversation elements and spatial relationships define context flow.
 
 ## Build & Development
-- `pnpm dev` - Development build with watch mode
-- `pnpm build` - Production build
-- TypeScript compilation: `npx tsc --noEmit`
+- `pnpm dev` - Development build with watch mode (using Rolldown)
+- `pnpm build` - Production build (using Rolldown)
+- `pnpm typecheck` - TypeScript compilation check: `npx tsc --noEmit`
+
+### Build System
+- **Migrated from esbuild to Rolldown** (January 2025)
+- Native TypeScript support without Babel transpilation
+- Uses `builtin-modules` package for Node.js externals
+- TypeScript config enables `allowImportingTsExtensions` for .ts/.tsx imports
 
 ## Code Style
 - Uses TypeScript with strict settings

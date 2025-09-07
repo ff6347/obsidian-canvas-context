@@ -1,7 +1,7 @@
 import { ItemView, WorkspaceLeaf } from "obsidian";
 import { StrictMode } from "react";
 import { type Root, createRoot } from "react-dom/client";
-import { ReactView } from "./components/react-view.js";
+import { ReactView } from "./components/react-view.tsx";
 
 export const VIEW_TYPE_CANVAS_CONTEXT = "canvas-context-view";
 
