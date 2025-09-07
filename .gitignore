@@ -142,3 +142,4 @@ vite.config.ts.timestamp-*
 .claude/settings.local.json
 .hotreload
 previous-work
+llm-docs
