@@ -1,3 +1,10 @@
+# [1.0.0-beta.2](https://github.com/ff6347/obsidian-canvas-context/compare/v1.0.0-beta.1...v1.0.0-beta.2) (2025-09-07)
+
+
+### Features
+
+* Add base-ui ([5e842d2](https://github.com/ff6347/obsidian-canvas-context/commit/5e842d2426c52cad0c79e08dfb7efdc85b60bd08))
+
 # 1.0.0-beta.1 (2025-09-07)
 
 
