@@ -1,8 +1,8 @@
 import { Plugin, Menu, WorkspaceLeaf } from "obsidian";
-import NodeActions from "./canvas/nodes-actions.js";
+import NodeActions from "./canvas/nodes-actions.ts";
 import type { CanvasConnection } from "obsidian-typings";
-import { CanvasContextSettingTab } from "./ui/settings.js";
-import { CanvasContextView, VIEW_TYPE_CANVAS_CONTEXT } from "./ui/view.js";
+import { CanvasContextSettingTab } from "./ui/settings.ts";
+import { CanvasContextView, VIEW_TYPE_CANVAS_CONTEXT } from "./ui/view.tsx";
 
 interface CanvasContextSettings {
 	settings: string;

@@ -1,8 +1,8 @@
 import { Notice, type Menu } from "obsidian";
 import type { CanvasConnection, CanvasViewCanvas } from "obsidian-typings";
-import type CanvasContextPlugin from "src/main.js";
-import { canvasGraphWalker } from "./walker.js";
-import { inference } from "src/llm/llm.js";
+import type CanvasContextPlugin from "../main.ts";
+import { canvasGraphWalker } from "./walker.ts";
+import { inference } from "../llm/llm.ts";
 
 // Canvas API types
 interface CanvasData {

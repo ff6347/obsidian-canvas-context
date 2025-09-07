@@ -1,5 +1,5 @@
 module.exports = {
-	extends: '@technologiestiftung/semantic-release-config',
-	npmPublish: true,
-	branches: [{ name: 'main' }, { name: 'beta', prerelease: true }],
+	extends: "@technologiestiftung/semantic-release-config",
+	npmPublish: false,
+	branches: [{ name: "main" }, { name: "beta", prerelease: true }],
 };

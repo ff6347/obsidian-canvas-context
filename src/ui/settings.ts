@@ -1,5 +1,5 @@
 import { App, PluginSettingTab, Setting } from "obsidian";
-import type CanvasContextPlugin from "src/main.js";
+import type CanvasContextPlugin from "../main.ts";
 
 export class CanvasContextSettingTab extends PluginSettingTab {
 	plugin: CanvasContextPlugin;
