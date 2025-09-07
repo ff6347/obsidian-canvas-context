@@ -15,8 +15,8 @@ beforeAll(() => {
 	} as any;
 
 	// Mock other Obsidian globals as needed
-	global.Plugin = class MockPlugin {};
-	global.Setting = class MockSetting {};
-	global.Modal = class MockModal {};
-	global.Notice = class MockNotice {};
+	(global as any).Plugin = class MockPlugin {};
+	(global as any).Setting = class MockSetting {};
+	(global as any).Modal = class MockModal {};
+	(global as any).Notice = class MockNotice {};
 });

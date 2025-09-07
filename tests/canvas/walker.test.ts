@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { canvasGraphWalker } from "../../src/canvas/walker";
+import { canvasGraphWalker } from "../../src/canvas/walker.js";
 import type { CanvasViewData } from "obsidian-typings";
 import type { App } from "obsidian";
-import { TFile } from "obsidian";
+import { TFile } from "../mocks/obsidian.js";
 
 // Mock Obsidian App and related APIs
 const mockApp = {
@@ -74,13 +74,13 @@ describe("Canvas Tree Walker", () => {
 			expect(result).toHaveLength(4);
 			
 			// Check that we have the correct roles in the right order
-			expect(result[0].role).toBe("system"); // System prompt first
-			expect(result[1].role).toBe("user");   // user1
-			expect(result[2].role).toBe("assistant"); // assistant1  
-			expect(result[3].role).toBe("user");   // user2 (target node)
+			expect(result[0]?.role).toBe("system"); // System prompt first
+			expect(result[1]?.role).toBe("user");   // user1
+			expect(result[2]?.role).toBe("assistant"); // assistant1  
+			expect(result[3]?.role).toBe("user");   // user2 (target node)
 
 			// Verify content doesn't include assistant2
-			const allContent = result.map(msg => msg.content).join(" ");
+			const allContent = result.map((msg: any) => msg.content).join(" ");
 			expect(allContent).toContain("System prompt content");
 			expect(allContent).toContain("User 1 content");
 			expect(allContent).toContain("Assistant 1 content");
@@ -141,7 +141,7 @@ describe("Canvas Tree Walker", () => {
 			expect(assistantMsgs).toHaveLength(1);
 			
 			// Verify system messages come first
-			expect(result[0].role).toBe("system");
+			expect(result[0]?.role).toBe("system");
 		});
 	});
 
@@ -189,12 +189,12 @@ describe("Canvas Tree Walker", () => {
 			expect(result).toHaveLength(5);
 			
 			// System prompt should be first (among system messages)
-			const systemMessages = result.filter(msg => msg.role === "system");
+			const systemMessages = result.filter((msg: any) => msg.role === "system");
 			expect(systemMessages).toHaveLength(1);
-			expect(systemMessages[0].content).toBe("System prompt");
+			expect(systemMessages[0]?.content).toBe("System prompt");
 
 			// Check that horizontal context (context2) is wrapped in additional-document tags
-			const contextMessages = result.filter(msg => 
+			const contextMessages = result.filter((msg: any) => 
 				msg.content.includes("<additional-document>")
 			);
 			expect(contextMessages).toHaveLength(1); // only context2

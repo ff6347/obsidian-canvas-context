@@ -10,7 +10,7 @@ export class TFile {
 	constructor(path: string) {
 		this.path = path;
 		this.name = path.split('/').pop() || '';
-		this.basename = this.name.split('.')[0];
+		this.basename = this.name.split('.')[0] || '';
 		this.extension = this.name.split('.').pop() || '';
 	}
 	
