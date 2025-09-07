@@ -2,6 +2,7 @@ import { ItemView, WorkspaceLeaf } from "obsidian";
 import { StrictMode } from "react";
 import { type Root, createRoot } from "react-dom/client";
 import { ReactView } from "./components/react-view.tsx";
+import { Layout } from "./layout.tsx";
 
 export const VIEW_TYPE_CANVAS_CONTEXT = "canvas-context-view";
 
@@ -24,7 +25,9 @@ export class CanvasContextView extends ItemView {
 		this.root = createRoot(this.contentEl);
 		this.root.render(
 			<StrictMode>
-				<ReactView />
+				<Layout>
+					<ReactView />
+				</Layout>
 			</StrictMode>,
 		);
 

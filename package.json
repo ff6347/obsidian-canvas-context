@@ -54,6 +54,7 @@
 	},
 	"dependencies": {
 		"@ai-sdk/openai-compatible": "1.0.15",
+		"@base-ui-components/react": "1.0.0-beta.3",
 		"@mermaid-js/mermaid-cli": "11.9.0",
 		"ai": "5.0.33",
 		"gray-matter": "4.0.3",
