@@ -40,23 +40,23 @@ graph TD
     A["🔧 System: You are helpful"] --> B["👤 User: What is ML?"]
     C["📄 Context: ML basics"] --> A
     D["🌐 Reference: Wikipedia ML"] --> B
-    
+
     B --> E["🤖 Assistant: ML is..."]
     F["📚 Context: Deep learning guide"] --> E
-    
+
     E --> G["👤 User: Tell more about supervised learning"]
     E --> H["👤 User: What about deep learning? 🎯"]
-    
+
     G --> I["🤖 Assistant: Supervised learning..."]
     H --> J["🤖 Response (will be generated)"]
-    
+
     classDef system fill:#fff2cc,stroke:#d6b656
     classDef user fill:#dae8fc,stroke:#6c8ebf
     classDef assistant fill:#d5e8d4,stroke:#82b366
     classDef context fill:#f8cecc,stroke:#b85450
     classDef target fill:#e1d5e7,stroke:#9673a6,stroke-width:3px
     classDef excluded fill:#f5f5f5,stroke:#666666,stroke-dasharray: 5 5
-    
+
     class A system
     class B,H user
     class E,I,J assistant
@@ -67,7 +67,7 @@ graph TD
 
 **Legend:**
 - 🔧 System prompts
-- 👤 User messages  
+- 👤 User messages
 - 🤖 Assistant responses
 - 📄📚🌐 Context materials
 - 🎯 Target node (right-clicked)
@@ -111,6 +111,8 @@ tags: ["context"]       # Identifies as context material
 
 ## Local LLM Integration Strategy
 
+Use Vercels AI SDK for flexible LLM provider support. No need for hitting the APIs bare bones.
+
 ### Phase 1: Ollama Integration
 ```typescript
 interface OllamaConfig {
@@ -120,15 +122,15 @@ interface OllamaConfig {
 }
 
 // API Endpoint
-POST /api/generate
+POST /v1/chat/completions
 {
-  "model": "llama3.1",
-  "prompt": "context + user message",
-  "stream": false,
-  "options": {
-    "temperature": 0.7,
-    "max_tokens": 1000
-  }
+  "model": "model-name",
+  "messages": [
+    {"role": "system", "content": "..."},
+    {"role": "user", "content": "..."}
+  ],
+  "temperature": 0.7,
+  "max_tokens": 1000
 }
 ```
 
@@ -242,15 +244,14 @@ POST /v1/chat/completions
 - ✅ Example canvas structure created for testing
 - ✅ Canvas node content extraction (file nodes with Obsidian's built-in methods)
 - ✅ Tree walking algorithm implementation (parent chain + horizontal context)
-- ⏳ Ollama integration with text generation
-- ⏳ Right-click "Send to LLM" functionality
-- ⏳ Response node creation and positioning
+- ⏳ Ollama/lmstudio/openai/anthropic/gemini integration with text generation
+- ✅ Right-click "Send to LLM" functionality
+- ✅ Response node creation and positioning
 - ⏳ Basic error handling and user feedback
 
 ### Enhanced Features (Should Have)
-- ⏳ LMStudio integration
-- ❌ Context priority and filtering (removed - over-engineering)
-- ⏳ Settings panel for configuration
+- ✅ LMStudio integration
+- ✅ Settings panel for configuration
 - ❌ Visual node styling by role (using Obsidian canvas colors)
 - ❌ Frontmatter editing interface (use Obsidian's native editing)
 - ⏳ Context preview before sending
