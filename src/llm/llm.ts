@@ -1,14 +1,16 @@
 import { generateText, type ModelMessage } from "ai";
-import { CurrentProviderType } from "../types/llm-types.ts";
+import type { CurrentProviderType } from "../types/llm-types.ts";
 import { providers, type ProviderConfig } from "./providers/providers.ts";
 export async function inference({
 	messages,
 	currentProviderName,
 	currentModelName,
+	baseURL,
 }: {
 	messages: ModelMessage[];
 	currentProviderName: CurrentProviderType;
 	currentModelName: string;
+	baseURL: string;
 }): Promise<string> {
 	let responseText = "";
 	try {
@@ -31,7 +33,7 @@ export async function inference({
 
 	// Call the generateText function from the AI library
 
-	const provider = providerGenerator.createProvider();
+	const provider = providerGenerator.createProvider(baseURL);
 	try {
 		const { text } = await generateText({
 			model: provider(currentModelName),
