@@ -3,14 +3,17 @@ import { StrictMode } from "react";
 import { type Root, createRoot } from "react-dom/client";
 import { ReactView } from "./components/react-view.tsx";
 import { Layout } from "./layout.tsx";
+import type CanvasContextPlugin from "../main.ts";
 
 export const VIEW_TYPE_CANVAS_CONTEXT = "canvas-context-view";
 
 export class CanvasContextView extends ItemView {
 	root: Root | null = null;
+	plugin: CanvasContextPlugin;
 
-	constructor(leaf: WorkspaceLeaf) {
+	constructor(leaf: WorkspaceLeaf, plugin: CanvasContextPlugin) {
 		super(leaf);
+		this.plugin = plugin;
 	}
 
 	getViewType() {
@@ -18,15 +21,23 @@ export class CanvasContextView extends ItemView {
 	}
 
 	getDisplayText() {
-		return "Example view";
+		return "Canvas Context";
+	}
+
+	getIcon() {
+		return "waypoints";
 	}
 
 	async onOpen() {
+		// Set minimum width for better UX
+		this.contentEl.style.minWidth = "350px";
+		this.contentEl.style.width = "400px";
+		
 		this.root = createRoot(this.contentEl);
 		this.root.render(
 			<StrictMode>
 				<Layout>
-					<ReactView />
+					<ReactView plugin={this.plugin} />
 				</Layout>
 			</StrictMode>,
 		);
