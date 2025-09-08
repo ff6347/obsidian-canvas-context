@@ -144,3 +144,6 @@ vite.config.ts.timestamp-*
 previous-work
 llm-docs
 main.js
+
+# Obsidian plugin data
+data.json
