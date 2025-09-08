@@ -16,8 +16,6 @@ export default class NodeActions {
 				.onClick(async () => {
 					if (node?.canvas?.data && node?.id) {
 						this.plugin.runInference(node.id, node);
-					} else {
-						console.log("No canvas data or node id available");
 					}
 				}),
 		);
@@ -31,14 +29,13 @@ export default class NodeActions {
 				let selectedCount = 0;
 				let selectedNodes: any[] = [];
 
-				// Method 1: Try using canvas.selection if it exists
+				// Try using canvas.selection if it exists
 				if (canvas.selection && canvas.selection.size > 0) {
 					selectedCount = canvas.selection.size;
 					selectedNodes = Array.from(canvas.selection);
-					console.log("Selection via canvas.selection:", selectedCount);
 				}
 
-				// Method 2: Try using getSelectionData if it exists
+				// Try using getSelectionData if it exists
 				if (
 					canvas.getSelectionData &&
 					typeof canvas.getSelectionData === "function"
@@ -52,16 +49,11 @@ export default class NodeActions {
 						) {
 							selectedNodes = selectionData.nodes;
 							selectedCount = selectedNodes.length;
-							console.log("Selection via getSelectionData:", selectedCount);
 						}
 					} catch (e) {
-						console.log("getSelectionData failed:", e);
+						console.error("getSelectionData failed:", e);
 					}
 				}
-
-				// Method 3: Check if the canvas has any indication of multiple selection
-				console.log("Canvas object properties:", Object.keys(canvas));
-				console.log("Node menu triggered, selection count:", selectedCount);
 
 				if (selectedCount > 1) {
 					menu.addSeparator();
@@ -72,19 +64,14 @@ export default class NodeActions {
 							)
 							.setIcon(PLUGIN_ICON)
 							.onClick(async () => {
-								// Run inference on the current node (since we know it's selected)
-								console.log("Running inference on selected node:", node.id);
-
 								if (node?.canvas?.data && node?.id) {
 									await this.plugin.runInference(node.id, node);
-								} else {
-									console.log("No canvas data or node id available");
 								}
 							}),
 					);
 				}
 			} catch (error) {
-				console.log("Could not check selection data:", error);
+				console.error("Could not check selection data:", error);
 			}
 		}
 	}

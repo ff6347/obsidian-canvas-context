@@ -71,13 +71,11 @@ export default class CanvasContextPlugin extends Plugin {
 			),
 		);
 
-		// Register canvas selection menu handler for toolbar button (keeping as backup)
-		console.log("🎯 Registering canvas:selection-menu event handler");
+		// Register canvas selection menu handler for toolbar button (backup approach)
 		this.registerEvent(
 			this.app.workspace.on(
 				"canvas:selection-menu",
 				(menu: Menu, canvas: any) => {
-					console.log("🎯 canvas:selection-menu event fired!");
 					this.buildSelectionMenu(menu, canvas);
 				},
 			),
@@ -87,8 +85,6 @@ export default class CanvasContextPlugin extends Plugin {
 		setTimeout(() => {
 			this.setupCanvasMenuObservers();
 		}, 1000);
-
-		console.log("Canvas Context Plugin: Loaded successfully");
 
 		this.addSettingTab(new CanvasContextSettingTab(this.app, this));
 	}
@@ -169,7 +165,6 @@ export default class CanvasContextPlugin extends Plugin {
 				return;
 			}
 			try {
-				console.log({ messages });
 				this.showLoadingStatus("Running inference...");
 				
 				const currentModelConfig = this.settings.modelConfigurations.find(
@@ -188,8 +183,6 @@ export default class CanvasContextPlugin extends Plugin {
 					currentModelName: currentModelConfig.modelName,
 					baseURL: currentModelConfig.baseURL,
 				});
-
-				console.log("LLM inference result:", result);
 
 				if (result.success) {
 					// Create successful response node
@@ -227,7 +220,6 @@ role: ${role}
 
 ${response}`;
 
-		console.log("Created response text:", responseText);
 
 		// Generate unique IDs
 		const responseId = this.generateId(16);
@@ -395,54 +387,36 @@ ${response}`;
 	}
 
 	async runInferenceFromSidebar(): Promise<boolean> {
-		// Find canvas view in the main workspace (not the sidebar)
 		const canvasLeaves = this.app.workspace.getLeavesOfType('canvas');
-		console.log("Canvas leaves found:", canvasLeaves.length);
 		
 		if (canvasLeaves.length === 0) {
 			new Notice("Please open a canvas to run inference.");
 			return false;
 		}
 
-		// Get the most recently active canvas view
 		const canvasLeaf = canvasLeaves[0];
 		if (!canvasLeaf) {
 			new Notice("Canvas leaf not accessible.");
 			return false;
 		}
-		const canvasView = canvasLeaf.view as any;
-		console.log("Canvas view:", canvasView);
-		console.log("Canvas view type:", canvasView?.getViewType?.());
 		
+		const canvasView = canvasLeaf.view as any;
 		const canvas = canvasView.canvas;
-		console.log("Canvas object:", canvas);
 		
 		if (!canvas) {
 			new Notice("Canvas not accessible. Please ensure you have a canvas open.");
 			return false;
 		}
-
-		// Check if canvas has selection capability
-		console.log("Canvas selection exists:", !!canvas.selection);
-		console.log("Canvas selection size:", canvas.selection?.size || 'N/A');
-		console.log("Canvas getSelectionData exists:", typeof canvas.getSelectionData);
 		
 		if (!canvas.selection) {
 			new Notice("Canvas selection not available. Please ensure you have a canvas open.");
 			return false;
 		}
 
-		// Debug raw selection
-		const rawSelection = Array.from(canvas.selection);
-		console.log("Raw selection items:", rawSelection.length, rawSelection);
-
-		// Get selected nodes using the proper Canvas API
 		let selectionData, selectedNodes;
 		try {
 			selectionData = canvas.getSelectionData();
 			selectedNodes = selectionData.nodes;
-			console.log("Selection data:", selectionData);
-			console.log("Selected nodes from getSelectionData:", selectedNodes.length, selectedNodes);
 		} catch (error) {
 			console.error("Error getting selection data:", error);
 			new Notice("Error accessing canvas selection. Please try selecting a node again.");
@@ -455,15 +429,12 @@ ${response}`;
 		}
 
 		const selectedNodeData = selectedNodes[0];
-		console.log("Selected node data:", selectedNodeData);
 		
-		// Check if the node has the required properties
 		if (!selectedNodeData.id) {
 			new Notice("Selected node is not valid for inference.");
 			return false;
 		}
 
-		// Create an ExtendedCanvasConnection-like object
 		const nodeConnection = {
 			id: selectedNodeData.id,
 			canvas: canvas
@@ -480,27 +451,18 @@ ${response}`;
 	}
 
 	buildSelectionMenu(menu: Menu, canvas: any) {
-		console.log("🎯 buildSelectionMenu called with:", menu, canvas);
-		
-		// Check if we have selected nodes
 		try {
 			const selectionData = canvas.getSelectionData();
-			console.log("🎯 Selection data:", selectionData);
 			const selectedNodes = selectionData.nodes;
-			console.log("🎯 Selected nodes:", selectedNodes.length, selectedNodes);
 		
 			// Only show the button if exactly one node is selected
 			if (selectedNodes.length === 1) {
-				console.log("🎯 Adding Canvas Context button to selection menu");
 				menu.addItem((item) =>
 					item
 						.setTitle("Canvas Context: Run Inference")
 						.setIcon(PLUGIN_ICON)
 						.onClick(async () => {
 							const selectedNode = selectedNodes[0];
-							console.log("🎯 Running inference from selection menu for node:", selectedNode.id);
-							
-							// Create an ExtendedCanvasConnection-like object
 							const nodeConnection = {
 								id: selectedNode.id,
 								canvas: canvas
@@ -514,11 +476,9 @@ ${response}`;
 							}
 						}),
 				);
-			} else {
-				console.log("🎯 Not adding button - selected nodes count:", selectedNodes.length);
 			}
 		} catch (error) {
-			console.error("🎯 Error in buildSelectionMenu:", error);
+			console.error("Error in buildSelectionMenu:", error);
 		}
 	}
 
@@ -612,19 +572,16 @@ ${response}`;
 	private observers: MutationObserver[] = [];
 
 	setupCanvasMenuObservers() {
-		console.log("🎯 Setting up mutation observers for canvas menus");
 		const canvasLeaves = this.app.workspace.getLeavesOfType('canvas');
-		console.log("🎯 Found canvas leaves:", canvasLeaves.length);
 		
 		for (const leaf of canvasLeaves) {
 			this.setupObserverForCanvas(leaf);
 		}
 
-		// Also listen for new canvas views being created
+		// Listen for new canvas views being created
 		this.registerEvent(
 			this.app.workspace.on("active-leaf-change", (leaf) => {
 				if (leaf?.view.getViewType() === "canvas") {
-					console.log("🎯 New canvas view activated, setting up observer");
 					setTimeout(() => {
 						this.setupObserverForCanvas(leaf);
 					}, 100);
@@ -641,7 +598,6 @@ ${response}`;
 			return;
 		}
 		
-		console.log("🎯 Setting up mutation observer for canvas");
 		(canvas.menu as any)._observerSetup = true;
 
 		const self = this;
@@ -650,7 +606,6 @@ ${response}`;
 		const observer = new MutationObserver((mutations) => {
 			mutations.forEach((mutation) => {
 				if (mutation.type === 'childList' && mutation.target === canvas.menu.menuEl) {
-					// Menu content changed, check if we need to add our button
 					self.addButtonToCanvasMenu(canvas);
 				}
 			});
@@ -664,9 +619,7 @@ ${response}`;
 					subtree: false 
 				});
 				this.observers.push(observer);
-				console.log("🎯 Mutation observer started for canvas menu");
 			} else {
-				// Menu element not ready yet, try again
 				setTimeout(checkMenuEl, 100);
 			}
 		};
@@ -686,8 +639,6 @@ ${response}`;
 			
 			// Only add button for single node selection
 			if (selectionData?.nodes?.length === 1) {
-				console.log("🎯 Adding Canvas Context button via mutation observer");
-				
 				const button = document.createElement('button');
 				button.className = 'clickable-icon canvas-context-inference-btn';
 				button.setAttribute('aria-label', 'Canvas Context: Run Inference');
@@ -705,16 +656,14 @@ ${response}`;
 							await this.runInference(firstNode.id, { id: firstNode.id, canvas } as any);
 						}
 					} catch (error) {
-						console.error("🎯 Inference error:", error);
+						console.error("Inference error:", error);
 					}
 				});
 				
-				// Add button to menu
 				canvas.menu.menuEl.appendChild(button);
-				console.log("🎯 Button added successfully via mutation observer");
 			}
 		} catch (error) {
-			console.error("🎯 Error adding button via mutation observer:", error);
+			console.error("Error adding button to canvas menu:", error);
 		}
 	}
 
