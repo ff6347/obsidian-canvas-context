@@ -1,0 +1,10 @@
+{
+  "currentModel": "gpt-oss:20b",
+  "currentProvider": "ollama",
+  "ollama": {
+    "baseURL": "http://localhost:11434"
+  },
+  "lmstudio": {
+    "baseURL": "http://localhost:1234"
+  }
+}

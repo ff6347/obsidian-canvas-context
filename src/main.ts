@@ -1,15 +1,32 @@
 import { Plugin, Menu, WorkspaceLeaf } from "obsidian";
 import NodeActions from "./canvas/nodes-actions.ts";
-import type { CanvasConnection } from "obsidian-typings";
+import type { CanvasConnection, CanvasViewData } from "obsidian-typings";
 import { CanvasContextSettingTab } from "./ui/settings.ts";
 import { CanvasContextView, VIEW_TYPE_CANVAS_CONTEXT } from "./ui/view.tsx";
+import { Notice } from "obsidian";
+import { inference } from "./llm/llm.ts";
+import { ModelMessage } from "ai";
+import { canvasGraphWalker } from "./canvas/walker.ts";
+import {
+	CanvasData,
+	CanvasNodeData,
+	CanvasTextData,
+	ExtendedCanvasConnection,
+} from "./types/canvas-types.ts";
+import { CurrentProviderType } from "./types/llm-types.ts";
 
 interface CanvasContextSettings {
-	settings: string;
+	currentModel: string;
+	currentProvider: CurrentProviderType;
+	ollama: { baseURL: string };
+	lmstudio: { baseURL: string };
 }
 
 const DEFAULT_SETTINGS: CanvasContextSettings = {
-	settings: "default",
+	currentModel: "",
+	currentProvider: "",
+	ollama: { baseURL: "http://localhost:11434" },
+	lmstudio: { baseURL: "http://localhost:1234" },
 };
 
 export default class CanvasContextPlugin extends Plugin {
@@ -24,7 +41,7 @@ export default class CanvasContextPlugin extends Plugin {
 			(leaf) => new CanvasContextView(leaf),
 		);
 
-		this.addRibbonIcon("dice", "Activate view", () => {
+		this.addRibbonIcon("waypoints", "Activate view", () => {
 			this.activateView();
 		});
 
@@ -97,5 +114,128 @@ export default class CanvasContextPlugin extends Plugin {
 
 		// "Reveal" the leaf in case it is in a collapsed sidebar
 		if (leaf) workspace.revealLeaf(leaf);
+	}
+
+	/**
+	 * Called inside the NodeActions when the user selects "Run Inference" from the node right click menu
+	 * Gathers context from connected nodes, sends to LLM, creates response node
+	 *
+	 */
+	async runInference(nodeId: string, node: ExtendedCanvasConnection) {
+		{
+			const messages: ModelMessage[] = [];
+
+			if (!node.canvas?.data) {
+				new Notice("No canvas data available on this node.");
+				return;
+			}
+			try {
+				const res = await canvasGraphWalker(nodeId, node.canvas.data, this.app);
+				messages.push(...res);
+			} catch (error) {
+				console.error("Error in canvasGraphWalker:", error);
+				new Notice("Error processing canvas data. Check console for details.");
+				return;
+			}
+			try {
+				console.log({ messages });
+				this.showLoadingStatus("Running inference...");
+				const provider = this.settings.currentProvider;
+				const modelName = this.settings.currentModel;
+				if (!provider || !modelName) {
+					new Notice("Please select a valid provider and model in settings.");
+					this.hideLoadingStatus();
+					return;
+				}
+				const response = await inference({
+					messages,
+					currentProviderName: provider,
+					currentModelName: modelName,
+				});
+
+				console.log("LLM response:", response);
+
+				// Create response node with frontmatter
+				await this.createResponseNode(node, response);
+
+				new Notice("LLM response added to canvas.");
+				this.hideLoadingStatus();
+			} catch (error) {
+				console.error("Inference error:", error);
+				new Notice("Error during LLM inference. Check console for details.");
+				this.hideLoadingStatus();
+			}
+		}
+	}
+	async createResponseNode(
+		sourceNode: ExtendedCanvasConnection,
+		response: string,
+	) {
+		if (!sourceNode.canvas || !sourceNode.id) return;
+
+		// Create response text with frontmatter
+		const responseText = `---
+role: assistant
+
+---
+
+${response}`;
+
+		console.log("Created response text:", responseText);
+
+		// Generate unique IDs
+		const responseId = this.generateId(16);
+		const edgeId = this.generateId(16);
+
+		// Get current canvas data
+		const currentData = (sourceNode.canvas as any).getData() as CanvasData;
+		if (!currentData) return;
+
+		// Position the response node below the source node
+		const sourceNodeData = currentData.nodes.find(
+			(n: CanvasNodeData) => n.id === sourceNode.id,
+		);
+		const positionX = sourceNodeData ? sourceNodeData.x : 100;
+		const positionY = sourceNodeData
+			? sourceNodeData.y + sourceNodeData.height + 50
+			: 100;
+
+		// Create text node using proper Canvas API types
+		const responseNodeData: CanvasTextData = {
+			type: "text",
+			text: responseText,
+			id: responseId,
+			x: positionX,
+			y: positionY,
+			width: 400,
+			height: 200,
+			color: "3", // Use color 3 for assistant responses
+		};
+
+		// Create edge data - connect from bottom to top
+		const edgeData = {
+			id: edgeId,
+			fromNode: sourceNode.id,
+			toNode: responseId,
+			fromSide: "bottom",
+			toSide: "top",
+		};
+
+		// Import new data with both existing and new nodes/edges
+		const newData: CanvasData = {
+			nodes: [...currentData.nodes, responseNodeData],
+			edges: [...currentData.edges, edgeData],
+		};
+
+		// Use Canvas API to import the updated data
+		(sourceNode.canvas as any).importData(newData);
+		(sourceNode.canvas as any).requestFrame();
+	}
+	generateId(length: number = 16): string {
+		let result: string[] = [];
+		for (let i = 0; i < length; i++) {
+			result.push(((16 * Math.random()) | 0).toString(16));
+		}
+		return result.join("");
 	}
 }
