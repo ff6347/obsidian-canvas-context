@@ -5,28 +5,33 @@ import { CanvasContextSettingTab } from "./ui/settings.ts";
 import { CanvasContextView, VIEW_TYPE_CANVAS_CONTEXT } from "./ui/view.tsx";
 import { Notice } from "obsidian";
 import { inference } from "./llm/llm.ts";
-import { ModelMessage } from "ai";
+import type { ModelMessage } from "ai";
 import { canvasGraphWalker } from "./canvas/walker.ts";
-import {
+import type {
 	CanvasData,
 	CanvasNodeData,
 	CanvasTextData,
 	ExtendedCanvasConnection,
 } from "./types/canvas-types.ts";
-import { CurrentProviderType } from "./types/llm-types.ts";
+import type { CurrentProviderType } from "./types/llm-types.ts";
+
+export interface ModelConfiguration {
+	id: string;
+	name: string;
+	provider: CurrentProviderType;
+	modelName: string;
+	baseURL: string;
+	enabled: boolean;
+}
 
 interface CanvasContextSettings {
 	currentModel: string;
-	currentProvider: CurrentProviderType;
-	ollama: { baseURL: string };
-	lmstudio: { baseURL: string };
+	modelConfigurations: ModelConfiguration[];
 }
 
 const DEFAULT_SETTINGS: CanvasContextSettings = {
 	currentModel: "",
-	currentProvider: "",
-	ollama: { baseURL: "http://localhost:11434" },
-	lmstudio: { baseURL: "http://localhost:1234" },
+	modelConfigurations: [],
 };
 
 export default class CanvasContextPlugin extends Plugin {
@@ -38,7 +43,7 @@ export default class CanvasContextPlugin extends Plugin {
 		await this.loadSettings();
 		this.registerView(
 			VIEW_TYPE_CANVAS_CONTEXT,
-			(leaf) => new CanvasContextView(leaf),
+			(leaf) => new CanvasContextView(leaf, this),
 		);
 
 		this.addRibbonIcon("waypoints", "Activate view", () => {
@@ -140,17 +145,22 @@ export default class CanvasContextPlugin extends Plugin {
 			try {
 				console.log({ messages });
 				this.showLoadingStatus("Running inference...");
-				const provider = this.settings.currentProvider;
-				const modelName = this.settings.currentModel;
-				if (!provider || !modelName) {
-					new Notice("Please select a valid provider and model in settings.");
+				
+				const currentModelConfig = this.settings.modelConfigurations.find(
+					config => config.id === this.settings.currentModel && config.enabled
+				);
+				
+				if (!currentModelConfig) {
+					new Notice("Please select a valid model configuration in settings.");
 					this.hideLoadingStatus();
 					return;
 				}
+				
 				const response = await inference({
 					messages,
-					currentProviderName: provider,
-					currentModelName: modelName,
+					currentProviderName: currentModelConfig.provider,
+					currentModelName: currentModelConfig.modelName,
+					baseURL: currentModelConfig.baseURL,
 				});
 
 				console.log("LLM response:", response);
