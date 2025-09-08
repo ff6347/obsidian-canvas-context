@@ -9,6 +9,9 @@ export class AddModelModal extends Modal {
 	modelConfig: Partial<ModelConfiguration>;
 	isEditing: boolean;
 	onSave: () => void;
+	availableModels: string[] = [];
+	isLoadingModels: boolean = false;
+	modelDropdown: HTMLSelectElement | null = null;
 
 	constructor(app: App, plugin: CanvasContextPlugin, modelConfig?: ModelConfiguration, onSave?: () => void) {
 		super(app);
@@ -58,6 +61,10 @@ export class AddModelModal extends Modal {
 						if (baseURLInput) {
 							this.updateBaseURLPlaceholder(baseURLInput);
 						}
+						// Load models when provider and baseURL are available
+						if (this.modelConfig.provider && this.modelConfig.baseURL) {
+							this.loadModels();
+						}
 					});
 			});
 
@@ -72,6 +79,10 @@ export class AddModelModal extends Modal {
 					.setValue(this.modelConfig.baseURL || "")
 					.onChange((value) => {
 						this.modelConfig.baseURL = value;
+						// Load models when provider and baseURL are available
+						if (this.modelConfig.provider && this.modelConfig.baseURL) {
+							this.loadModels();
+						}
 					});
 				this.updateBaseURLPlaceholder(baseURLInput);
 			});
@@ -79,14 +90,29 @@ export class AddModelModal extends Modal {
 		// Model Name
 		new Setting(contentEl)
 			.setName("Model Name")
-			.setDesc("The exact model name as it appears in the provider")
-			.addText((text) => {
-				text
-					.setPlaceholder("e.g., llama3.2:3b")
-					.setValue(this.modelConfig.modelName || "")
-					.onChange((value) => {
-						this.modelConfig.modelName = value;
-					});
+			.setDesc("Select from available models")
+			.addDropdown((dropdown) => {
+				this.modelDropdown = dropdown.selectEl;
+				dropdown.addOption("", "Select a model");
+				
+				// Set current value if available
+				if (this.modelConfig.modelName) {
+					dropdown.setValue(this.modelConfig.modelName);
+				}
+				
+				dropdown.onChange((value) => {
+					this.modelConfig.modelName = value;
+					// Auto-populate display name if empty
+					if (!this.modelConfig.name && value) {
+						this.modelConfig.name = `${this.modelConfig.provider} - ${value}`;
+						this.updateDisplayName();
+					}
+				});
+				
+				// Load models if provider and baseURL are available
+				if (this.modelConfig.provider && this.modelConfig.baseURL) {
+					this.loadModels();
+				}
 			});
 
 		// Verify Connection Button
@@ -196,6 +222,67 @@ export class AddModelModal extends Modal {
 		new Notice(this.isEditing ? "Model configuration updated!" : "Model configuration added!");
 		this.onSave();
 		this.close();
+	}
+
+	async loadModels() {
+		if (!this.modelConfig.provider || !this.modelConfig.baseURL || !this.modelDropdown) {
+			return;
+		}
+
+		if (this.isLoadingModels) {
+			return; // Already loading
+		}
+
+		this.isLoadingModels = true;
+		
+		// Clear existing options except the first one
+		this.modelDropdown.innerHTML = '';
+		const defaultOption = this.modelDropdown.createEl('option', { value: '', text: 'Loading models...' });
+		this.modelDropdown.appendChild(defaultOption);
+		this.modelDropdown.disabled = true;
+
+		try {
+			const providerGenerator = providers[this.modelConfig.provider as keyof typeof providers];
+			if (!providerGenerator) {
+				throw new Error("Provider not found");
+			}
+
+			const models = await providerGenerator.listModels(this.modelConfig.baseURL);
+			this.availableModels = models;
+
+			// Populate dropdown with models
+			this.modelDropdown.innerHTML = '';
+			const selectOption = this.modelDropdown.createEl('option', { value: '', text: 'Select a model' });
+			this.modelDropdown.appendChild(selectOption);
+			
+			models.forEach(model => {
+				const option = this.modelDropdown!.createEl('option', { value: model, text: model });
+				this.modelDropdown!.appendChild(option);
+			});
+
+			// Restore selected value if it exists in the list
+			if (this.modelConfig.modelName && models.includes(this.modelConfig.modelName)) {
+				this.modelDropdown.value = this.modelConfig.modelName;
+			}
+
+			this.modelDropdown.disabled = false;
+			
+		} catch (error) {
+			console.error("Error loading models:", error);
+			this.modelDropdown.innerHTML = '';
+			const errorOption = this.modelDropdown.createEl('option', { value: '', text: 'Failed to load models' });
+			this.modelDropdown.appendChild(errorOption);
+			this.modelDropdown.disabled = false;
+		}
+
+		this.isLoadingModels = false;
+	}
+
+	updateDisplayName() {
+		const nameInput = this.contentEl.querySelector('input[type="text"]') as HTMLInputElement;
+		if (nameInput && this.modelConfig.name) {
+			nameInput.value = this.modelConfig.name;
+		}
 	}
 
 	generateId(): string {
