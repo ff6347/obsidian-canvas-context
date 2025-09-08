@@ -41,7 +41,7 @@ export async function isProviderAlive(
  * curl http://localhost:11434/api/tags
  */
 export async function listModels(
-	baseURL: string = "http://localhost:11434/",
+	baseURL: string = "http://localhost:11434",
 ): Promise<string[]> {
 	try {
 		const response = await fetch(`${baseURL}/api/tags`);

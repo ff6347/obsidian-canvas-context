@@ -15,7 +15,7 @@ interface LMStudioModelsResponse {
 export function createProvider(baseURL: string = "http://localhost:1234") {
 	const lmstudio = createOpenAICompatible({
 		name: providerName,
-		baseURL: baseURL,
+		baseURL: `${baseURL}/v1`,
 	});
 
 	return lmstudio;
