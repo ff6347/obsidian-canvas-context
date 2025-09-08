@@ -4,7 +4,7 @@ import type { CanvasConnection, CanvasViewData } from "obsidian-typings";
 import { CanvasContextSettingTab } from "./ui/settings.ts";
 import { CanvasContextView, VIEW_TYPE_CANVAS_CONTEXT } from "./ui/view.tsx";
 import { Notice } from "obsidian";
-import { inference } from "./llm/llm.ts";
+import { inference, type InferenceResult } from "./llm/llm.ts";
 import type { ModelMessage } from "ai";
 import { canvasGraphWalker } from "./canvas/walker.ts";
 import type {
@@ -37,6 +37,7 @@ const DEFAULT_SETTINGS: CanvasContextSettings = {
 export default class CanvasContextPlugin extends Plugin {
 	nodeActions: NodeActions | undefined;
 	statusEl: HTMLElement | null = null;
+	recentErrors: InferenceResult[] = [];
 
 	settings: CanvasContextSettings = DEFAULT_SETTINGS;
 	async onload() {
@@ -156,19 +157,27 @@ export default class CanvasContextPlugin extends Plugin {
 					return;
 				}
 				
-				const response = await inference({
+				const result = await inference({
 					messages,
 					currentProviderName: currentModelConfig.provider,
 					currentModelName: currentModelConfig.modelName,
 					baseURL: currentModelConfig.baseURL,
 				});
 
-				console.log("LLM response:", response);
+				console.log("LLM inference result:", result);
 
-				// Create response node with frontmatter
-				await this.createResponseNode(node, response);
-
-				new Notice("LLM response added to canvas.");
+				if (result.success) {
+					// Create successful response node
+					await this.createResponseNode(node, result.text, false);
+					new Notice("LLM response added to canvas.");
+				} else {
+					// Store error for sidebar display
+					this.addRecentError(result);
+					// Create error node with detailed error information
+					await this.createErrorNode(node, result);
+					new Notice(`Inference failed: ${result.error}`, 5000);
+				}
+				
 				this.hideLoadingStatus();
 			} catch (error) {
 				console.error("Inference error:", error);
@@ -180,12 +189,14 @@ export default class CanvasContextPlugin extends Plugin {
 	async createResponseNode(
 		sourceNode: ExtendedCanvasConnection,
 		response: string,
+		isError: boolean = false,
 	) {
 		if (!sourceNode.canvas || !sourceNode.id) return;
 
 		// Create response text with frontmatter
+		const role = isError ? "error" : "assistant";
 		const responseText = `---
-role: assistant
+role: ${role}
 
 ---
 
@@ -219,7 +230,7 @@ ${response}`;
 			y: positionY,
 			width: 400,
 			height: 200,
-			color: "3", // Use color 3 for assistant responses
+			color: isError ? "1" : "3", // Use color 1 (red) for errors, color 3 for assistant responses
 		};
 
 		// Create edge data - connect from bottom to top
@@ -241,6 +252,57 @@ ${response}`;
 		(sourceNode.canvas as any).importData(newData);
 		(sourceNode.canvas as any).requestFrame();
 	}
+
+	async createErrorNode(
+		sourceNode: ExtendedCanvasConnection,
+		result: InferenceResult,
+	) {
+		if (!sourceNode.canvas || !sourceNode.id || result.success) return;
+
+		// Create detailed error message
+		const errorDetails = [
+			`# ❌ Inference Error`,
+			``,
+			`**Error Type:** ${result.errorType || 'unknown'}`,
+			`**Message:** ${result.error || 'Unknown error occurred'}`,
+			``,
+			`## Troubleshooting`,
+			this.getErrorTroubleshootingText(result.errorType),
+		].join('\n');
+
+		// Use the existing createResponseNode method with error flag
+		await this.createResponseNode(sourceNode, errorDetails, true);
+	}
+
+	addRecentError(result: InferenceResult) {
+		if (result.success) return;
+		
+		// Add timestamp to error
+		const errorWithTimestamp = {
+			...result,
+			timestamp: Date.now()
+		};
+		
+		// Keep only the 5 most recent errors
+		this.recentErrors.unshift(errorWithTimestamp as InferenceResult);
+		if (this.recentErrors.length > 5) {
+			this.recentErrors = this.recentErrors.slice(0, 5);
+		}
+	}
+
+	getErrorTroubleshootingText(errorType?: string): string {
+		switch (errorType) {
+			case 'connection':
+				return `- Check if the provider service is running\n- Verify the base URL is correct\n- Ensure network connectivity`;
+			case 'model':
+				return `- Verify the model name exists on the provider\n- Check if the model is properly loaded\n- Try refreshing available models`;
+			case 'provider':
+				return `- Ensure the provider is properly configured\n- Check provider settings in the plugin`;
+			default:
+				return `- Check the console for detailed error information\n- Verify all configuration settings\n- Try running inference again`;
+		}
+	}
+
 	generateId(length: number = 16): string {
 		let result: string[] = [];
 		for (let i = 0; i < length; i++) {

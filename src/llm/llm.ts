@@ -1,6 +1,13 @@
 import { generateText, type ModelMessage } from "ai";
 import type { CurrentProviderType } from "../types/llm-types.ts";
 import { providers, type ProviderConfig } from "./providers/providers.ts";
+export interface InferenceResult {
+	success: boolean;
+	text: string;
+	error?: string;
+	errorType?: 'connection' | 'model' | 'provider' | 'unknown';
+}
+
 export async function inference({
 	messages,
 	currentProviderName,
@@ -11,27 +18,36 @@ export async function inference({
 	currentProviderName: CurrentProviderType;
 	currentModelName: string;
 	baseURL: string;
-}): Promise<string> {
-	let responseText = "";
+}): Promise<InferenceResult> {
 	try {
 		if (!messages || messages.length === 0) {
-			throw new Error("No messages provided");
+			return {
+				success: false,
+				text: "",
+				error: "No messages provided for inference",
+				errorType: 'unknown'
+			};
 		}
 	} catch (error) {
 		console.error("Error in inference function:", error);
-		throw error;
+		return {
+			success: false,
+			text: "",
+			error: `Invalid input: ${error instanceof Error ? error.message : 'Unknown error'}`,
+			errorType: 'unknown'
+		};
 	}
 
 	const providerGenerator: ProviderConfig | undefined =
 		providers[currentProviderName as keyof typeof providers];
 	if (!providerGenerator) {
-		throw new Error(`Provider ${currentProviderName} not found`);
+		return {
+			success: false,
+			text: "",
+			error: `Provider '${currentProviderName}' not found`,
+			errorType: 'provider'
+		};
 	}
-
-	// Here you can add additional checks to see if the model exists in the provider
-	// For simplicity, we assume the model exists
-
-	// Call the generateText function from the AI library
 
 	const provider = providerGenerator.createProvider(baseURL);
 	try {
@@ -39,12 +55,28 @@ export async function inference({
 			model: provider(currentModelName),
 			messages,
 		});
-		responseText = text;
+		return {
+			success: true,
+			text: text
+		};
 	} catch (error) {
 		console.error("Error generating text:", error);
+		
+		// Determine error type based on error content
+		const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+		let errorType: InferenceResult['errorType'] = 'unknown';
+		
+		if (errorMessage.includes('connect') || errorMessage.includes('ECONNREFUSED') || errorMessage.includes('network')) {
+			errorType = 'connection';
+		} else if (errorMessage.includes('model') || errorMessage.includes('not found')) {
+			errorType = 'model';
+		}
 
-		responseText = "Error generating text from the model.";
+		return {
+			success: false,
+			text: "",
+			error: `Failed to generate response: ${errorMessage}`,
+			errorType: errorType
+		};
 	}
-
-	return responseText;
 }

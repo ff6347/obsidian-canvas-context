@@ -248,6 +248,72 @@ export const ReactView: React.FC<ReactViewProps> = ({ plugin }) => {
 					</div>
 				</>
 			)}
+
+			{plugin.recentErrors.length > 0 && (
+				<>
+					<Separator style={{
+						height: "1px",
+						backgroundColor: "var(--background-modifier-border)",
+						margin: "20px 0",
+						border: "none"
+					}} />
+					
+					<div style={{ 
+						padding: "16px", 
+						backgroundColor: "var(--background-primary-alt)", 
+						borderRadius: "8px",
+						border: "1px solid var(--background-modifier-error)",
+						fontSize: "13px",
+						lineHeight: "1.4"
+					}}>
+						<div style={{ 
+							fontWeight: "600", 
+							marginBottom: "12px",
+							color: "var(--text-error)",
+							fontSize: "14px",
+							display: "flex",
+							alignItems: "center",
+							gap: "6px"
+						}}>
+							⚠️ Recent Errors
+						</div>
+						{plugin.recentErrors.slice(0, 3).map((error, index) => (
+							<div key={index} style={{ 
+								marginBottom: index < 2 ? "12px" : "0",
+								paddingBottom: index < 2 ? "12px" : "0",
+								borderBottom: index < 2 ? "1px solid var(--background-modifier-border)" : "none"
+							}}>
+								<div style={{ 
+									fontSize: "12px", 
+									color: "var(--text-error)",
+									fontWeight: "500",
+									marginBottom: "4px",
+									textTransform: "capitalize"
+								}}>
+									{error.errorType || 'Unknown'} Error
+								</div>
+								<div style={{ 
+									fontSize: "11px", 
+									color: "var(--text-muted)",
+									wordBreak: "break-word",
+									lineHeight: "1.3"
+								}}>
+									{error.error}
+								</div>
+								{(error as any).timestamp && (
+									<div style={{ 
+										fontSize: "10px", 
+										color: "var(--text-faint)",
+										marginTop: "4px"
+									}}>
+										{new Date((error as any).timestamp).toLocaleTimeString()}
+									</div>
+								)}
+							</div>
+						))}
+					</div>
+				</>
+			)}
 		</div>
 	);
 };
