@@ -1,4 +1,4 @@
-import { CanvasConnection, CanvasViewCanvas } from "obsidian-typings";
+import type { CanvasConnection, CanvasViewCanvas } from "obsidian-typings";
 
 // }
 export interface ExtendedCanvasConnection extends CanvasConnection {
