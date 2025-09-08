@@ -259,15 +259,28 @@ ${response}`;
 	) {
 		if (!sourceNode.canvas || !sourceNode.id || result.success) return;
 
-		// Create detailed error message
+		// Get current model configuration for context
+		const currentModelConfig = this.settings.modelConfigurations.find(
+			config => config.id === this.settings.currentModel
+		);
+
+		// Create detailed error message with configuration context
 		const errorDetails = [
 			`# ❌ Inference Error`,
 			``,
 			`**Error Type:** ${result.errorType || 'unknown'}`,
 			`**Message:** ${result.error || 'Unknown error occurred'}`,
 			``,
+			`## Configuration`,
+			currentModelConfig ? [
+				`**Model:** ${currentModelConfig.name}`,
+				`**Provider:** ${currentModelConfig.provider}`,
+				`**Model Name:** ${currentModelConfig.modelName}`,
+				`**Base URL:** ${currentModelConfig.baseURL}`,
+			].join('\n') : '⚠️ No model configuration found',
+			``,
 			`## Troubleshooting`,
-			this.getErrorTroubleshootingText(result.errorType),
+			this.getErrorTroubleshootingText(result.errorType, currentModelConfig?.provider),
 		].join('\n');
 
 		// Use the existing createResponseNode method with error flag
@@ -290,16 +303,69 @@ ${response}`;
 		}
 	}
 
-	getErrorTroubleshootingText(errorType?: string): string {
+	getErrorTroubleshootingText(errorType?: string, provider?: string): string {
+		const baseSteps = [];
+		
 		switch (errorType) {
 			case 'connection':
-				return `- Check if the provider service is running\n- Verify the base URL is correct\n- Ensure network connectivity`;
+				baseSteps.push(
+					'- Check if the provider service is running',
+					'- Verify the base URL is correct',
+					'- Ensure network connectivity'
+				);
+				break;
 			case 'model':
-				return `- Verify the model name exists on the provider\n- Check if the model is properly loaded\n- Try refreshing available models`;
+				baseSteps.push(
+					'- Verify the model name exists on the provider',
+					'- Check if the model is properly loaded',
+					'- Try refreshing available models in the modal'
+				);
+				break;
 			case 'provider':
-				return `- Ensure the provider is properly configured\n- Check provider settings in the plugin`;
+				baseSteps.push(
+					'- Ensure the provider is properly configured',
+					'- Check provider settings in the plugin'
+				);
+				break;
 			default:
-				return `- Check the console for detailed error information\n- Verify all configuration settings\n- Try running inference again`;
+				baseSteps.push(
+					'- Check the console for detailed error information',
+					'- Verify all configuration settings',
+					'- Try running inference again'
+				);
+		}
+
+		// Add provider-specific guidance
+		const providerSteps = this.getProviderSpecificSteps(provider);
+		if (providerSteps.length > 0) {
+			baseSteps.push('', '### Provider-Specific Tips:', ...providerSteps);
+		}
+
+		return baseSteps.join('\n');
+	}
+
+	getProviderSpecificSteps(provider?: string): string[] {
+		switch (provider) {
+			case 'ollama':
+				return [
+					'**Ollama Setup:**',
+					'- Default URL: `http://localhost:11434`',
+					'- Start Ollama: `ollama serve`',
+					'- List models: `ollama list`',
+					'- Pull models: `ollama pull llama3.2`',
+					'- Check status: visit http://localhost:11434 in browser'
+				];
+			case 'lmstudio':
+				return [
+					'**LM Studio Setup:**',
+					'- Default URL: `http://localhost:1234`',
+					'- Enable "Start Server" in LM Studio',
+					'- Load a model in the Local Server tab',
+					'- Verify server is running in the Server tab',
+					'- Check endpoint: visit http://localhost:1234/v1/models'
+				];
+			default:
+				return [];
 		}
 	}
 
