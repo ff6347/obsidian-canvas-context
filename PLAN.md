@@ -244,10 +244,11 @@ POST /v1/chat/completions
 - ✅ Example canvas structure created for testing
 - ✅ Canvas node content extraction (file nodes with Obsidian's built-in methods)
 - ✅ Tree walking algorithm implementation (parent chain + horizontal context)
-- ⏳ Ollama/lmstudio/openai/anthropic/gemini integration with text generation
-- ✅ Right-click "Send to LLM" functionality
+- ✅ Ollama/lmstudio/openai/anthropic/gemini integration with text generation
+- ✅ Right-click "Send to LLM" functionality  
+- ✅ Canvas selection toolbar integration with waypoints icon
 - ✅ Response node creation and positioning
-- ⏳ Basic error handling and user feedback
+- ✅ Basic error handling and user feedback
 
 ### Enhanced Features (Should Have)
 - ✅ LMStudio integration
@@ -437,44 +438,43 @@ src/
     - **CI/CD Optimization**: Removed redundant manual asset upload steps from workflow
     - **Version Management**: Enhanced version-bump.js to only update versions.json when minAppVersion changes
 
-## 🐛 Current Issue: Canvas Selection Toolbar (Jan 2025)
+12. **Canvas Selection Toolbar Integration**: Complete UI integration with mutation observers
+    - **Dual Approach Implementation**: Mutation observers + event handler backup for maximum compatibility
+    - **Default Functionality Preserved**: All default Obsidian toolbar options remain intact
+    - **Smart Button Insertion**: Waypoints icon appears only for single node selection
+    - **Global Icon System**: `PLUGIN_ICON` constant for consistent branding across all interfaces
+    - **Production Ready**: Clean code with debug logging removed, proper cleanup on unload
 
-### Problem Description
-Canvas selection toolbar is not working correctly after recent changes:
-- **Single node selection**: Only shows ⚡ bolt button (missing default options like "Delete")
-- **Multi-node selection**: Shows nothing (should show "Create group", "Delete", etc.)
+## ✅ Canvas Selection Toolbar Implementation (Jan 2025)
 
-### Root Cause
-The `patchCanvasMenus()` method in `src/main.ts` is completely overriding the canvas menu render instead of augmenting it. The selection count check prevents multi-selection menus from showing, and the patching approach breaks default single-selection options.
+### Successfully Implemented
+Canvas selection toolbar now works correctly with dual approach:
 
-### Working State (Before Breaking)
-From conversation: "*great that works. Now this works when I have one node selected. When I select multiple nodes it still is the only button in the toolbar. Restore the multi selection to the default*"
+1. **Mutation Observer Approach**: Primary method using DOM observation
+   - Watches for canvas menu changes without interfering with default functionality
+   - Adds waypoints icon button only for single node selection
+   - Preserves all default toolbar options (Delete, Set color, Zoom, Edit)
 
-This indicates single-selection was working with both default options AND the ⚡ button, but multi-selection was broken.
+2. **Event Handler Backup**: `canvas:selection-menu` event registration
+   - Provides fallback compatibility for different Obsidian versions
+   - Clean event-driven integration
 
-### Correct Behavior Needed
-- **Single selection**: Default single-selection options + our ⚡ inference button
-- **Multi-selection**: Default multi-selection options only (no ⚡ button)
+### Final Behavior
+- **Single selection**: Default options + waypoints Canvas Context button
+- **Multi-selection**: Default options only (Create group, Delete, etc.)
 - **No selection**: No toolbar (default behavior)
 
-### Solution Strategy
-1. **Fix patching approach**: Augment existing buttons instead of replacing entire menu
-2. **Preserve default functionality**: Don't break existing canvas menu behavior
-3. **Smart button insertion**: Only add ⚡ button when appropriate (single selection)
-4. **Proper DOM timing**: Use reliable method that doesn't interfere with default rendering
-
-### Implementation Notes
-- The selection count check `if (selectionData.nodes.length !== 1)` is correct for preventing multi-selection ⚡ button
-- The problem is the patching completely overrides `canvas.menu.render` instead of extending it
-- Need to find a way to add our button WITHOUT breaking default menu functionality
+### Technical Implementation
+- **Global Icon Constant**: `PLUGIN_ICON = "waypoints"` for consistent branding
+- **Clean Code**: Removed all debug logging for production readiness
+- **Proper Cleanup**: Mutation observers disconnected on plugin unload
 
 ### 🎯 Ready for Next Session
-1. **URGENT: Fix Canvas Selection Toolbar**: Restore default single/multi-selection menus while adding ⚡ button for single selection
-2. **Advanced Base UI Components**: Implement Select, Input, Dialog components for settings
-3. **Settings Panel Implementation**: Full configuration UI for LLM providers (Ollama/LMStudio)
-4. **Advanced Context Features**: Preview context before sending, debug visualization
-5. **Error Handling Improvements**: Better error messages, retry mechanisms
-6. **Performance Optimization**: Large canvas handling, context caching
+1. **Advanced Base UI Components**: Implement Select, Input, Dialog components for settings
+2. **Settings Panel Enhancement**: Full configuration UI for LLM providers
+3. **Advanced Context Features**: Preview context before sending, debug visualization
+4. **Error Handling Improvements**: Better error messages, retry mechanisms
+5. **Performance Optimization**: Large canvas handling, context caching
 
 ### 📋 Technical Decisions Made
 - **Text Node Support**: ✅ NOW SUPPORTED - Canvas text cards integrated with gray-matter frontmatter parsing
@@ -492,6 +492,9 @@ This indicates single-selection was working with both default options AND the �
 - **Test Coverage**: Comprehensive testing ensures walker behavior matches design specifications
 - **Loading UX Strategy**: Status bar with enhanced animations over modal/floating approaches
 - **Animation Timing**: Layered animations (background 2s, text 1.5s, spinner 0.8s) for maximum visibility
+- **Canvas Toolbar Integration**: Mutation observer approach chosen over menu patching for compatibility
+- **Global Icon System**: `PLUGIN_ICON = "waypoints"` constant for consistent branding
+- **Dual Fallback Strategy**: Primary mutation observers + backup event handlers for maximum compatibility
 
 ### 💡 Future Enhancement Notes
 - **Hex Color Support**: Canvas also supports hex color values (e.g., `"color": "#ff6b6b"`) for more precise color control
