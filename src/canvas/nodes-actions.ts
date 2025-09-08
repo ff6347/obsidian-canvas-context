@@ -1,6 +1,7 @@
 import { type Menu } from "obsidian";
 import type CanvasContextPlugin from "../main.ts";
 import type { ExtendedCanvasConnection } from "../types/canvas-types.ts";
+import { PLUGIN_ICON } from "../main.ts";
 
 export default class NodeActions {
 	plugin: CanvasContextPlugin;
@@ -11,7 +12,7 @@ export default class NodeActions {
 		menu.addItem((item) =>
 			item
 				.setTitle("Canvas Context: Run Inference")
-				.setIcon("document")
+				.setIcon(PLUGIN_ICON)
 				.onClick(async () => {
 					if (node?.canvas?.data && node?.id) {
 						this.plugin.runInference(node.id, node);
@@ -69,7 +70,7 @@ export default class NodeActions {
 							.setTitle(
 								`Canvas Context: Run on ${selectedCount} Selected Nodes`,
 							)
-							.setIcon("zap")
+							.setIcon(PLUGIN_ICON)
 							.onClick(async () => {
 								// Run inference on the current node (since we know it's selected)
 								console.log("Running inference on selected node:", node.id);

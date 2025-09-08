@@ -15,6 +15,9 @@ import type {
 } from "./types/canvas-types.ts";
 import type { CurrentProviderType } from "./types/llm-types.ts";
 
+// Global plugin icon for consistent usage across the plugin
+export const PLUGIN_ICON = "waypoints";
+
 export interface ModelConfiguration {
 	id: string;
 	name: string;
@@ -47,7 +50,7 @@ export default class CanvasContextPlugin extends Plugin {
 			(leaf) => new CanvasContextView(leaf, this),
 		);
 
-		this.addRibbonIcon("waypoints", "Activate view", () => {
+		this.addRibbonIcon(PLUGIN_ICON, "Activate view", () => {
 			this.activateView();
 		});
 
@@ -492,7 +495,7 @@ ${response}`;
 				menu.addItem((item) =>
 					item
 						.setTitle("Canvas Context: Run Inference")
-						.setIcon("zap")
+						.setIcon(PLUGIN_ICON)
 						.onClick(async () => {
 							const selectedNode = selectedNodes[0];
 							console.log("🎯 Running inference from selection menu for node:", selectedNode.id);
@@ -689,7 +692,7 @@ ${response}`;
 				button.className = 'clickable-icon canvas-context-inference-btn';
 				button.setAttribute('aria-label', 'Canvas Context: Run Inference');
 				button.setAttribute('data-tooltip-position', 'top');
-				setIcon(button, 'zap');
+				setIcon(button, PLUGIN_ICON);
 				
 				button.addEventListener('click', async (e) => {
 					e.stopPropagation();
