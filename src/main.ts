@@ -1,4 +1,4 @@
-import { Plugin, Menu, WorkspaceLeaf } from "obsidian";
+import { Plugin, Menu, WorkspaceLeaf, ItemView, setIcon } from "obsidian";
 import NodeActions from "./canvas/nodes-actions.ts";
 import type { CanvasConnection, CanvasViewData } from "obsidian-typings";
 import { CanvasContextSettingTab } from "./ui/settings.ts";
@@ -67,6 +67,18 @@ export default class CanvasContextPlugin extends Plugin {
 				},
 			),
 		);
+
+		// Register canvas selection menu handler for toolbar button
+		this.registerEvent(
+			this.app.workspace.on(
+				"canvas:selection-menu",
+				(menu: Menu, canvas: any) => {
+					this.buildSelectionMenu(menu, canvas);
+				},
+			),
+		);
+
+		console.log("Canvas Context Plugin: Loaded successfully");
 
 		this.addSettingTab(new CanvasContextSettingTab(this.app, this));
 	}
@@ -367,6 +379,135 @@ ${response}`;
 			default:
 				return [];
 		}
+	}
+
+	async runInferenceFromSidebar(): Promise<boolean> {
+		// Find canvas view in the main workspace (not the sidebar)
+		const canvasLeaves = this.app.workspace.getLeavesOfType('canvas');
+		console.log("Canvas leaves found:", canvasLeaves.length);
+		
+		if (canvasLeaves.length === 0) {
+			new Notice("Please open a canvas to run inference.");
+			return false;
+		}
+
+		// Get the most recently active canvas view
+		const canvasLeaf = canvasLeaves[0];
+		if (!canvasLeaf) {
+			new Notice("Canvas leaf not accessible.");
+			return false;
+		}
+		const canvasView = canvasLeaf.view as any;
+		console.log("Canvas view:", canvasView);
+		console.log("Canvas view type:", canvasView?.getViewType?.());
+		
+		const canvas = canvasView.canvas;
+		console.log("Canvas object:", canvas);
+		
+		if (!canvas) {
+			new Notice("Canvas not accessible. Please ensure you have a canvas open.");
+			return false;
+		}
+
+		// Check if canvas has selection capability
+		console.log("Canvas selection exists:", !!canvas.selection);
+		console.log("Canvas selection size:", canvas.selection?.size || 'N/A');
+		console.log("Canvas getSelectionData exists:", typeof canvas.getSelectionData);
+		
+		if (!canvas.selection) {
+			new Notice("Canvas selection not available. Please ensure you have a canvas open.");
+			return false;
+		}
+
+		// Debug raw selection
+		const rawSelection = Array.from(canvas.selection);
+		console.log("Raw selection items:", rawSelection.length, rawSelection);
+
+		// Get selected nodes using the proper Canvas API
+		let selectionData, selectedNodes;
+		try {
+			selectionData = canvas.getSelectionData();
+			selectedNodes = selectionData.nodes;
+			console.log("Selection data:", selectionData);
+			console.log("Selected nodes from getSelectionData:", selectedNodes.length, selectedNodes);
+		} catch (error) {
+			console.error("Error getting selection data:", error);
+			new Notice("Error accessing canvas selection. Please try selecting a node again.");
+			return false;
+		}
+		
+		if (selectedNodes.length === 0) {
+			new Notice("Please select a node in the canvas to run inference.");
+			return false;
+		}
+
+		const selectedNodeData = selectedNodes[0];
+		console.log("Selected node data:", selectedNodeData);
+		
+		// Check if the node has the required properties
+		if (!selectedNodeData.id) {
+			new Notice("Selected node is not valid for inference.");
+			return false;
+		}
+
+		// Create an ExtendedCanvasConnection-like object
+		const nodeConnection = {
+			id: selectedNodeData.id,
+			canvas: canvas
+		} as ExtendedCanvasConnection;
+
+		try {
+			await this.runInference(selectedNodeData.id, nodeConnection);
+			return true;
+		} catch (error) {
+			console.error("Error running inference from sidebar:", error);
+			new Notice("Failed to run inference. Check console for details.");
+			return false;
+		}
+	}
+
+	buildSelectionMenu(menu: Menu, canvas: any) {
+		console.log("buildSelectionMenu called with:", menu, canvas);
+		
+		// Check if we have selected nodes
+		const selectionData = canvas.getSelectionData();
+		console.log("Selection data:", selectionData);
+		const selectedNodes = selectionData.nodes;
+		console.log("Selected nodes:", selectedNodes.length, selectedNodes);
+		
+		// Only show the button if exactly one node is selected
+		if (selectedNodes.length === 1) {
+			console.log("Adding Canvas Context button to selection menu");
+			menu.addItem((item) =>
+				item
+					.setTitle("Canvas Context: Run Inference")
+					.setIcon("zap")
+					.onClick(async () => {
+						const selectedNode = selectedNodes[0];
+						console.log("Running inference from selection menu for node:", selectedNode.id);
+						
+						// Create an ExtendedCanvasConnection-like object
+						const nodeConnection = {
+							id: selectedNode.id,
+							canvas: canvas
+						} as ExtendedCanvasConnection;
+						
+						try {
+							await this.runInference(selectedNode.id, nodeConnection);
+						} catch (error) {
+							console.error("Error running inference from selection menu:", error);
+							new Notice("Failed to run inference. Check console for details.");
+						}
+					}),
+			);
+		}
+	}
+
+
+	getCurrentCanvas(): any | null {
+		const canvasView = this.app.workspace.getActiveViewOfType(ItemView);
+		if (canvasView?.getViewType() !== 'canvas') return null;
+		return (canvasView as any)?.canvas || null;
 	}
 
 	generateId(length: number = 16): string {
