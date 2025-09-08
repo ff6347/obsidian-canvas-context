@@ -25,23 +25,30 @@ export default class NodeActions {
 		if (node?.canvas) {
 			try {
 				const canvas = node.canvas;
-				
+
 				// Try different methods to get selection
 				let selectedCount = 0;
 				let selectedNodes: any[] = [];
-				
+
 				// Method 1: Try using canvas.selection if it exists
 				if (canvas.selection && canvas.selection.size > 0) {
 					selectedCount = canvas.selection.size;
 					selectedNodes = Array.from(canvas.selection);
 					console.log("Selection via canvas.selection:", selectedCount);
 				}
-				
+
 				// Method 2: Try using getSelectionData if it exists
-				if (canvas.getSelectionData && typeof canvas.getSelectionData === 'function') {
+				if (
+					canvas.getSelectionData &&
+					typeof canvas.getSelectionData === "function"
+				) {
 					try {
 						const selectionData = (canvas as any).getSelectionData();
-						if (selectionData && selectionData.nodes && Array.isArray(selectionData.nodes)) {
+						if (
+							selectionData &&
+							selectionData.nodes &&
+							Array.isArray(selectionData.nodes)
+						) {
 							selectedNodes = selectionData.nodes;
 							selectedCount = selectedNodes.length;
 							console.log("Selection via getSelectionData:", selectedCount);
@@ -50,21 +57,23 @@ export default class NodeActions {
 						console.log("getSelectionData failed:", e);
 					}
 				}
-				
+
 				// Method 3: Check if the canvas has any indication of multiple selection
 				console.log("Canvas object properties:", Object.keys(canvas));
 				console.log("Node menu triggered, selection count:", selectedCount);
-				
+
 				if (selectedCount > 1) {
 					menu.addSeparator();
 					menu.addItem((item) =>
 						item
-							.setTitle(`Canvas Context: Run on ${selectedCount} Selected Nodes`)
+							.setTitle(
+								`Canvas Context: Run on ${selectedCount} Selected Nodes`,
+							)
 							.setIcon("zap")
 							.onClick(async () => {
 								// Run inference on the current node (since we know it's selected)
 								console.log("Running inference on selected node:", node.id);
-								
+
 								if (node?.canvas?.data && node?.id) {
 									await this.plugin.runInference(node.id, node);
 								} else {

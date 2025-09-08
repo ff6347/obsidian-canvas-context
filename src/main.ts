@@ -68,15 +68,22 @@ export default class CanvasContextPlugin extends Plugin {
 			),
 		);
 
-		// Register canvas selection menu handler for toolbar button
+		// Register canvas selection menu handler for toolbar button (keeping as backup)
+		console.log("🎯 Registering canvas:selection-menu event handler");
 		this.registerEvent(
 			this.app.workspace.on(
 				"canvas:selection-menu",
 				(menu: Menu, canvas: any) => {
+					console.log("🎯 canvas:selection-menu event fired!");
 					this.buildSelectionMenu(menu, canvas);
 				},
 			),
 		);
+
+		// Use mutation observer approach to watch for canvas menu changes
+		setTimeout(() => {
+			this.setupCanvasMenuObservers();
+		}, 1000);
 
 		console.log("Canvas Context Plugin: Loaded successfully");
 
@@ -85,6 +92,9 @@ export default class CanvasContextPlugin extends Plugin {
 
 	onunload() {
 		this.hideLoadingStatus();
+		// Clean up mutation observers
+		this.observers.forEach(observer => observer.disconnect());
+		this.observers = [];
 	}
 
 	showLoadingStatus(text = "Loading...") {
@@ -467,39 +477,241 @@ ${response}`;
 	}
 
 	buildSelectionMenu(menu: Menu, canvas: any) {
-		console.log("buildSelectionMenu called with:", menu, canvas);
+		console.log("🎯 buildSelectionMenu called with:", menu, canvas);
 		
 		// Check if we have selected nodes
-		const selectionData = canvas.getSelectionData();
-		console.log("Selection data:", selectionData);
-		const selectedNodes = selectionData.nodes;
-		console.log("Selected nodes:", selectedNodes.length, selectedNodes);
+		try {
+			const selectionData = canvas.getSelectionData();
+			console.log("🎯 Selection data:", selectionData);
+			const selectedNodes = selectionData.nodes;
+			console.log("🎯 Selected nodes:", selectedNodes.length, selectedNodes);
 		
-		// Only show the button if exactly one node is selected
-		if (selectedNodes.length === 1) {
-			console.log("Adding Canvas Context button to selection menu");
-			menu.addItem((item) =>
-				item
-					.setTitle("Canvas Context: Run Inference")
-					.setIcon("zap")
-					.onClick(async () => {
-						const selectedNode = selectedNodes[0];
-						console.log("Running inference from selection menu for node:", selectedNode.id);
-						
-						// Create an ExtendedCanvasConnection-like object
-						const nodeConnection = {
-							id: selectedNode.id,
-							canvas: canvas
-						} as ExtendedCanvasConnection;
-						
-						try {
-							await this.runInference(selectedNode.id, nodeConnection);
-						} catch (error) {
-							console.error("Error running inference from selection menu:", error);
-							new Notice("Failed to run inference. Check console for details.");
+			// Only show the button if exactly one node is selected
+			if (selectedNodes.length === 1) {
+				console.log("🎯 Adding Canvas Context button to selection menu");
+				menu.addItem((item) =>
+					item
+						.setTitle("Canvas Context: Run Inference")
+						.setIcon("zap")
+						.onClick(async () => {
+							const selectedNode = selectedNodes[0];
+							console.log("🎯 Running inference from selection menu for node:", selectedNode.id);
+							
+							// Create an ExtendedCanvasConnection-like object
+							const nodeConnection = {
+								id: selectedNode.id,
+								canvas: canvas
+							} as ExtendedCanvasConnection;
+							
+							try {
+								await this.runInference(selectedNode.id, nodeConnection);
+							} catch (error) {
+								console.error("Error running inference from selection menu:", error);
+								new Notice("Failed to run inference. Check console for details.");
+							}
+						}),
+				);
+			} else {
+				console.log("🎯 Not adding button - selected nodes count:", selectedNodes.length);
+			}
+		} catch (error) {
+			console.error("🎯 Error in buildSelectionMenu:", error);
+		}
+	}
+
+
+	patchCanvasMenusProperlyThisTime() {
+		console.log("🎯 Patching canvas menus properly...");
+		const canvasLeaves = this.app.workspace.getLeavesOfType('canvas');
+		console.log("🎯 Found canvas leaves:", canvasLeaves.length);
+		
+		for (const leaf of canvasLeaves) {
+			const canvasView = leaf.view as any;
+			const canvas = canvasView?.canvas;
+			
+			if (!canvas || !canvas.menu || (canvas.menu as any)._contextPatchedProperly) {
+				continue;
+			}
+			
+			console.log("🎯 Patching canvas menu properly");
+			(canvas.menu as any)._contextPatchedProperly = true;
+			
+			const self = this;
+			const originalRender = canvas.menu.render;
+			
+			// Store reference to original render
+			(canvas.menu as any)._originalRender = originalRender;
+			
+			canvas.menu.render = function() {
+				// Call original render first
+				const result = originalRender.call(this);
+				
+				// Now augment with our button
+				setTimeout(() => {
+					try {
+						if (!this.menuEl) {
+							console.log("🎯 No menuEl available");
+							return;
 						}
-					}),
-			);
+						
+						// Check if we already added our button
+						if (this.menuEl.querySelector('.canvas-context-inference-btn')) {
+							console.log("🎯 Button already exists, skipping");
+							return;
+						}
+						
+						const selectionData = canvas.getSelectionData();
+						console.log("🎯 Menu render - selection data:", selectionData);
+						console.log("🎯 Menu element children before adding button:", this.menuEl.children.length, Array.from(this.menuEl.children));
+						
+						// Only add for single selection
+						if (selectionData.nodes.length === 1) {
+							console.log("🎯 Adding button via menu patching");
+							
+							const button = document.createElement('button');
+							button.className = 'clickable-icon canvas-context-inference-btn';
+							button.setAttribute('aria-label', 'Canvas Context: Run Inference');
+							button.setAttribute('data-tooltip-position', 'top');
+							setIcon(button, 'zap');
+							
+							button.addEventListener('click', async (e) => {
+								e.stopPropagation();
+								e.preventDefault();
+								
+								try {
+									const currentSelection = canvas.getSelectionData();
+									if (currentSelection.nodes.length > 0) {
+										const firstNode = currentSelection.nodes[0];
+										await self.runInference(firstNode.id, { id: firstNode.id, canvas } as any);
+									}
+								} catch (error) {
+									console.error("🎯 Inference error:", error);
+								}
+							});
+							
+							// Insert at the beginning instead of appending to preserve existing buttons
+							this.menuEl.insertBefore(button, this.menuEl.firstChild);
+							console.log("🎯 Button added successfully");
+							console.log("🎯 Menu element children after adding button:", this.menuEl.children.length, Array.from(this.menuEl.children));
+						} else {
+							console.log("🎯 Not single selection, not adding button. Count:", selectionData.nodes.length);
+						}
+					} catch (error) {
+						console.error("🎯 Error adding button:", error);
+					}
+				}, 10);
+				
+				return result;
+			};
+		}
+	}
+
+	private observers: MutationObserver[] = [];
+
+	setupCanvasMenuObservers() {
+		console.log("🎯 Setting up mutation observers for canvas menus");
+		const canvasLeaves = this.app.workspace.getLeavesOfType('canvas');
+		console.log("🎯 Found canvas leaves:", canvasLeaves.length);
+		
+		for (const leaf of canvasLeaves) {
+			this.setupObserverForCanvas(leaf);
+		}
+
+		// Also listen for new canvas views being created
+		this.registerEvent(
+			this.app.workspace.on("active-leaf-change", (leaf) => {
+				if (leaf?.view.getViewType() === "canvas") {
+					console.log("🎯 New canvas view activated, setting up observer");
+					setTimeout(() => {
+						this.setupObserverForCanvas(leaf);
+					}, 100);
+				}
+			})
+		);
+	}
+
+	setupObserverForCanvas(leaf: any) {
+		const canvasView = leaf?.view as any;
+		const canvas = canvasView?.canvas;
+		
+		if (!canvas || !canvas.menu || (canvas.menu as any)._observerSetup) {
+			return;
+		}
+		
+		console.log("🎯 Setting up mutation observer for canvas");
+		(canvas.menu as any)._observerSetup = true;
+
+		const self = this;
+		
+		// Create mutation observer to watch for menu changes
+		const observer = new MutationObserver((mutations) => {
+			mutations.forEach((mutation) => {
+				if (mutation.type === 'childList' && mutation.target === canvas.menu.menuEl) {
+					// Menu content changed, check if we need to add our button
+					self.addButtonToCanvasMenu(canvas);
+				}
+			});
+		});
+
+		// Start observing when menu element is available
+		const checkMenuEl = () => {
+			if (canvas.menu.menuEl) {
+				observer.observe(canvas.menu.menuEl, { 
+					childList: true, 
+					subtree: false 
+				});
+				this.observers.push(observer);
+				console.log("🎯 Mutation observer started for canvas menu");
+			} else {
+				// Menu element not ready yet, try again
+				setTimeout(checkMenuEl, 100);
+			}
+		};
+
+		checkMenuEl();
+	}
+
+	addButtonToCanvasMenu(canvas: any) {
+		try {
+			if (!canvas.menu.menuEl) return;
+
+			// Check if button already exists
+			const existingButton = canvas.menu.menuEl.querySelector('.canvas-context-inference-btn');
+			if (existingButton) return;
+
+			const selectionData = canvas.getSelectionData();
+			
+			// Only add button for single node selection
+			if (selectionData?.nodes?.length === 1) {
+				console.log("🎯 Adding Canvas Context button via mutation observer");
+				
+				const button = document.createElement('button');
+				button.className = 'clickable-icon canvas-context-inference-btn';
+				button.setAttribute('aria-label', 'Canvas Context: Run Inference');
+				button.setAttribute('data-tooltip-position', 'top');
+				setIcon(button, 'zap');
+				
+				button.addEventListener('click', async (e) => {
+					e.stopPropagation();
+					e.preventDefault();
+					
+					try {
+						const currentSelection = canvas.getSelectionData();
+						if (currentSelection?.nodes?.length > 0) {
+							const firstNode = currentSelection.nodes[0];
+							await this.runInference(firstNode.id, { id: firstNode.id, canvas } as any);
+						}
+					} catch (error) {
+						console.error("🎯 Inference error:", error);
+					}
+				});
+				
+				// Add button to menu
+				canvas.menu.menuEl.appendChild(button);
+				console.log("🎯 Button added successfully via mutation observer");
+			}
+		} catch (error) {
+			console.error("🎯 Error adding button via mutation observer:", error);
 		}
 	}
 

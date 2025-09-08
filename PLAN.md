@@ -437,12 +437,44 @@ src/
     - **CI/CD Optimization**: Removed redundant manual asset upload steps from workflow
     - **Version Management**: Enhanced version-bump.js to only update versions.json when minAppVersion changes
 
+## 🐛 Current Issue: Canvas Selection Toolbar (Jan 2025)
+
+### Problem Description
+Canvas selection toolbar is not working correctly after recent changes:
+- **Single node selection**: Only shows ⚡ bolt button (missing default options like "Delete")
+- **Multi-node selection**: Shows nothing (should show "Create group", "Delete", etc.)
+
+### Root Cause
+The `patchCanvasMenus()` method in `src/main.ts` is completely overriding the canvas menu render instead of augmenting it. The selection count check prevents multi-selection menus from showing, and the patching approach breaks default single-selection options.
+
+### Working State (Before Breaking)
+From conversation: "*great that works. Now this works when I have one node selected. When I select multiple nodes it still is the only button in the toolbar. Restore the multi selection to the default*"
+
+This indicates single-selection was working with both default options AND the ⚡ button, but multi-selection was broken.
+
+### Correct Behavior Needed
+- **Single selection**: Default single-selection options + our ⚡ inference button
+- **Multi-selection**: Default multi-selection options only (no ⚡ button)
+- **No selection**: No toolbar (default behavior)
+
+### Solution Strategy
+1. **Fix patching approach**: Augment existing buttons instead of replacing entire menu
+2. **Preserve default functionality**: Don't break existing canvas menu behavior
+3. **Smart button insertion**: Only add ⚡ button when appropriate (single selection)
+4. **Proper DOM timing**: Use reliable method that doesn't interfere with default rendering
+
+### Implementation Notes
+- The selection count check `if (selectionData.nodes.length !== 1)` is correct for preventing multi-selection ⚡ button
+- The problem is the patching completely overrides `canvas.menu.render` instead of extending it
+- Need to find a way to add our button WITHOUT breaking default menu functionality
+
 ### 🎯 Ready for Next Session
-1. **Advanced Base UI Components**: Implement Select, Input, Dialog components for settings
-2. **Settings Panel Implementation**: Full configuration UI for LLM providers (Ollama/LMStudio)
-3. **Advanced Context Features**: Preview context before sending, debug visualization
-4. **Error Handling Improvements**: Better error messages, retry mechanisms
-5. **Performance Optimization**: Large canvas handling, context caching
+1. **URGENT: Fix Canvas Selection Toolbar**: Restore default single/multi-selection menus while adding ⚡ button for single selection
+2. **Advanced Base UI Components**: Implement Select, Input, Dialog components for settings
+3. **Settings Panel Implementation**: Full configuration UI for LLM providers (Ollama/LMStudio)
+4. **Advanced Context Features**: Preview context before sending, debug visualization
+5. **Error Handling Improvements**: Better error messages, retry mechanisms
+6. **Performance Optimization**: Large canvas handling, context caching
 
 ### 📋 Technical Decisions Made
 - **Text Node Support**: ✅ NOW SUPPORTED - Canvas text cards integrated with gray-matter frontmatter parsing
