@@ -1,10 +1,14 @@
 import { ItemView, WorkspaceLeaf } from "obsidian";
 import { StrictMode } from "react";
 import { type Root, createRoot } from "react-dom/client";
-import { ReactView } from "./components/react-view.tsx";
 import { Layout } from "./layout.tsx";
 import type CanvasContextPlugin from "../main.ts";
-import { PLUGIN_ICON, VIEW_TYPE_CANVAS_CONTEXT } from "../lib/constants.ts";
+import {
+	PLUGIN_DISPLAY_NAME,
+	PLUGIN_ICON,
+	VIEW_TYPE_CANVAS_CONTEXT,
+} from "../lib/constants.ts";
+import { ReactView } from "./components/react-view.tsx";
 
 export class CanvasContextView extends ItemView {
 	root: Root | null = null;
@@ -20,7 +24,7 @@ export class CanvasContextView extends ItemView {
 	}
 
 	getDisplayText() {
-		return "Canvas Context";
+		return PLUGIN_DISPLAY_NAME;
 	}
 
 	getIcon() {

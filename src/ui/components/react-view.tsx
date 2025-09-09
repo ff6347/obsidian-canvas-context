@@ -3,6 +3,7 @@ import { Field } from "@base-ui-components/react/field";
 import { Separator } from "@base-ui-components/react/separator";
 import { useState, useEffect } from "react";
 import type CanvasContextPlugin from "../../main.ts";
+import { PLUGIN_DISPLAY_NAME } from "../../lib/constants.ts";
 
 interface ReactViewProps {
 	plugin: CanvasContextPlugin;
@@ -61,7 +62,7 @@ export const ReactView: React.FC<ReactViewProps> = ({ plugin }) => {
 	return (
 		<div className={"canvas-context__wrapper"}>
 			<div className="canvas-context__header">
-				<h3 className="canvas-context__title">Canvas Context</h3>
+				<h3 className="canvas-context__title">{PLUGIN_DISPLAY_NAME}</h3>
 			</div>
 
 			<Separator className={"canvas-context__hr"} />
@@ -222,10 +223,10 @@ export const ReactView: React.FC<ReactViewProps> = ({ plugin }) => {
 				{isRunningInference ? (
 					<>
 						<span className="canvas-context__run-button-spinner" />
-						Running Canvas Context...
+						{`Running ${PLUGIN_DISPLAY_NAME}...`}
 					</>
 				) : (
-					<>Canvas Context - Run Inference</>
+					<>{`${PLUGIN_DISPLAY_NAME} - Run Inference`}</>
 				)}
 			</button>
 		</div>
