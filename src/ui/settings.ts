@@ -1,4 +1,10 @@
-import { App, PluginSettingTab, Setting, ButtonComponent, Notice } from "obsidian";
+import {
+	App,
+	PluginSettingTab,
+	Setting,
+	ButtonComponent,
+	Notice,
+} from "obsidian";
 import type CanvasContextPlugin from "../main.ts";
 import type { ModelConfiguration } from "../main.ts";
 import { AddModelModal } from "./add-model-modal.ts";
@@ -21,15 +27,16 @@ export class CanvasContextSettingTab extends PluginSettingTab {
 			.setDesc("Select the default model for inference (fallback model)")
 			.addDropdown((dropdown) => {
 				dropdown.addOption("", "Select a model");
-				
+
 				// Add all enabled model configurations
 				this.plugin.settings.modelConfigurations
-					.filter(config => config.enabled)
-					.forEach(config => {
+					.filter((config) => config.enabled)
+					.forEach((config) => {
 						dropdown.addOption(config.id, config.name);
 					});
-				
-				dropdown.setValue(this.plugin.settings.currentModel)
+
+				dropdown
+					.setValue(this.plugin.settings.currentModel)
 					.onChange(async (value) => {
 						this.plugin.settings.currentModel = value;
 						await this.plugin.saveSettings();
@@ -49,9 +56,14 @@ export class CanvasContextSettingTab extends PluginSettingTab {
 					.setButtonText("Add Model")
 					.setCta()
 					.onClick(() => {
-						const modal = new AddModelModal(this.app, this.plugin, undefined, () => {
-							this.display(); // Refresh the settings page
-						});
+						const modal = new AddModelModal(
+							this.app,
+							this.plugin,
+							undefined,
+							() => {
+								this.display(); // Refresh the settings page
+							},
+						);
 						modal.open();
 					});
 			});
@@ -60,7 +72,7 @@ export class CanvasContextSettingTab extends PluginSettingTab {
 		if (this.plugin.settings.modelConfigurations.length === 0) {
 			modelSection.createDiv({
 				text: "No model configurations found. Click 'Add Model' to get started.",
-				cls: "setting-item-description"
+				cls: "setting-item-description",
 			});
 		} else {
 			this.plugin.settings.modelConfigurations.forEach((config, index) => {
@@ -69,24 +81,28 @@ export class CanvasContextSettingTab extends PluginSettingTab {
 		}
 	}
 
-	renderModelConfiguration(containerEl: HTMLElement, config: ModelConfiguration, index: number) {
+	renderModelConfiguration(
+		containerEl: HTMLElement,
+		config: ModelConfiguration,
+		index: number,
+	) {
 		const setting = new Setting(containerEl);
-		
+
 		// Model info
 		setting.setName(config.name);
-		setting.setDesc(`${config.provider} • ${config.modelName} • ${config.baseURL}`);
+		setting.setDesc(
+			`${config.provider} • ${config.modelName} • ${config.baseURL}`,
+		);
 
 		// Enable/Disable toggle
 		setting.addToggle((toggle) => {
-			toggle
-				.setValue(config.enabled)
-				.onChange(async (value) => {
-					if (this.plugin.settings.modelConfigurations[index]) {
-						this.plugin.settings.modelConfigurations[index].enabled = value;
-						await this.plugin.saveSettings();
-						this.display(); // Refresh to update current model dropdown
-					}
-				});
+			toggle.setValue(config.enabled).onChange(async (value) => {
+				if (this.plugin.settings.modelConfigurations[index]) {
+					this.plugin.settings.modelConfigurations[index].enabled = value;
+					await this.plugin.saveSettings();
+					this.display(); // Refresh to update current model dropdown
+				}
+			});
 		});
 
 		// Verify button
@@ -123,7 +139,7 @@ export class CanvasContextSettingTab extends PluginSettingTab {
 					if (this.plugin.settings.currentModel === config.id) {
 						this.plugin.settings.currentModel = "";
 					}
-					
+
 					// Remove from array
 					this.plugin.settings.modelConfigurations.splice(index, 1);
 					await this.plugin.saveSettings();
@@ -133,23 +149,31 @@ export class CanvasContextSettingTab extends PluginSettingTab {
 		});
 	}
 
-	async verifyModelConfiguration(config: ModelConfiguration, button: ButtonComponent) {
+	async verifyModelConfiguration(
+		config: ModelConfiguration,
+		button: ButtonComponent,
+	) {
 		const originalText = button.buttonEl.textContent;
 		button.setButtonText("Verifying...");
 		button.setDisabled(true);
 
 		try {
-			const providerGenerator = providers[config.provider as keyof typeof providers];
+			const providerGenerator =
+				providers[config.provider as keyof typeof providers];
 			if (!providerGenerator) {
 				throw new Error("Provider not found");
 			}
 
 			const models = await providerGenerator.listModels(config.baseURL);
-			new Notice(`${config.name}: Connection successful! Found ${models.length} models.`);
+			new Notice(
+				`${config.name}: Connection successful! Found ${models.length} models.`,
+			);
 			button.setButtonText("✓");
 		} catch (error) {
 			console.error("Connection verification failed:", error);
-			new Notice(`${config.name}: Connection failed. Please check the configuration.`);
+			new Notice(
+				`${config.name}: Connection failed. Please check the configuration.`,
+			);
 			button.setButtonText("✗");
 		}
 

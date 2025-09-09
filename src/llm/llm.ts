@@ -5,7 +5,7 @@ export interface InferenceResult {
 	success: boolean;
 	text: string;
 	error?: string;
-	errorType?: 'connection' | 'model' | 'provider' | 'unknown';
+	errorType?: "connection" | "model" | "provider" | "unknown";
 }
 
 export async function inference({
@@ -25,7 +25,7 @@ export async function inference({
 				success: false,
 				text: "",
 				error: "No messages provided for inference",
-				errorType: 'unknown'
+				errorType: "unknown",
 			};
 		}
 	} catch (error) {
@@ -33,8 +33,8 @@ export async function inference({
 		return {
 			success: false,
 			text: "",
-			error: `Invalid input: ${error instanceof Error ? error.message : 'Unknown error'}`,
-			errorType: 'unknown'
+			error: `Invalid input: ${error instanceof Error ? error.message : "Unknown error"}`,
+			errorType: "unknown",
 		};
 	}
 
@@ -45,7 +45,7 @@ export async function inference({
 			success: false,
 			text: "",
 			error: `Provider '${currentProviderName}' not found`,
-			errorType: 'provider'
+			errorType: "provider",
 		};
 	}
 
@@ -57,26 +57,34 @@ export async function inference({
 		});
 		return {
 			success: true,
-			text: text
+			text: text,
 		};
 	} catch (error) {
 		console.error("Error generating text:", error);
-		
+
 		// Determine error type based on error content
-		const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-		let errorType: InferenceResult['errorType'] = 'unknown';
-		
-		if (errorMessage.includes('connect') || errorMessage.includes('ECONNREFUSED') || errorMessage.includes('network')) {
-			errorType = 'connection';
-		} else if (errorMessage.includes('model') || errorMessage.includes('not found')) {
-			errorType = 'model';
+		const errorMessage =
+			error instanceof Error ? error.message : "Unknown error";
+		let errorType: InferenceResult["errorType"] = "unknown";
+
+		if (
+			errorMessage.includes("connect") ||
+			errorMessage.includes("ECONNREFUSED") ||
+			errorMessage.includes("network")
+		) {
+			errorType = "connection";
+		} else if (
+			errorMessage.includes("model") ||
+			errorMessage.includes("not found")
+		) {
+			errorType = "model";
 		}
 
 		return {
 			success: false,
 			text: "",
 			error: `Failed to generate response: ${errorMessage}`,
-			errorType: errorType
+			errorType: errorType,
 		};
 	}
 }

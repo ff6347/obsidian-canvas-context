@@ -10,7 +10,8 @@
 		"test:ui": "vitest --ui",
 		"test:watch": "vitest --watch",
 		"test:coverage": "vitest --coverage",
-		"typecheck": "tsc --noEmit"
+		"typecheck": "tsc --noEmit",
+		"format": "prettier --write ."
 	},
 	"keywords": [],
 	"author": "ff6347 <hash@ff6347.email>",
@@ -29,6 +30,7 @@
 		"happy-dom": "18.0.1",
 		"jsdom": "26.1.0",
 		"obsidian": "1.8.7",
+		"prettier": "3.6.2",
 		"rolldown": "1.0.0-beta.35",
 		"semantic-release": "24.2.7",
 		"typescript": "5.9.2",

@@ -8,14 +8,14 @@ role: system
 tags: ["context"]
 ---
 This is content`;
-		
+
 		// Test parsing logic (placeholder)
 		expect(true).toBe(true);
 	});
 
 	it("should handle missing frontmatter", () => {
 		const content = "Just plain content without frontmatter";
-		
+
 		// Test default values
 		expect(true).toBe(true);
 	});
