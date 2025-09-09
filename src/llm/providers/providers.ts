@@ -13,6 +13,11 @@ import {
 	createProvider as createOpenAIProvider,
 	listModels as listOpenAIModels,
 } from "./openai.ts";
+import {
+	providerName as openrouterProviderName,
+	createProvider as createOpenRouterProvider,
+	listModels as listOpenRouterModels,
+} from "./openrouter.ts";
 
 export const providers = {
 	ollama: {
@@ -29,6 +34,11 @@ export const providers = {
 		name: openaiProviderName,
 		createProvider: createOpenAIProvider,
 		listModels: listOpenAIModels,
+	},
+	openrouter: {
+		name: openrouterProviderName,
+		createProvider: createOpenRouterProvider,
+		listModels: listOpenRouterModels,
 	},
 } as const;
 

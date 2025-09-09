@@ -68,6 +68,7 @@ export class AddModelModal extends Modal {
 					.addOption("ollama", "Ollama")
 					.addOption("lmstudio", "LM Studio")
 					.addOption("openai", "OpenAI")
+					.addOption("openrouter", "OpenRouter")
 					.setValue(this.modelConfig.provider || "")
 					.onChange((value) => {
 						this.modelConfig.provider = value as CurrentProviderType;
@@ -186,6 +187,7 @@ export class AddModelModal extends Modal {
 				ollama: "http://localhost:11434",
 				lmstudio: "http://localhost:1234",
 				openai: "https://api.openai.com",
+				openrouter: "https://openrouter.ai/api/v1",
 			};
 			const placeholder =
 				placeholders[this.modelConfig.provider as keyof typeof placeholders] ||
@@ -250,9 +252,13 @@ export class AddModelModal extends Modal {
 			return;
 		}
 
-		// Validate API key for OpenAI
-		if (this.modelConfig.provider === "openai" && !this.modelConfig.apiKey) {
-			new Notice("API Key is required for OpenAI provider.");
+		// Validate API key for OpenAI and OpenRouter
+		if (
+			(this.modelConfig.provider === "openai" ||
+				this.modelConfig.provider === "openrouter") &&
+			!this.modelConfig.apiKey
+		) {
+			new Notice("API Key is required for OpenAI and OpenRouter providers.");
 			return;
 		}
 
@@ -374,7 +380,10 @@ export class AddModelModal extends Modal {
 	updateApiKeyFieldVisibility() {
 		if (!this.apiKeySetting) return;
 
-		if (this.modelConfig.provider === "openai") {
+		if (
+			this.modelConfig.provider === "openai" ||
+			this.modelConfig.provider === "openrouter"
+		) {
 			this.apiKeySetting.settingEl.style.display = "";
 		} else {
 			this.apiKeySetting.settingEl.style.display = "none";
@@ -386,8 +395,12 @@ export class AddModelModal extends Modal {
 			return false;
 		}
 
-		// For OpenAI, also require API key
-		if (this.modelConfig.provider === "openai" && !this.modelConfig.apiKey) {
+		// For OpenAI and OpenRouter, also require API key
+		if (
+			(this.modelConfig.provider === "openai" ||
+				this.modelConfig.provider === "openrouter") &&
+			!this.modelConfig.apiKey
+		) {
 			return false;
 		}
 

@@ -43,15 +43,16 @@ This is an Obsidian plugin that transforms canvas into a spatial context-aware L
    - **Ollama**: Local inference via `ollama-ai-provider-v2`
    - **LM Studio**: OpenAI-compatible API via `@ai-sdk/openai-compatible`
    - **OpenAI**: Cloud inference with API key authentication via `@ai-sdk/openai`
-   - **Extensible Architecture**: Easy addition of new providers (Anthropic, Google, etc.)
+   - **OpenRouter**: Universal API gateway via `@openrouter/ai-sdk-provider` with access to hundreds of models from Anthropic, Google, Meta, Mistral, and more
+   - **Extensible Architecture**: Easy addition of new providers following established patterns
    - **Unified Interface**: Consistent provider pattern for createProvider, listModels, isProviderAlive
    - **Model Discovery**: Dynamic model listing with alphabetical sorting for all providers
    - **Authentication**: Secure API key storage and handling for cloud providers
 
 4. **Advanced Model Configuration UI**: Complete settings interface
-   - **Provider Selection**: Dropdown with Ollama, LM Studio, OpenAI options
-   - **Dynamic Fields**: API key input appears only for providers that require authentication
-   - **Model Discovery**: Real-time model listing from selected providers
+   - **Provider Selection**: Dropdown with Ollama, LM Studio, OpenAI, and OpenRouter options
+   - **Dynamic Fields**: API key input appears only for providers that require authentication (OpenAI, OpenRouter)
+   - **Model Discovery**: Real-time model listing from selected providers with alphabetical sorting
    - **Connection Testing**: Verify provider availability and authentication
    - **Configuration Management**: Add, edit, delete, enable/disable model configurations
    - **Secure Display**: API key masking in settings (shows only last 4 characters)
@@ -70,7 +71,7 @@ This is an Obsidian plugin that transforms canvas into a spatial context-aware L
 
 ### 🎯 Next Implementation Steps
 
-1. **Additional Provider Support**: Add Anthropic Claude, Google Gemini, Mistral AI
+1. **Additional Provider Support**: Add Anthropic Claude, Google Gemini, Mistral AI (Note: OpenRouter already provides access to these models)
 2. **Enhanced UI Components**: Advanced Base UI components (Select, Input, Dialog)
 3. **Context Preview**: Show users what context will be sent before inference
 4. **Debugging Tools**: Context visualization and troubleshooting features
@@ -78,7 +79,7 @@ This is an Obsidian plugin that transforms canvas into a spatial context-aware L
 
 ## Key Design Decisions
 
-- **Multi-provider Architecture**: Support local (Ollama/LMStudio) and cloud (OpenAI/Anthropic) providers
+- **Multi-provider Architecture**: Support local (Ollama/LMStudio) and cloud (OpenAI/OpenRouter) providers
 - **Vercel AI SDK**: Unified interface for all LLM providers
 - **Secure Authentication**: API key storage with masking for cloud providers
 - **Extensible Design**: Easy addition of new providers following standard pattern
@@ -93,25 +94,45 @@ To add a new LLM provider (example: Anthropic Claude):
 1. **Install dependency**: `pnpm add @ai-sdk/anthropic`
 2. **Create provider file**: `src/llm/providers/anthropic.ts`
 3. **Follow standard pattern**:
+
    ```typescript
    import { createAnthropic } from "@ai-sdk/anthropic";
-   
+
    export const providerName = "anthropic" as const;
-   
+
    export function createProvider(apiKey: string, baseURL?: string) {
-     return createAnthropic({ apiKey, baseURL });
+   	return createAnthropic({ apiKey, baseURL });
    }
-   
-   export async function listModels(apiKey: string, baseURL?: string): Promise<string[]> {
-     // Implement model discovery
+
+   export async function listModels(
+   	apiKey: string,
+   	baseURL?: string,
+   ): Promise<string[]> {
+   	// Implement model discovery
    }
-   
-   export async function isProviderAlive(apiKey: string, baseURL?: string): Promise<boolean> {
-     // Implement health check
+
+   export async function isProviderAlive(
+   	apiKey: string,
+   	baseURL?: string,
+   ): Promise<boolean> {
+   	// Implement health check
    }
    ```
+
 4. **Register in providers.ts**: Add to providers registry
 5. **Update types**: Add to `CurrentProviderType`
 6. **Update UI**: Add to provider dropdown
 
 This pattern ensures all providers work seamlessly with the existing UI and authentication system.
+
+## OpenRouter Benefits
+
+OpenRouter provides unique advantages as a universal API gateway:
+
+- **Universal Model Access**: One API key for hundreds of models from leading providers (Anthropic, Google, Meta, Mistral, OpenAI, and more)
+- **Cost-Effective**: Pay-as-you-go pricing with transparent per-token costs and no monthly fees
+- **High Availability**: Enterprise-grade infrastructure with automatic failover
+- **Latest Models**: Immediate access to new models as they're released
+- **Simplified Integration**: Standardized API across all models with consistent interfaces
+
+For users who want access to multiple model providers without managing separate API keys, OpenRouter is an excellent choice that complements the direct provider integrations.
