@@ -51,9 +51,9 @@ export async function inference({
 		};
 	}
 
-	// For OpenAI, pass the API key as the first parameter
+	// For OpenAI and OpenRouter, pass the API key as the first parameter
 	const provider =
-		currentProviderName === "openai" && apiKey
+		(currentProviderName === "openai" || currentProviderName === "openrouter") && apiKey
 			? providerGenerator.createProvider(apiKey, baseURL)
 			: providerGenerator.createProvider(baseURL);
 	try {
