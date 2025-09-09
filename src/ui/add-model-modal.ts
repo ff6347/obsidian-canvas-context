@@ -13,17 +13,24 @@ export class AddModelModal extends Modal {
 	isLoadingModels: boolean = false;
 	modelDropdown: HTMLSelectElement | null = null;
 
-	constructor(app: App, plugin: CanvasContextPlugin, modelConfig?: ModelConfiguration, onSave?: () => void) {
+	constructor(
+		app: App,
+		plugin: CanvasContextPlugin,
+		modelConfig?: ModelConfiguration,
+		onSave?: () => void,
+	) {
 		super(app);
 		this.plugin = plugin;
 		this.isEditing = !!modelConfig;
-		this.modelConfig = modelConfig ? { ...modelConfig } : {
-			name: "",
-			provider: "" as CurrentProviderType,
-			modelName: "",
-			baseURL: "",
-			enabled: true,
-		};
+		this.modelConfig = modelConfig
+			? { ...modelConfig }
+			: {
+					name: "",
+					provider: "" as CurrentProviderType,
+					modelName: "",
+					baseURL: "",
+					enabled: true,
+				};
 		this.onSave = onSave || (() => {});
 	}
 
@@ -31,7 +38,11 @@ export class AddModelModal extends Modal {
 		const { contentEl } = this;
 		contentEl.empty();
 
-		contentEl.createEl("h2", { text: this.isEditing ? "Edit Model Configuration" : "Add Model Configuration" });
+		contentEl.createEl("h2", {
+			text: this.isEditing
+				? "Edit Model Configuration"
+				: "Add Model Configuration",
+		});
 
 		// Model Name
 		new Setting(contentEl)
@@ -75,15 +86,13 @@ export class AddModelModal extends Modal {
 			.setDesc("The base URL for the provider")
 			.addText((text) => {
 				baseURLInput = text.inputEl;
-				text
-					.setValue(this.modelConfig.baseURL || "")
-					.onChange((value) => {
-						this.modelConfig.baseURL = value;
-						// Load models when provider and baseURL are available
-						if (this.modelConfig.provider && this.modelConfig.baseURL) {
-							this.loadModels();
-						}
-					});
+				text.setValue(this.modelConfig.baseURL || "").onChange((value) => {
+					this.modelConfig.baseURL = value;
+					// Load models when provider and baseURL are available
+					if (this.modelConfig.provider && this.modelConfig.baseURL) {
+						this.loadModels();
+					}
+				});
 				this.updateBaseURLPlaceholder(baseURLInput);
 			});
 
@@ -94,12 +103,12 @@ export class AddModelModal extends Modal {
 			.addDropdown((dropdown) => {
 				this.modelDropdown = dropdown.selectEl;
 				dropdown.addOption("", "Select a model");
-				
+
 				// Set current value if available
 				if (this.modelConfig.modelName) {
 					dropdown.setValue(this.modelConfig.modelName);
 				}
-				
+
 				dropdown.onChange((value) => {
 					this.modelConfig.modelName = value;
 					// Auto-populate display name if empty
@@ -108,7 +117,7 @@ export class AddModelModal extends Modal {
 						this.updateDisplayName();
 					}
 				});
-				
+
 				// Load models if provider and baseURL are available
 				if (this.modelConfig.provider && this.modelConfig.baseURL) {
 					this.loadModels();
@@ -120,25 +129,23 @@ export class AddModelModal extends Modal {
 			.setName("Connection Test")
 			.setDesc("Test the connection to the provider")
 			.addButton((button) => {
-				button
-					.setButtonText("Verify Connection")
-					.onClick(async () => {
-						await this.verifyConnection(button);
-					});
+				button.setButtonText("Verify Connection").onClick(async () => {
+					await this.verifyConnection(button);
+				});
 			});
 
 		// Action buttons
-		const buttonContainer = contentEl.createDiv({ cls: "modal-button-container" });
+		const buttonContainer = contentEl.createDiv({
+			cls: "modal-button-container",
+		});
 		buttonContainer.style.display = "flex";
 		buttonContainer.style.justifyContent = "flex-end";
 		buttonContainer.style.gap = "10px";
 		buttonContainer.style.marginTop = "20px";
 
-		new ButtonComponent(buttonContainer)
-			.setButtonText("Cancel")
-			.onClick(() => {
-				this.close();
-			});
+		new ButtonComponent(buttonContainer).setButtonText("Cancel").onClick(() => {
+			this.close();
+		});
 
 		new ButtonComponent(buttonContainer)
 			.setButtonText(this.isEditing ? "Update" : "Add Model")
@@ -152,9 +159,11 @@ export class AddModelModal extends Modal {
 		if (baseURLInput && this.modelConfig.provider) {
 			const placeholders = {
 				ollama: "http://localhost:11434",
-				lmstudio: "http://localhost:1234"
+				lmstudio: "http://localhost:1234",
 			};
-			const placeholder = placeholders[this.modelConfig.provider as keyof typeof placeholders] || "";
+			const placeholder =
+				placeholders[this.modelConfig.provider as keyof typeof placeholders] ||
+				"";
 			baseURLInput.placeholder = placeholder;
 			if (!this.modelConfig.baseURL) {
 				this.modelConfig.baseURL = placeholder;
@@ -173,17 +182,22 @@ export class AddModelModal extends Modal {
 		button.setDisabled(true);
 
 		try {
-			const providerGenerator = providers[this.modelConfig.provider as keyof typeof providers];
+			const providerGenerator =
+				providers[this.modelConfig.provider as keyof typeof providers];
 			if (!providerGenerator) {
 				throw new Error("Provider not found");
 			}
 
-			const models = await providerGenerator.listModels(this.modelConfig.baseURL);
+			const models = await providerGenerator.listModels(
+				this.modelConfig.baseURL,
+			);
 			new Notice(`Connection successful! Found ${models.length} models.`);
 			button.setButtonText("✓ Connected");
 		} catch (error) {
 			console.error("Connection verification failed:", error);
-			new Notice("Connection failed. Please check the base URL and ensure the provider is running.");
+			new Notice(
+				"Connection failed. Please check the base URL and ensure the provider is running.",
+			);
 			button.setButtonText("✗ Failed");
 		}
 
@@ -195,21 +209,28 @@ export class AddModelModal extends Modal {
 
 	async saveModel() {
 		// Validate required fields
-		if (!this.modelConfig.name || !this.modelConfig.provider || !this.modelConfig.modelName || !this.modelConfig.baseURL) {
+		if (
+			!this.modelConfig.name ||
+			!this.modelConfig.provider ||
+			!this.modelConfig.modelName ||
+			!this.modelConfig.baseURL
+		) {
 			new Notice("Please fill in all required fields.");
 			return;
 		}
 
 		// Generate ID if this is a new model
 		if (!this.modelConfig.id) {
-			this.modelConfig.id = this.generateId();
+			this.modelConfig.id = this.plugin.generateId();
 		}
 
 		const modelConfig = this.modelConfig as ModelConfiguration;
 
 		if (this.isEditing) {
 			// Update existing model
-			const index = this.plugin.settings.modelConfigurations.findIndex(config => config.id === modelConfig.id);
+			const index = this.plugin.settings.modelConfigurations.findIndex(
+				(config) => config.id === modelConfig.id,
+			);
 			if (index !== -1) {
 				this.plugin.settings.modelConfigurations[index] = modelConfig;
 			}
@@ -219,13 +240,21 @@ export class AddModelModal extends Modal {
 		}
 
 		await this.plugin.saveSettings();
-		new Notice(this.isEditing ? "Model configuration updated!" : "Model configuration added!");
+		new Notice(
+			this.isEditing
+				? "Model configuration updated!"
+				: "Model configuration added!",
+		);
 		this.onSave();
 		this.close();
 	}
 
 	async loadModels() {
-		if (!this.modelConfig.provider || !this.modelConfig.baseURL || !this.modelDropdown) {
+		if (
+			!this.modelConfig.provider ||
+			!this.modelConfig.baseURL ||
+			!this.modelDropdown
+		) {
 			return;
 		}
 
@@ -234,43 +263,60 @@ export class AddModelModal extends Modal {
 		}
 
 		this.isLoadingModels = true;
-		
+
 		// Clear existing options except the first one
-		this.modelDropdown.innerHTML = '';
-		const defaultOption = this.modelDropdown.createEl('option', { value: '', text: 'Loading models...' });
+		this.modelDropdown.innerHTML = "";
+		const defaultOption = this.modelDropdown.createEl("option", {
+			value: "",
+			text: "Loading models...",
+		});
 		this.modelDropdown.appendChild(defaultOption);
 		this.modelDropdown.disabled = true;
 
 		try {
-			const providerGenerator = providers[this.modelConfig.provider as keyof typeof providers];
+			const providerGenerator =
+				providers[this.modelConfig.provider as keyof typeof providers];
 			if (!providerGenerator) {
 				throw new Error("Provider not found");
 			}
 
-			const models = await providerGenerator.listModels(this.modelConfig.baseURL);
+			const models = await providerGenerator.listModels(
+				this.modelConfig.baseURL,
+			);
 			this.availableModels = models;
 
 			// Populate dropdown with models
-			this.modelDropdown.innerHTML = '';
-			const selectOption = this.modelDropdown.createEl('option', { value: '', text: 'Select a model' });
+			this.modelDropdown.innerHTML = "";
+			const selectOption = this.modelDropdown.createEl("option", {
+				value: "",
+				text: "Select a model",
+			});
 			this.modelDropdown.appendChild(selectOption);
-			
-			models.forEach(model => {
-				const option = this.modelDropdown!.createEl('option', { value: model, text: model });
+
+			models.forEach((model) => {
+				const option = this.modelDropdown!.createEl("option", {
+					value: model,
+					text: model,
+				});
 				this.modelDropdown!.appendChild(option);
 			});
 
 			// Restore selected value if it exists in the list
-			if (this.modelConfig.modelName && models.includes(this.modelConfig.modelName)) {
+			if (
+				this.modelConfig.modelName &&
+				models.includes(this.modelConfig.modelName)
+			) {
 				this.modelDropdown.value = this.modelConfig.modelName;
 			}
 
 			this.modelDropdown.disabled = false;
-			
 		} catch (error) {
 			console.error("Error loading models:", error);
-			this.modelDropdown.innerHTML = '';
-			const errorOption = this.modelDropdown.createEl('option', { value: '', text: 'Failed to load models' });
+			this.modelDropdown.innerHTML = "";
+			const errorOption = this.modelDropdown.createEl("option", {
+				value: "",
+				text: "Failed to load models",
+			});
 			this.modelDropdown.appendChild(errorOption);
 			this.modelDropdown.disabled = false;
 		}
@@ -279,14 +325,12 @@ export class AddModelModal extends Modal {
 	}
 
 	updateDisplayName() {
-		const nameInput = this.contentEl.querySelector('input[type="text"]') as HTMLInputElement;
+		const nameInput = this.contentEl.querySelector(
+			'input[type="text"]',
+		) as HTMLInputElement;
 		if (nameInput && this.modelConfig.name) {
 			nameInput.value = this.modelConfig.name;
 		}
-	}
-
-	generateId(): string {
-		return Date.now().toString(36) + Math.random().toString(36).substring(2);
 	}
 
 	onClose() {
