@@ -15,7 +15,7 @@
 	},
 	"keywords": [],
 	"author": "ff6347 <hash@ff6347.email>",
-	"license": "MIT",
+	"license": "GPL-3.0",
 	"packageManager": "pnpm@10.15.1",
 	"type": "module",
 	"private": true,
