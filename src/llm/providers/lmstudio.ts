@@ -42,7 +42,6 @@ export async function listModels(
 			throw new Error(`Error fetching models: ${response.statusText}`);
 		}
 		const data = (await response.json()) as LMStudioModelsResponse;
-		console.log(data);
 		return data.data.map((model) => model.id);
 	} catch (error) {
 		console.error("Error fetching LM Studio models:", error);
