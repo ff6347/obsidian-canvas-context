@@ -1,7 +1,7 @@
 import { type Menu } from "obsidian";
 import type CanvasContextPlugin from "../main.ts";
 import type { ExtendedCanvasConnection } from "../types/canvas-types.ts";
-import { PLUGIN_ICON } from "../main.ts";
+import { PLUGIN_ICON } from "../lib/constants.ts";
 
 export default class NodeActions {
 	plugin: CanvasContextPlugin;

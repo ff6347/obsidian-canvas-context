@@ -1,8 +1,8 @@
 import { Plugin, Menu, WorkspaceLeaf, ItemView, setIcon } from "obsidian";
 import NodeActions from "./canvas/nodes-actions.ts";
-import type { CanvasConnection, CanvasViewData } from "obsidian-typings";
+import type { CanvasConnection } from "obsidian-typings";
 import { CanvasContextSettingTab } from "./ui/settings.ts";
-import { CanvasContextView, VIEW_TYPE_CANVAS_CONTEXT } from "./ui/view.tsx";
+import { CanvasContextView } from "./ui/view.tsx";
 import { Notice } from "obsidian";
 import { inference, type InferenceResult } from "./llm/llm.ts";
 import type { ModelMessage } from "ai";
@@ -14,9 +14,7 @@ import type {
 	ExtendedCanvasConnection,
 } from "./types/canvas-types.ts";
 import type { CurrentProviderType } from "./types/llm-types.ts";
-
-// Global plugin icon for consistent usage across the plugin
-export const PLUGIN_ICON = "waypoints";
+import { PLUGIN_ICON, VIEW_TYPE_CANVAS_CONTEXT } from "./lib/constants.ts";
 
 export interface ModelConfiguration {
 	id: string;
@@ -41,7 +39,6 @@ export default class CanvasContextPlugin extends Plugin {
 	nodeActions: NodeActions | undefined;
 	statusEl: HTMLElement | null = null;
 	recentErrors: InferenceResult[] = [];
-
 	settings: CanvasContextSettings = DEFAULT_SETTINGS;
 	async onload() {
 		await this.loadSettings();
@@ -92,7 +89,7 @@ export default class CanvasContextPlugin extends Plugin {
 	onunload() {
 		this.hideLoadingStatus();
 		// Clean up mutation observers
-		this.observers.forEach(observer => observer.disconnect());
+		this.observers.forEach((observer) => observer.disconnect());
 		this.observers = [];
 	}
 
@@ -166,17 +163,18 @@ export default class CanvasContextPlugin extends Plugin {
 			}
 			try {
 				this.showLoadingStatus("Running inference...");
-				
+
 				const currentModelConfig = this.settings.modelConfigurations.find(
-					config => config.id === this.settings.currentModel && config.enabled
+					(config) =>
+						config.id === this.settings.currentModel && config.enabled,
 				);
-				
+
 				if (!currentModelConfig) {
 					new Notice("Please select a valid model configuration in settings.");
 					this.hideLoadingStatus();
 					return;
 				}
-				
+
 				const result = await inference({
 					messages,
 					currentProviderName: currentModelConfig.provider,
@@ -195,7 +193,7 @@ export default class CanvasContextPlugin extends Plugin {
 					await this.createErrorNode(node, result);
 					new Notice(`Inference failed: ${result.error}`, 5000);
 				}
-				
+
 				this.hideLoadingStatus();
 			} catch (error) {
 				console.error("Inference error:", error);
@@ -219,7 +217,6 @@ role: ${role}
 ---
 
 ${response}`;
-
 
 		// Generate unique IDs
 		const responseId = this.generateId(16);
@@ -278,27 +275,32 @@ ${response}`;
 
 		// Get current model configuration for context
 		const currentModelConfig = this.settings.modelConfigurations.find(
-			config => config.id === this.settings.currentModel
+			(config) => config.id === this.settings.currentModel,
 		);
 
 		// Create detailed error message with configuration context
 		const errorDetails = [
 			`# ❌ Inference Error`,
 			``,
-			`**Error Type:** ${result.errorType || 'unknown'}`,
-			`**Message:** ${result.error || 'Unknown error occurred'}`,
+			`**Error Type:** ${result.errorType || "unknown"}`,
+			`**Message:** ${result.error || "Unknown error occurred"}`,
 			``,
 			`## Configuration`,
-			currentModelConfig ? [
-				`**Model:** ${currentModelConfig.name}`,
-				`**Provider:** ${currentModelConfig.provider}`,
-				`**Model Name:** ${currentModelConfig.modelName}`,
-				`**Base URL:** ${currentModelConfig.baseURL}`,
-			].join('\n') : '⚠️ No model configuration found',
+			currentModelConfig
+				? [
+						`**Model:** ${currentModelConfig.name}`,
+						`**Provider:** ${currentModelConfig.provider}`,
+						`**Model Name:** ${currentModelConfig.modelName}`,
+						`**Base URL:** ${currentModelConfig.baseURL}`,
+					].join("\n")
+				: "⚠️ No model configuration found",
 			``,
 			`## Troubleshooting`,
-			this.getErrorTroubleshootingText(result.errorType, currentModelConfig?.provider),
-		].join('\n');
+			this.getErrorTroubleshootingText(
+				result.errorType,
+				currentModelConfig?.provider,
+			),
+		].join("\n");
 
 		// Use the existing createResponseNode method with error flag
 		await this.createResponseNode(sourceNode, errorDetails, true);
@@ -306,13 +308,13 @@ ${response}`;
 
 	addRecentError(result: InferenceResult) {
 		if (result.success) return;
-		
+
 		// Add timestamp to error
 		const errorWithTimestamp = {
 			...result,
-			timestamp: Date.now()
+			timestamp: Date.now(),
 		};
-		
+
 		// Keep only the 5 most recent errors
 		this.recentErrors.unshift(errorWithTimestamp as InferenceResult);
 		if (this.recentErrors.length > 5) {
@@ -321,65 +323,65 @@ ${response}`;
 	}
 
 	getErrorTroubleshootingText(errorType?: string, provider?: string): string {
-		const baseSteps = [];
-		
+		const baseSteps: string[] = [];
+
 		switch (errorType) {
-			case 'connection':
+			case "connection":
 				baseSteps.push(
-					'- Check if the provider service is running',
-					'- Verify the base URL is correct',
-					'- Ensure network connectivity'
+					"- Check if the provider service is running",
+					"- Verify the base URL is correct",
+					"- Ensure network connectivity",
 				);
 				break;
-			case 'model':
+			case "model":
 				baseSteps.push(
-					'- Verify the model name exists on the provider',
-					'- Check if the model is properly loaded',
-					'- Try refreshing available models in the modal'
+					"- Verify the model name exists on the provider",
+					"- Check if the model is properly loaded",
+					"- Try refreshing available models in the modal",
 				);
 				break;
-			case 'provider':
+			case "provider":
 				baseSteps.push(
-					'- Ensure the provider is properly configured',
-					'- Check provider settings in the plugin'
+					"- Ensure the provider is properly configured",
+					"- Check provider settings in the plugin",
 				);
 				break;
 			default:
 				baseSteps.push(
-					'- Check the console for detailed error information',
-					'- Verify all configuration settings',
-					'- Try running inference again'
+					"- Check the console for detailed error information",
+					"- Verify all configuration settings",
+					"- Try running inference again",
 				);
 		}
 
 		// Add provider-specific guidance
 		const providerSteps = this.getProviderSpecificSteps(provider);
 		if (providerSteps.length > 0) {
-			baseSteps.push('', '### Provider-Specific Tips:', ...providerSteps);
+			baseSteps.push("", "### Provider-Specific Tips:", ...providerSteps);
 		}
 
-		return baseSteps.join('\n');
+		return baseSteps.join("\n");
 	}
 
 	getProviderSpecificSteps(provider?: string): string[] {
 		switch (provider) {
-			case 'ollama':
+			case "ollama":
 				return [
-					'**Ollama Setup:**',
-					'- Default URL: `http://localhost:11434`',
-					'- Start Ollama: `ollama serve`',
-					'- List models: `ollama list`',
-					'- Pull models: `ollama pull llama3.2`',
-					'- Check status: visit http://localhost:11434 in browser'
+					"**Ollama Setup:**",
+					"- Default URL: `http://localhost:11434`",
+					"- Start Ollama: `ollama serve`",
+					"- List models: `ollama list`",
+					"- Pull models: `ollama pull llama3.2`",
+					"- Check status: visit http://localhost:11434 in browser",
 				];
-			case 'lmstudio':
+			case "lmstudio":
 				return [
-					'**LM Studio Setup:**',
-					'- Default URL: `http://localhost:1234`',
+					"**LM Studio Setup:**",
+					"- Default URL: `http://localhost:1234`",
 					'- Enable "Start Server" in LM Studio',
-					'- Load a model in the Local Server tab',
-					'- Verify server is running in the Server tab',
-					'- Check endpoint: visit http://localhost:1234/v1/models'
+					"- Load a model in the Local Server tab",
+					"- Verify server is running in the Server tab",
+					"- Check endpoint: visit http://localhost:1234/v1/models",
 				];
 			default:
 				return [];
@@ -387,8 +389,8 @@ ${response}`;
 	}
 
 	async runInferenceFromSidebar(): Promise<boolean> {
-		const canvasLeaves = this.app.workspace.getLeavesOfType('canvas');
-		
+		const canvasLeaves = this.app.workspace.getLeavesOfType("canvas");
+
 		if (canvasLeaves.length === 0) {
 			new Notice("Please open a canvas to run inference.");
 			return false;
@@ -399,17 +401,21 @@ ${response}`;
 			new Notice("Canvas leaf not accessible.");
 			return false;
 		}
-		
+
 		const canvasView = canvasLeaf.view as any;
 		const canvas = canvasView.canvas;
-		
+
 		if (!canvas) {
-			new Notice("Canvas not accessible. Please ensure you have a canvas open.");
+			new Notice(
+				"Canvas not accessible. Please ensure you have a canvas open.",
+			);
 			return false;
 		}
-		
+
 		if (!canvas.selection) {
-			new Notice("Canvas selection not available. Please ensure you have a canvas open.");
+			new Notice(
+				"Canvas selection not available. Please ensure you have a canvas open.",
+			);
 			return false;
 		}
 
@@ -419,17 +425,19 @@ ${response}`;
 			selectedNodes = selectionData.nodes;
 		} catch (error) {
 			console.error("Error getting selection data:", error);
-			new Notice("Error accessing canvas selection. Please try selecting a node again.");
+			new Notice(
+				"Error accessing canvas selection. Please try selecting a node again.",
+			);
 			return false;
 		}
-		
+
 		if (selectedNodes.length === 0) {
 			new Notice("Please select a node in the canvas to run inference.");
 			return false;
 		}
 
 		const selectedNodeData = selectedNodes[0];
-		
+
 		if (!selectedNodeData.id) {
 			new Notice("Selected node is not valid for inference.");
 			return false;
@@ -437,7 +445,7 @@ ${response}`;
 
 		const nodeConnection = {
 			id: selectedNodeData.id,
-			canvas: canvas
+			canvas: canvas,
 		} as ExtendedCanvasConnection;
 
 		try {
@@ -454,7 +462,7 @@ ${response}`;
 		try {
 			const selectionData = canvas.getSelectionData();
 			const selectedNodes = selectionData.nodes;
-		
+
 			// Only show the button if exactly one node is selected
 			if (selectedNodes.length === 1) {
 				menu.addItem((item) =>
@@ -465,14 +473,19 @@ ${response}`;
 							const selectedNode = selectedNodes[0];
 							const nodeConnection = {
 								id: selectedNode.id,
-								canvas: canvas
+								canvas: canvas,
 							} as ExtendedCanvasConnection;
-							
+
 							try {
 								await this.runInference(selectedNode.id, nodeConnection);
 							} catch (error) {
-								console.error("Error running inference from selection menu:", error);
-								new Notice("Failed to run inference. Check console for details.");
+								console.error(
+									"Error running inference from selection menu:",
+									error,
+								);
+								new Notice(
+									"Failed to run inference. Check console for details.",
+								);
 							}
 						}),
 				);
@@ -482,33 +495,36 @@ ${response}`;
 		}
 	}
 
-
 	patchCanvasMenusProperlyThisTime() {
 		console.log("🎯 Patching canvas menus properly...");
-		const canvasLeaves = this.app.workspace.getLeavesOfType('canvas');
+		const canvasLeaves = this.app.workspace.getLeavesOfType("canvas");
 		console.log("🎯 Found canvas leaves:", canvasLeaves.length);
-		
+
 		for (const leaf of canvasLeaves) {
 			const canvasView = leaf.view as any;
 			const canvas = canvasView?.canvas;
-			
-			if (!canvas || !canvas.menu || (canvas.menu as any)._contextPatchedProperly) {
+
+			if (
+				!canvas ||
+				!canvas.menu ||
+				(canvas.menu as any)._contextPatchedProperly
+			) {
 				continue;
 			}
-			
+
 			console.log("🎯 Patching canvas menu properly");
 			(canvas.menu as any)._contextPatchedProperly = true;
-			
+
 			const self = this;
 			const originalRender = canvas.menu.render;
-			
+
 			// Store reference to original render
 			(canvas.menu as any)._originalRender = originalRender;
-			
-			canvas.menu.render = function() {
+
+			canvas.menu.render = function () {
 				// Call original render first
 				const result = originalRender.call(this);
-				
+
 				// Now augment with our button
 				setTimeout(() => {
 					try {
@@ -516,54 +532,71 @@ ${response}`;
 							console.log("🎯 No menuEl available");
 							return;
 						}
-						
+
 						// Check if we already added our button
-						if (this.menuEl.querySelector('.canvas-context-inference-btn')) {
+						if (this.menuEl.querySelector(".canvas-context-inference-btn")) {
 							console.log("🎯 Button already exists, skipping");
 							return;
 						}
-						
+
 						const selectionData = canvas.getSelectionData();
 						console.log("🎯 Menu render - selection data:", selectionData);
-						console.log("🎯 Menu element children before adding button:", this.menuEl.children.length, Array.from(this.menuEl.children));
-						
+						console.log(
+							"🎯 Menu element children before adding button:",
+							this.menuEl.children.length,
+							Array.from(this.menuEl.children),
+						);
+
 						// Only add for single selection
 						if (selectionData.nodes.length === 1) {
 							console.log("🎯 Adding button via menu patching");
-							
-							const button = document.createElement('button');
-							button.className = 'clickable-icon canvas-context-inference-btn';
-							button.setAttribute('aria-label', 'Canvas Context: Run Inference');
-							button.setAttribute('data-tooltip-position', 'top');
-							setIcon(button, 'zap');
-							
-							button.addEventListener('click', async (e) => {
+
+							const button = document.createElement("button");
+							button.className = "clickable-icon canvas-context-inference-btn";
+							button.setAttribute(
+								"aria-label",
+								"Canvas Context: Run Inference",
+							);
+							button.setAttribute("data-tooltip-position", "top");
+							setIcon(button, "zap");
+
+							button.addEventListener("click", async (e) => {
 								e.stopPropagation();
 								e.preventDefault();
-								
+
 								try {
 									const currentSelection = canvas.getSelectionData();
 									if (currentSelection.nodes.length > 0) {
 										const firstNode = currentSelection.nodes[0];
-										await self.runInference(firstNode.id, { id: firstNode.id, canvas } as any);
+										await self.runInference(firstNode.id, {
+											id: firstNode.id,
+											canvas,
+										} as any);
 									}
 								} catch (error) {
 									console.error("🎯 Inference error:", error);
 								}
 							});
-							
+
 							// Insert at the beginning instead of appending to preserve existing buttons
 							this.menuEl.insertBefore(button, this.menuEl.firstChild);
 							console.log("🎯 Button added successfully");
-							console.log("🎯 Menu element children after adding button:", this.menuEl.children.length, Array.from(this.menuEl.children));
+							console.log(
+								"🎯 Menu element children after adding button:",
+								this.menuEl.children.length,
+								Array.from(this.menuEl.children),
+							);
 						} else {
-							console.log("🎯 Not single selection, not adding button. Count:", selectionData.nodes.length);
+							console.log(
+								"🎯 Not single selection, not adding button. Count:",
+								selectionData.nodes.length,
+							);
 						}
 					} catch (error) {
 						console.error("🎯 Error adding button:", error);
 					}
 				}, 10);
-				
+
 				return result;
 			};
 		}
@@ -572,8 +605,8 @@ ${response}`;
 	private observers: MutationObserver[] = [];
 
 	setupCanvasMenuObservers() {
-		const canvasLeaves = this.app.workspace.getLeavesOfType('canvas');
-		
+		const canvasLeaves = this.app.workspace.getLeavesOfType("canvas");
+
 		for (const leaf of canvasLeaves) {
 			this.setupObserverForCanvas(leaf);
 		}
@@ -586,26 +619,29 @@ ${response}`;
 						this.setupObserverForCanvas(leaf);
 					}, 100);
 				}
-			})
+			}),
 		);
 	}
 
 	setupObserverForCanvas(leaf: any) {
 		const canvasView = leaf?.view as any;
 		const canvas = canvasView?.canvas;
-		
+
 		if (!canvas || !canvas.menu || (canvas.menu as any)._observerSetup) {
 			return;
 		}
-		
+
 		(canvas.menu as any)._observerSetup = true;
 
 		const self = this;
-		
+
 		// Create mutation observer to watch for menu changes
 		const observer = new MutationObserver((mutations) => {
 			mutations.forEach((mutation) => {
-				if (mutation.type === 'childList' && mutation.target === canvas.menu.menuEl) {
+				if (
+					mutation.type === "childList" &&
+					mutation.target === canvas.menu.menuEl
+				) {
 					self.addButtonToCanvasMenu(canvas);
 				}
 			});
@@ -614,9 +650,9 @@ ${response}`;
 		// Start observing when menu element is available
 		const checkMenuEl = () => {
 			if (canvas.menu.menuEl) {
-				observer.observe(canvas.menu.menuEl, { 
-					childList: true, 
-					subtree: false 
+				observer.observe(canvas.menu.menuEl, {
+					childList: true,
+					subtree: false,
 				});
 				this.observers.push(observer);
 			} else {
@@ -632,34 +668,39 @@ ${response}`;
 			if (!canvas.menu.menuEl) return;
 
 			// Check if button already exists
-			const existingButton = canvas.menu.menuEl.querySelector('.canvas-context-inference-btn');
+			const existingButton = canvas.menu.menuEl.querySelector(
+				".canvas-context-inference-btn",
+			);
 			if (existingButton) return;
 
 			const selectionData = canvas.getSelectionData();
-			
+
 			// Only add button for single node selection
 			if (selectionData?.nodes?.length === 1) {
-				const button = document.createElement('button');
-				button.className = 'clickable-icon canvas-context-inference-btn';
-				button.setAttribute('aria-label', 'Canvas Context: Run Inference');
-				button.setAttribute('data-tooltip-position', 'top');
+				const button = document.createElement("button");
+				button.className = "clickable-icon canvas-context-inference-btn";
+				button.setAttribute("aria-label", "Canvas Context: Run Inference");
+				button.setAttribute("data-tooltip-position", "top");
 				setIcon(button, PLUGIN_ICON);
-				
-				button.addEventListener('click', async (e) => {
+
+				button.addEventListener("click", async (e) => {
 					e.stopPropagation();
 					e.preventDefault();
-					
+
 					try {
 						const currentSelection = canvas.getSelectionData();
 						if (currentSelection?.nodes?.length > 0) {
 							const firstNode = currentSelection.nodes[0];
-							await this.runInference(firstNode.id, { id: firstNode.id, canvas } as any);
+							await this.runInference(firstNode.id, {
+								id: firstNode.id,
+								canvas,
+							} as any);
 						}
 					} catch (error) {
 						console.error("Inference error:", error);
 					}
 				});
-				
+
 				canvas.menu.menuEl.appendChild(button);
 			}
 		} catch (error) {
@@ -667,10 +708,9 @@ ${response}`;
 		}
 	}
 
-
 	getCurrentCanvas(): any | null {
 		const canvasView = this.app.workspace.getActiveViewOfType(ItemView);
-		if (canvasView?.getViewType() !== 'canvas') return null;
+		if (canvasView?.getViewType() !== "canvas") return null;
 		return (canvasView as any)?.canvas || null;
 	}
 
