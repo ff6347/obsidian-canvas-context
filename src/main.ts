@@ -1,7 +1,11 @@
 import { Plugin, Menu, WorkspaceLeaf, ItemView, setIcon } from "obsidian";
 import NodeActions from "./canvas/nodes-actions.ts";
 import type { CanvasConnection } from "obsidian-typings";
-import { CanvasContextSettingTab } from "./ui/settings.ts";
+import {
+	type CanvasContextSettings,
+	CanvasContextSettingTab,
+	DEFAULT_SETTINGS,
+} from "./ui/settings.ts";
 import { CanvasContextView } from "./ui/view.tsx";
 import { Notice } from "obsidian";
 import { inference, type InferenceResult } from "./llm/llm.ts";
@@ -13,31 +17,11 @@ import type {
 	CanvasTextData,
 	ExtendedCanvasConnection,
 } from "./types/canvas-types.ts";
-import type { CurrentProviderType } from "./types/llm-types.ts";
 import {
 	PLUGIN_DISPLAY_NAME,
 	PLUGIN_ICON,
 	VIEW_TYPE_CANVAS_CONTEXT,
 } from "./lib/constants.ts";
-
-export interface ModelConfiguration {
-	id: string;
-	name: string;
-	provider: CurrentProviderType;
-	modelName: string;
-	baseURL: string;
-	enabled: boolean;
-}
-
-interface CanvasContextSettings {
-	currentModel: string;
-	modelConfigurations: ModelConfiguration[];
-}
-
-const DEFAULT_SETTINGS: CanvasContextSettings = {
-	currentModel: "",
-	modelConfigurations: [],
-};
 
 export default class CanvasContextPlugin extends Plugin {
 	nodeActions: NodeActions | undefined;
@@ -183,12 +167,19 @@ export default class CanvasContextPlugin extends Plugin {
 					return;
 				}
 
-				const result = await inference({
+				const inferenceOptions = {
 					messages,
 					currentProviderName: currentModelConfig.provider,
 					currentModelName: currentModelConfig.modelName,
 					baseURL: currentModelConfig.baseURL,
-				});
+				};
+
+				// Add API key if available
+				if (currentModelConfig.apiKey) {
+					(inferenceOptions as any).apiKey = currentModelConfig.apiKey;
+				}
+
+				const result = await inference(inferenceOptions);
 
 				if (result.success) {
 					// Create successful response node

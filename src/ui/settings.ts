@@ -6,9 +6,36 @@ import {
 	Notice,
 } from "obsidian";
 import type CanvasContextPlugin from "../main.ts";
-import type { ModelConfiguration } from "../main.ts";
 import { AddModelModal } from "./add-model-modal.ts";
 import { providers } from "../llm/providers/providers.ts";
+import type { CurrentProviderType } from "../types/llm-types.ts";
+
+export interface ModelConfiguration {
+	id: string;
+	name: string;
+	provider: CurrentProviderType;
+	modelName: string;
+	baseURL: string;
+	enabled: boolean;
+	apiKey?: string; // Optional API key for providers that require authentication
+}
+
+export interface CanvasContextSettings {
+	currentModel: string;
+	modelConfigurations: ModelConfiguration[];
+}
+
+export const DEFAULT_SETTINGS: CanvasContextSettings = {
+	currentModel: "",
+	modelConfigurations: [],
+};
+
+function maskApiKey(apiKey: string): string {
+	if (!apiKey) return "";
+	if (apiKey.length <= 8) return "•".repeat(apiKey.length);
+	return "•".repeat(apiKey.length - 4) + apiKey.slice(-4);
+}
+
 export class CanvasContextSettingTab extends PluginSettingTab {
 	plugin: CanvasContextPlugin;
 
@@ -90,9 +117,11 @@ export class CanvasContextSettingTab extends PluginSettingTab {
 
 		// Model info
 		setting.setName(config.name);
-		setting.setDesc(
-			`${config.provider} • ${config.modelName} • ${config.baseURL}`,
-		);
+		const descParts = [config.provider, config.modelName, config.baseURL];
+		if (config.provider === "openai" && config.apiKey) {
+			descParts.push(`API Key: ${maskApiKey(config.apiKey)}`);
+		}
+		setting.setDesc(descParts.join(" • "));
 
 		// Enable/Disable toggle
 		setting.addToggle((toggle) => {
@@ -164,7 +193,11 @@ export class CanvasContextSettingTab extends PluginSettingTab {
 				throw new Error("Provider not found");
 			}
 
-			const models = await providerGenerator.listModels(config.baseURL);
+			// For OpenAI, pass the API key as the first parameter
+			const models =
+				config.provider === "openai" && config.apiKey
+					? await providerGenerator.listModels(config.apiKey, config.baseURL)
+					: await providerGenerator.listModels(config.baseURL);
 			new Notice(
 				`${config.name}: Connection successful! Found ${models.length} models.`,
 			);

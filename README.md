@@ -4,13 +4,12 @@ This plugin uses the Obsidian Canvas to control what context gets send to a LLM.
 We (this is I) also use the spatial arrangment on the canvas for better navigation of our context.
 This is a pretty early stage of an idea and I am not sure if this might get useful or not.
 
-
 ## Prerequisites
 
 - [Obsidian](https://obsidian.md) 1.9.12 or higher
 - [Ollama](https://ollama.com) or [LM Studio](https://lmstudio.ai) installed.
 - The local server of one of the two enabled and a model downloaded.
-
+- Alternative a OpenAI API key if you want to use OpenAI models.
 
 ## Rules
 
@@ -23,6 +22,7 @@ This is a pretty early stage of an idea and I am not sure if this might get usef
 ## Setup
 
 - Install the plugin by cloning it into the plugins folder of your vault.
+
 ```bash
 cd path/to/your/vault
 mkdir -p .obsidian/plugins
@@ -38,20 +38,20 @@ git clone https://github.com/ff6347/obsidian-canvas-context.git .obsidian/plugin
 
 - Create a canvas in Obsidian
 - Add a new note that describes your system prompt _(this is optional but helps aligning the model)_.
-	- Add the property `role: system` to the frontmatter of the note.
+  - Add the property `role: system` to the frontmatter of the note.
 - Add a card or note with instructions or questions and connect it to your system prompt.
 
 > [!TIP]
 > You can drag from the bottom of one note a card out by just click dragging on the connector.
 
 The connection should be from **bottom** of the system prompt to the **top** of the card.
+
 - Add notes that you want to use as context and connect them to your system prompt at the right or left side.
 - Use one of these ways to run the inference:
-	- Select the last card or note in your tree and use the CTRL click context menu to run the inference by selecting `Canvas Context: Run Inference`.
-	- Select the last card and use the little waypoint button to run the inference.
-	- Use the waypoint icon in the left ribbon toolbar to open the canvas context panel and run the inference from there using the button.
+  - Select the last card or note in your tree and use the CTRL click context menu to run the inference by selecting `Canvas Context: Run Inference`.
+  - Select the last card and use the little waypoint button to run the inference.
+  - Use the waypoint icon in the left ribbon toolbar to open the canvas context panel and run the inference from there using the button.
 - The result will be added as a new card to the canvas and will be connected to the last card/note.
-
 
 ## Development
 
