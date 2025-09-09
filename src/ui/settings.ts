@@ -118,7 +118,10 @@ export class CanvasContextSettingTab extends PluginSettingTab {
 		// Model info
 		setting.setName(config.name);
 		const descParts = [config.provider, config.modelName, config.baseURL];
-		if ((config.provider === "openai" || config.provider === "openrouter") && config.apiKey) {
+		if (
+			(config.provider === "openai" || config.provider === "openrouter") &&
+			config.apiKey
+		) {
 			descParts.push(`API Key: ${maskApiKey(config.apiKey)}`);
 		}
 		setting.setDesc(descParts.join(" • "));
@@ -195,7 +198,8 @@ export class CanvasContextSettingTab extends PluginSettingTab {
 
 			// For OpenAI and OpenRouter, pass the API key as the first parameter
 			const models =
-				(config.provider === "openai" || config.provider === "openrouter") && config.apiKey
+				(config.provider === "openai" || config.provider === "openrouter") &&
+				config.apiKey
 					? await providerGenerator.listModels(config.apiKey, config.baseURL)
 					: await providerGenerator.listModels(config.baseURL);
 			new Notice(

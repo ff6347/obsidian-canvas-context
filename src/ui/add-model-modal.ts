@@ -253,7 +253,11 @@ export class AddModelModal extends Modal {
 		}
 
 		// Validate API key for OpenAI and OpenRouter
-		if ((this.modelConfig.provider === "openai" || this.modelConfig.provider === "openrouter") && !this.modelConfig.apiKey) {
+		if (
+			(this.modelConfig.provider === "openai" ||
+				this.modelConfig.provider === "openrouter") &&
+			!this.modelConfig.apiKey
+		) {
 			new Notice("API Key is required for OpenAI and OpenRouter providers.");
 			return;
 		}
@@ -376,7 +380,10 @@ export class AddModelModal extends Modal {
 	updateApiKeyFieldVisibility() {
 		if (!this.apiKeySetting) return;
 
-		if (this.modelConfig.provider === "openai" || this.modelConfig.provider === "openrouter") {
+		if (
+			this.modelConfig.provider === "openai" ||
+			this.modelConfig.provider === "openrouter"
+		) {
 			this.apiKeySetting.settingEl.style.display = "";
 		} else {
 			this.apiKeySetting.settingEl.style.display = "none";
@@ -389,7 +396,11 @@ export class AddModelModal extends Modal {
 		}
 
 		// For OpenAI and OpenRouter, also require API key
-		if ((this.modelConfig.provider === "openai" || this.modelConfig.provider === "openrouter") && !this.modelConfig.apiKey) {
+		if (
+			(this.modelConfig.provider === "openai" ||
+				this.modelConfig.provider === "openrouter") &&
+			!this.modelConfig.apiKey
+		) {
 			return false;
 		}
 
