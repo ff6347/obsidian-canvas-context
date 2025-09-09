@@ -8,6 +8,11 @@ import {
 	createProvider as createLMStudioProvider,
 	listModels as listLMStudioModels,
 } from "./lmstudio.ts";
+import {
+	providerName as openaiProviderName,
+	createProvider as createOpenAIProvider,
+	listModels as listOpenAIModels,
+} from "./openai.ts";
 
 export const providers = {
 	ollama: {
@@ -19,6 +24,11 @@ export const providers = {
 		name: lmstudioProviderName,
 		createProvider: createLMStudioProvider,
 		listModels: listLMStudioModels,
+	},
+	openai: {
+		name: openaiProviderName,
+		createProvider: createOpenAIProvider,
+		listModels: listOpenAIModels,
 	},
 } as const;
 
