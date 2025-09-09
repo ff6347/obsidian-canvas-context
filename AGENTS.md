@@ -1,20 +1,24 @@
 # Claude Project Instructions
 
 ## Project Overview
+
 This is an Obsidian plugin that transforms canvas into a spatial context-aware LLM interface. Canvas nodes become conversation elements and spatial relationships define context flow.
 
 ## Build & Development
+
 - `pnpm dev` - Development build with watch mode (using Rolldown)
 - `pnpm build` - Production build (using Rolldown)
 - `pnpm typecheck` - TypeScript compilation check: `npx tsc --noEmit`
 
 ### Build System
+
 - **Migrated from esbuild to Rolldown** (January 2025)
 - Native TypeScript support without Babel transpilation
 - Uses `builtin-modules` package for Node.js externals
 - TypeScript config enables `allowImportingTsExtensions` for .ts/.tsx imports
 
 ## Code Style
+
 - Uses TypeScript with strict settings
 - Prettier configured with tabs, semicolons, double quotes
 - Target: Obsidian plugin development
@@ -22,6 +26,7 @@ This is an Obsidian plugin that transforms canvas into a spatial context-aware L
 ## Current Progress
 
 ### ✅ Completed (Sep 2025)
+
 1. **Canvas Tree Walking Algorithm**: Defined simplified rules
    - Walk UP parent chain (main conversation thread)
    - Include horizontal context from all nodes in parent chain
@@ -52,12 +57,14 @@ This is an Obsidian plugin that transforms canvas into a spatial context-aware L
    - Enhanced version-bump.js to only update versions.json when needed
 
 ### 🎯 Next Implementation Steps
+
 1. Advanced UI components with Base UI (Select, Input, Dialog)
 2. Settings panel implementation with provider configuration
 3. Enhanced LLM provider integration (multiple providers)
 4. Context preview and debugging visualization
 
 ## Key Design Decisions
+
 - **Local-first**: Start with Ollama/LMStudio for privacy
 - **Minimal complexity**: Focus on core spatial context value
 - **Standard roles only**: No invented LLM API properties

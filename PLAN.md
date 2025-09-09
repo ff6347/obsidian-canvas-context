@@ -5,6 +5,7 @@
 Transform Obsidian's canvas into a spatial context-aware LLM interface where canvas nodes become conversation elements and spatial relationships define context flow.
 
 ### Core Vision
+
 - **Spatial Context Building**: Use canvas node positioning and connections to build rich LLM context
 - **Local-First LLM Integration**: Start with Ollama/LMStudio for privacy and speed
 - **Minimal UI Disruption**: Enhance existing canvas workflow rather than replacing it
@@ -13,21 +14,25 @@ Transform Obsidian's canvas into a spatial context-aware LLM interface where can
 ## Canvas Tree Walking Algorithm
 
 ### Trigger Mechanism
+
 - **Right-click** on any canvas node → "Send to LLM" context menu option
 
 ### Context Building Rules
+
 1. **Walk UP the Tree**: Follow parent connections (nodes feeding into current node) - this is the main conversation thread
 2. **Collect Horizontal Context**: For each node in the parent chain, include any connected nodes from left OR right (no distinction) - these are supplementary context materials and reference documents
 3. **Exclude Sibling Branches**: Don't include parallel conversation branches that split off from the same parent nodes
 4. **Main Thread Priority**: The vertical conversation flow is primary, horizontal connections provide additional context only
 
 ### Context Priority Order
+
 1. **System Prompts** (role: system) - Always first in LLM context
 2. **Parent Chain** (following connections upward) - Main conversation flow
 3. **Horizontal Context** (left/right connections) - Supporting information
 4. **Target Node** (the clicked node) - Final context element
 
 ### Branch Handling
+
 - **Sibling branches** are parallel conversation paths that diverge from the same parent node
 - Include the **parent chain** (your direct conversation thread) and all its **horizontal context**
 - Exclude **sibling conversation nodes** (other branches from the same parents)
@@ -66,6 +71,7 @@ graph TD
 ```
 
 **Legend:**
+
 - 🔧 System prompts
 - 👤 User messages
 - 🤖 Assistant responses
@@ -74,6 +80,7 @@ graph TD
 - Dashed lines: Excluded sibling branches
 
 **Context Collection for Right-Clicked Node**:
+
 - **Main Thread**: System → User: What is ML? → Assistant: ML is... → User: What about deep learning?
 - **Context Included**: ML basics + Wikipedia ML + Deep learning guide (all horizontal context from parent chain)
 - **Excluded**: "Tell more about supervised learning" (sibling branch) and its responses
@@ -81,6 +88,7 @@ graph TD
 ## Frontmatter Properties System
 
 ### Essential Properties Only
+
 ```yaml
 # LLM API Role (maps directly to completion API)
 role: system | user | assistant
@@ -90,20 +98,24 @@ tags: ["context", "research", "sibling-branch"]
 ```
 
 ### System Prompt Special Case
+
 ```yaml
 role: system
-model: "llama3.1"       # Optional, defaults to plugin setting
-temperature: 0.7        # Optional, defaults to plugin setting
+model: "llama3.1" # Optional, defaults to plugin setting
+temperature: 0.7 # Optional, defaults to plugin setting
 ```
 
 ### Context Materials
+
 Context materials (reference docs, supporting info) use:
+
 ```yaml
-role: user              # Maps to LLM user role in API
-tags: ["context"]       # Identifies as context material
+role: user # Maps to LLM user role in API
+tags: ["context"] # Identifies as context material
 ```
 
 ### Design Principles
+
 - **Minimal Properties**: Only use what maps to LLM APIs or provides essential organization
 - **No Invented Roles**: Stick to standard `system`, `user`, `assistant` roles
 - **Plugin-Level Configuration**: Model selection and parameters set in plugin UI, not per-node
@@ -114,6 +126,7 @@ tags: ["context"]       # Identifies as context material
 Use Vercels AI SDK for flexible LLM provider support. No need for hitting the APIs bare bones.
 
 ### Phase 1: Ollama Integration
+
 ```typescript
 interface OllamaConfig {
   baseUrl: string;        // Default: http://localhost:11434
@@ -135,6 +148,7 @@ POST /v1/chat/completions
 ```
 
 ### Phase 2: LMStudio Support
+
 ```typescript
 interface LMStudioConfig {
   baseUrl: string;        // Default: http://localhost:1234
@@ -156,6 +170,7 @@ POST /v1/chat/completions
 ```
 
 ### Model Management
+
 - **Auto-detection**: Scan for available models on startup
 - **Model Switching**: Per-node model selection via frontmatter
 - **Fallback Strategy**: Default to fastest available model
@@ -164,6 +179,7 @@ POST /v1/chat/completions
 ## Technical Implementation Phases
 
 ### Phase 1: Foundation (Week 1-2)
+
 **Goal**: Basic canvas analysis and context extraction
 
 1. **Canvas API Integration**
@@ -182,6 +198,7 @@ POST /v1/chat/completions
    - Error handling and timeouts
 
 ### Phase 2: Context Management (Week 3-4)
+
 **Goal**: Sophisticated context building with frontmatter
 
 1. **Frontmatter Parsing**
@@ -201,6 +218,7 @@ POST /v1/chat/completions
    - Apply visual styling based on node role
 
 ### Phase 3: User Interface (Week 5-6)
+
 **Goal**: Seamless user experience and configuration
 
 1. **Context Menu Integration**
@@ -219,6 +237,7 @@ POST /v1/chat/completions
    - Context preview (show what will be sent)
 
 ### Phase 4: Advanced Features (Week 7-8)
+
 **Goal**: Power user features and workflow optimization
 
 1. **Batch Operations**
@@ -239,17 +258,20 @@ POST /v1/chat/completions
 ## MVP Feature Set
 
 ### Core Features (Must Have)
+
 - ✅ Canvas tree walking rules defined (simplified branching logic)
 - ✅ Frontmatter properties simplified (role, tags only)
 - ✅ Example canvas structure created for testing
 - ✅ Canvas node content extraction (file nodes with Obsidian's built-in methods)
 - ✅ Tree walking algorithm implementation (parent chain + horizontal context)
-- ⏳ Ollama/lmstudio/openai/anthropic/gemini integration with text generation
+- ✅ Ollama/lmstudio/openai/anthropic/gemini integration with text generation
 - ✅ Right-click "Send to LLM" functionality
+- ✅ Canvas selection toolbar integration with waypoints icon
 - ✅ Response node creation and positioning
-- ⏳ Basic error handling and user feedback
+- ✅ Basic error handling and user feedback
 
 ### Enhanced Features (Should Have)
+
 - ✅ LMStudio integration
 - ✅ Settings panel for configuration
 - ❌ Visual node styling by role (using Obsidian canvas colors)
@@ -257,6 +279,7 @@ POST /v1/chat/completions
 - ⏳ Context preview before sending
 
 ### Advanced Features (Could Have)
+
 - ⏳ Batch processing multiple nodes
 - ⏳ Template system for common workflows
 - ⏳ Response regeneration with different parameters
@@ -295,6 +318,7 @@ src/
 ## Example Workflow
 
 1. **User Creates Canvas Structure**:
+
    ```
    [Research Notes] ← [Data Source] → [Analysis Method]
             ↓
@@ -309,6 +333,7 @@ src/
    - Builds LLM message array with proper roles
 
 3. **Context Sent to LLM**:
+
    ```
    Messages: [
      {role: "system", content: "Research Notes content"},
@@ -324,18 +349,21 @@ src/
 ## Success Metrics
 
 ### Technical Performance
+
 - Canvas parsing: < 100ms for 100+ nodes
 - Context building: < 50ms for complex graphs
 - LLM response time: < 30s for typical queries
 - Memory usage: < 50MB additional overhead
 
 ### User Experience
+
 - Setup time: < 5 minutes from install to first use
 - Learning curve: Intuitive for existing canvas users
 - Error recovery: Graceful handling of LLM failures
 - Workflow integration: Seamless with existing Obsidian usage
 
 ### Feature Completeness
+
 - MVP features: 100% implemented and tested
 - Enhanced features: 80% implemented
 - Advanced features: 40% prototyped
@@ -344,16 +372,19 @@ src/
 ## Risk Mitigation
 
 ### Technical Risks
+
 - **Canvas API Changes**: Monitor Obsidian updates, maintain compatibility layer
 - **LLM Service Availability**: Implement retries, fallbacks, offline mode
 - **Performance Issues**: Optimize algorithms, add caching, lazy loading
 
 ### User Experience Risks
+
 - **Complex Configuration**: Provide sensible defaults, guided setup
 - **Steep Learning Curve**: Create tutorials, example workflows
 - **Feature Creep**: Maintain focus on core spatial context value
 
 ### Integration Risks
+
 - **Plugin Conflicts**: Test with popular plugins, namespace properly
 - **Data Loss**: Implement backup/recovery, atomic operations
 - **Privacy Concerns**: Local-first approach, clear data handling docs
@@ -361,6 +392,7 @@ src/
 ## Current Progress (Updated)
 
 ### ✅ Completed (Sep 5-7, 2025)
+
 1. **Canvas Tree Walking Rules**: Defined simplified branching logic
    - Walk UP the parent chain (main conversation thread)
    - Include horizontal context from all nodes in parent chain
@@ -427,7 +459,7 @@ src/
 
 10. **React UI with Base UI Components**: Modern settings interface foundation
     - **Layout Component Fixed**: Resolved object rendering errors with proper React.FC typing
-    - **Base UI Integration**: Successfully integrated Switch components with state management  
+    - **Base UI Integration**: Successfully integrated Switch components with state management
     - **Component Architecture**: Established proper TypeScript interfaces and event handlers
     - **Working Foundation**: Ready for advanced UI components (Select, Input, Dialog, etc.)
 
@@ -437,14 +469,50 @@ src/
     - **CI/CD Optimization**: Removed redundant manual asset upload steps from workflow
     - **Version Management**: Enhanced version-bump.js to only update versions.json when minAppVersion changes
 
+12. **Canvas Selection Toolbar Integration**: Complete UI integration with mutation observers
+    - **Dual Approach Implementation**: Mutation observers + event handler backup for maximum compatibility
+    - **Default Functionality Preserved**: All default Obsidian toolbar options remain intact
+    - **Smart Button Insertion**: Waypoints icon appears only for single node selection
+    - **Global Icon System**: `PLUGIN_ICON` constant for consistent branding across all interfaces
+    - **Production Ready**: Clean code with debug logging removed, proper cleanup on unload
+
+## ✅ Canvas Selection Toolbar Implementation (Jan 2025)
+
+### Successfully Implemented
+
+Canvas selection toolbar now works correctly with dual approach:
+
+1. **Mutation Observer Approach**: Primary method using DOM observation
+   - Watches for canvas menu changes without interfering with default functionality
+   - Adds waypoints icon button only for single node selection
+   - Preserves all default toolbar options (Delete, Set color, Zoom, Edit)
+
+2. **Event Handler Backup**: `canvas:selection-menu` event registration
+   - Provides fallback compatibility for different Obsidian versions
+   - Clean event-driven integration
+
+### Final Behavior
+
+- **Single selection**: Default options + waypoints Canvas Context button
+- **Multi-selection**: Default options only (Create group, Delete, etc.)
+- **No selection**: No toolbar (default behavior)
+
+### Technical Implementation
+
+- **Global Icon Constant**: `PLUGIN_ICON = "waypoints"` for consistent branding
+- **Clean Code**: Removed all debug logging for production readiness
+- **Proper Cleanup**: Mutation observers disconnected on plugin unload
+
 ### 🎯 Ready for Next Session
+
 1. **Advanced Base UI Components**: Implement Select, Input, Dialog components for settings
-2. **Settings Panel Implementation**: Full configuration UI for LLM providers (Ollama/LMStudio)
+2. **Settings Panel Enhancement**: Full configuration UI for LLM providers
 3. **Advanced Context Features**: Preview context before sending, debug visualization
 4. **Error Handling Improvements**: Better error messages, retry mechanisms
 5. **Performance Optimization**: Large canvas handling, context caching
 
 ### 📋 Technical Decisions Made
+
 - **Text Node Support**: ✅ NOW SUPPORTED - Canvas text cards integrated with gray-matter frontmatter parsing
 - **Frontmatter Extraction**: Uses Obsidian's built-in `getFrontMatterInfo()` for files + gray-matter for text nodes
 - **Default Role Assignment**: Text cards without frontmatter default to `role: "user"`
@@ -460,8 +528,12 @@ src/
 - **Test Coverage**: Comprehensive testing ensures walker behavior matches design specifications
 - **Loading UX Strategy**: Status bar with enhanced animations over modal/floating approaches
 - **Animation Timing**: Layered animations (background 2s, text 1.5s, spinner 0.8s) for maximum visibility
+- **Canvas Toolbar Integration**: Mutation observer approach chosen over menu patching for compatibility
+- **Global Icon System**: `PLUGIN_ICON = "waypoints"` constant for consistent branding
+- **Dual Fallback Strategy**: Primary mutation observers + backup event handlers for maximum compatibility
 
 ### 💡 Future Enhancement Notes
+
 - **Hex Color Support**: Canvas also supports hex color values (e.g., `"color": "#ff6b6b"`) for more precise color control
 - **Alternative Color Options**: Could implement user-configurable colors for different node roles
 - **Color Theming**: Could match colors to Obsidian theme or user preferences

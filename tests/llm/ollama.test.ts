@@ -6,7 +6,7 @@ describe("Ollama Client", () => {
 		// Mock HTTP client
 		const mockFetch = vi.fn();
 		global.fetch = mockFetch;
-		
+
 		// Test API call structure
 		expect(true).toBe(true);
 	});

@@ -6,14 +6,14 @@ export class TFile {
 	name: string;
 	basename: string;
 	extension: string;
-	
+
 	constructor(path: string) {
 		this.path = path;
-		this.name = path.split('/').pop() || '';
-		this.basename = this.name.split('.')[0] || '';
-		this.extension = this.name.split('.').pop() || '';
+		this.name = path.split("/").pop() || "";
+		this.basename = this.name.split(".")[0] || "";
+		this.extension = this.name.split(".").pop() || "";
 	}
-	
+
 	// Make instanceof work in tests
 	static [Symbol.hasInstance](instance: any) {
 		return instance && instance.path && instance.name;
@@ -28,12 +28,12 @@ export class App {
 		modify: vi.fn(),
 		create: vi.fn(),
 	};
-	
+
 	metadataCache = {
 		getFileCache: vi.fn(),
 		getCache: vi.fn(),
 	};
-	
+
 	workspace = {
 		getActiveFile: vi.fn(),
 	};
@@ -41,7 +41,7 @@ export class App {
 
 export class Plugin {
 	app: App;
-	
+
 	constructor(app: App) {
 		this.app = app;
 	}
@@ -61,7 +61,7 @@ export function getFrontMatterInfo(content: string) {
 	}
 	return {
 		exists: false,
-		frontmatter: '',
+		frontmatter: "",
 		from: 0,
 		to: 0,
 		contentStart: 0,
