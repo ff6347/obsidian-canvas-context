@@ -1,7 +1,7 @@
 /* Canvas Context Plugin Styles */
 
 .root {
-	isolation: "isolate";
+	isolation: isolate;
 	height: 100%;
 	min-width: 300px;
 	/*display: flex;*/
