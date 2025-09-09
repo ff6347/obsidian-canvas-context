@@ -13,11 +13,13 @@ export async function inference({
 	currentProviderName,
 	currentModelName,
 	baseURL,
+	apiKey,
 }: {
 	messages: ModelMessage[];
 	currentProviderName: CurrentProviderType;
 	currentModelName: string;
 	baseURL: string;
+	apiKey?: string;
 }): Promise<InferenceResult> {
 	try {
 		if (!messages || messages.length === 0) {
@@ -49,7 +51,11 @@ export async function inference({
 		};
 	}
 
-	const provider = providerGenerator.createProvider(baseURL);
+	// For OpenAI, pass the API key as the first parameter
+	const provider =
+		currentProviderName === "openai" && apiKey
+			? providerGenerator.createProvider(apiKey, baseURL)
+			: providerGenerator.createProvider(baseURL);
 	try {
 		const { text } = await generateText({
 			model: provider(currentModelName),
