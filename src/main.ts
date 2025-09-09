@@ -14,7 +14,11 @@ import type {
 	ExtendedCanvasConnection,
 } from "./types/canvas-types.ts";
 import type { CurrentProviderType } from "./types/llm-types.ts";
-import { PLUGIN_ICON, VIEW_TYPE_CANVAS_CONTEXT } from "./lib/constants.ts";
+import {
+	PLUGIN_DISPLAY_NAME,
+	PLUGIN_ICON,
+	VIEW_TYPE_CANVAS_CONTEXT,
+} from "./lib/constants.ts";
 
 export interface ModelConfiguration {
 	id: string;
@@ -47,9 +51,13 @@ export default class CanvasContextPlugin extends Plugin {
 			(leaf) => new CanvasContextView(leaf, this),
 		);
 
-		this.addRibbonIcon(PLUGIN_ICON, "Activate view", () => {
-			this.activateView();
-		});
+		this.addRibbonIcon(
+			PLUGIN_ICON,
+			`Activate ${PLUGIN_DISPLAY_NAME} view`,
+			() => {
+				this.activateView();
+			},
+		);
 
 		this.statusEl = this.addStatusBarItem();
 		this.statusEl.addClass("canvas-context-loading-status");
