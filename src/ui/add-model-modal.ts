@@ -1,6 +1,6 @@
 import { App, Modal, Setting, Notice, ButtonComponent } from "obsidian";
 import type CanvasContextPlugin from "../main.ts";
-import type { ModelConfiguration } from "../main.ts";
+import type { ModelConfiguration } from "./settings.ts";
 import type { CurrentProviderType } from "../types/llm-types.ts";
 import { providers } from "../llm/providers/providers.ts";
 
@@ -12,6 +12,7 @@ export class AddModelModal extends Modal {
 	availableModels: string[] = [];
 	isLoadingModels: boolean = false;
 	modelDropdown: HTMLSelectElement | null = null;
+	apiKeySetting: Setting | null = null;
 
 	constructor(
 		app: App,
@@ -66,14 +67,17 @@ export class AddModelModal extends Modal {
 					.addOption("", "Select a provider")
 					.addOption("ollama", "Ollama")
 					.addOption("lmstudio", "LM Studio")
+					.addOption("openai", "OpenAI")
 					.setValue(this.modelConfig.provider || "")
 					.onChange((value) => {
 						this.modelConfig.provider = value as CurrentProviderType;
 						if (baseURLInput) {
 							this.updateBaseURLPlaceholder(baseURLInput);
 						}
-						// Load models when provider and baseURL are available
-						if (this.modelConfig.provider && this.modelConfig.baseURL) {
+						// Show/hide API key field based on provider
+						this.updateApiKeyFieldVisibility();
+						// Load models when provider and required params are available
+						if (this.canLoadModels()) {
 							this.loadModels();
 						}
 					});
@@ -88,13 +92,34 @@ export class AddModelModal extends Modal {
 				baseURLInput = text.inputEl;
 				text.setValue(this.modelConfig.baseURL || "").onChange((value) => {
 					this.modelConfig.baseURL = value;
-					// Load models when provider and baseURL are available
-					if (this.modelConfig.provider && this.modelConfig.baseURL) {
+					// Load models when provider and required params are available
+					if (this.canLoadModels()) {
 						this.loadModels();
 					}
 				});
 				this.updateBaseURLPlaceholder(baseURLInput);
 			});
+
+		// API Key (for OpenAI)
+		this.apiKeySetting = new Setting(contentEl)
+			.setName("API Key")
+			.setDesc("Your OpenAI API key")
+			.addText((text) => {
+				text.inputEl.type = "password";
+				text
+					.setPlaceholder("sk-...")
+					.setValue(this.modelConfig.apiKey || "")
+					.onChange((value) => {
+						this.modelConfig.apiKey = value;
+						// Load models when provider and required params are available
+						if (this.canLoadModels()) {
+							this.loadModels();
+						}
+					});
+			});
+
+		// Initially hide API key field
+		this.updateApiKeyFieldVisibility();
 
 		// Model Name
 		new Setting(contentEl)
@@ -118,8 +143,8 @@ export class AddModelModal extends Modal {
 					}
 				});
 
-				// Load models if provider and baseURL are available
-				if (this.modelConfig.provider && this.modelConfig.baseURL) {
+				// Load models if provider and required params are available
+				if (this.canLoadModels()) {
 					this.loadModels();
 				}
 			});
@@ -160,6 +185,7 @@ export class AddModelModal extends Modal {
 			const placeholders = {
 				ollama: "http://localhost:11434",
 				lmstudio: "http://localhost:1234",
+				openai: "https://api.openai.com",
 			};
 			const placeholder =
 				placeholders[this.modelConfig.provider as keyof typeof placeholders] ||
@@ -173,8 +199,8 @@ export class AddModelModal extends Modal {
 	}
 
 	async verifyConnection(button: ButtonComponent) {
-		if (!this.modelConfig.provider || !this.modelConfig.baseURL) {
-			new Notice("Please select a provider and enter a base URL first.");
+		if (!this.canLoadModels()) {
+			new Notice("Please fill in all required fields first.");
 			return;
 		}
 
@@ -188,9 +214,14 @@ export class AddModelModal extends Modal {
 				throw new Error("Provider not found");
 			}
 
-			const models = await providerGenerator.listModels(
-				this.modelConfig.baseURL,
-			);
+			// For OpenAI, pass the API key as the first parameter
+			const models =
+				this.modelConfig.provider === "openai" && this.modelConfig.apiKey
+					? await providerGenerator.listModels(
+							this.modelConfig.apiKey,
+							this.modelConfig.baseURL!,
+						)
+					: await providerGenerator.listModels(this.modelConfig.baseURL!);
 			new Notice(`Connection successful! Found ${models.length} models.`);
 			button.setButtonText("✓ Connected");
 		} catch (error) {
@@ -216,6 +247,12 @@ export class AddModelModal extends Modal {
 			!this.modelConfig.baseURL
 		) {
 			new Notice("Please fill in all required fields.");
+			return;
+		}
+
+		// Validate API key for OpenAI
+		if (this.modelConfig.provider === "openai" && !this.modelConfig.apiKey) {
+			new Notice("API Key is required for OpenAI provider.");
 			return;
 		}
 
@@ -250,11 +287,7 @@ export class AddModelModal extends Modal {
 	}
 
 	async loadModels() {
-		if (
-			!this.modelConfig.provider ||
-			!this.modelConfig.baseURL ||
-			!this.modelDropdown
-		) {
+		if (!this.canLoadModels() || !this.modelDropdown) {
 			return;
 		}
 
@@ -280,9 +313,14 @@ export class AddModelModal extends Modal {
 				throw new Error("Provider not found");
 			}
 
-			const models = await providerGenerator.listModels(
-				this.modelConfig.baseURL,
-			);
+			// For OpenAI, pass the API key as the first parameter
+			const models =
+				this.modelConfig.provider === "openai" && this.modelConfig.apiKey
+					? await providerGenerator.listModels(
+							this.modelConfig.apiKey,
+							this.modelConfig.baseURL!,
+						)
+					: await providerGenerator.listModels(this.modelConfig.baseURL!);
 			this.availableModels = models;
 
 			// Populate dropdown with models
@@ -331,6 +369,29 @@ export class AddModelModal extends Modal {
 		if (nameInput && this.modelConfig.name) {
 			nameInput.value = this.modelConfig.name;
 		}
+	}
+
+	updateApiKeyFieldVisibility() {
+		if (!this.apiKeySetting) return;
+
+		if (this.modelConfig.provider === "openai") {
+			this.apiKeySetting.settingEl.style.display = "";
+		} else {
+			this.apiKeySetting.settingEl.style.display = "none";
+		}
+	}
+
+	canLoadModels(): boolean {
+		if (!this.modelConfig.provider || !this.modelConfig.baseURL) {
+			return false;
+		}
+
+		// For OpenAI, also require API key
+		if (this.modelConfig.provider === "openai" && !this.modelConfig.apiKey) {
+			return false;
+		}
+
+		return true;
 	}
 
 	onClose() {
