@@ -1,5 +1,66 @@
 /* Canvas Context Plugin Styles */
 
+.root {
+	isolation: "isolate";
+	height: 100%;
+	min-width: 300px;
+	/*display: flex;*/
+}
+
+.canvas-context__wrapper {
+	padding: 8px;
+	max-width: 400px;
+}
+
+.canvas-context__header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: 8px;
+}
+
+.canvas-context__title {
+	font-size: 1.2em;
+	font-weight: bold;
+	color: var(--text-normal);
+}
+
+.canvas-context__label {
+	display: block;
+	margin-bottom: 12px;
+	font-size: 14px;
+	font-weight: 500;
+	color: var(--text-normal);
+}
+
+.canvas-context__select-trigger {
+	width: 100%;
+	min-height: 36px;
+	padding: 8px 16px;
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 4px;
+	background-color: var(--background-primary);
+	color: var(--text-normal);
+	font-size: 14px;
+	cursor: pointer;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	transition:
+		border-color 0.2s,
+		box-shadow 0.2s;
+}
+
+.canvas-context__select-value {
+	flex: 1;
+}
+.canvas-context__hr {
+	height: 1px;
+	background-color: var(--background-modifier-border);
+	border: none;
+	margin: 8px 0;
+}
+
 /* Status bar loading indicator with enhanced animation */
 .canvas-context-loading-status {
 	animation: pulse-background 2s ease-in-out infinite;
@@ -7,8 +68,8 @@
 
 .canvas-context-loading-status .spinner {
 	display: inline-block;
-	width: 14px;
-	height: 14px;
+	width: 16px;
+	height: 16px;
 	border: 2px solid var(--text-muted);
 	border-radius: 50%;
 	border-top-color: var(--interactive-accent);
@@ -21,28 +82,253 @@
 	font-weight: 500;
 }
 
-
 @keyframes spin {
-	0% { transform: rotate(0deg); }
-	100% { transform: rotate(360deg); }
+	0% {
+		transform: rotate(0deg);
+	}
+	100% {
+		transform: rotate(360deg);
+	}
 }
 
 @keyframes pulse-background {
-	0%, 100% { 
-		background-color: transparent; 
+	0%,
+	100% {
+		background-color: transparent;
 	}
-	50% { 
-		background-color: var(--background-modifier-hover); 
+	50% {
+		background-color: var(--background-modifier-hover);
 	}
 }
 
 @keyframes fade-pulse {
-	0%, 100% { 
-		opacity: 1; 
+	0%,
+	100% {
+		opacity: 1;
 		color: var(--text-normal);
 	}
-	50% { 
-		opacity: 0.7; 
+	50% {
+		opacity: 0.7;
 		color: var(--text-accent);
 	}
+}
+
+/* Select Component Styles */
+.canvas-context__select-icon {
+	margin-left: 8px;
+	font-size: 12px;
+	color: var(--text-muted);
+}
+
+.canvas-context__select-popup {
+	background-color: var(--background-primary);
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 4px;
+	box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+	padding: 8px;
+	min-width: 300px;
+	z-index: 1000;
+}
+
+.canvas-context__select-empty-state {
+	padding: 8px;
+	color: var(--text-muted);
+	text-align: center;
+	font-size: 14px;
+}
+
+.canvas-context__select-empty-subtext {
+	font-size: 12px;
+}
+
+.canvas-context__select-item {
+	padding: 8px 16px;
+	cursor: pointer;
+	border-radius: 4px;
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	font-size: 14px;
+	transition: background-color 0.2s;
+}
+
+.canvas-context__select-item:hover {
+	background-color: var(--background-modifier-hover);
+}
+
+.canvas-context__select-item-indicator {
+	font-size: 12px;
+	color: var(--text-accent);
+}
+
+.canvas-context__select-item-text {
+	flex: 1;
+}
+
+.canvas-context__select-item-label {
+	font-weight: 500;
+}
+
+.canvas-context__select-item-description {
+	font-size: 12px;
+	color: var(--text-muted);
+	/*margin-top: 8px;*/
+}
+
+.canvas-context__select-placeholder {
+	color: var(--text-muted);
+}
+
+.canvas-context__select-value-label {
+	font-weight: 500;
+}
+
+.canvas-context__select-value-description {
+	font-size: 12px;
+	color: var(--text-muted);
+	/*margin-top: 2px;*/
+}
+
+/* Model Details Section */
+.canvas-context__separator {
+	height: 1px;
+	background-color: var(--background-modifier-border);
+	margin: 16px 0;
+	border: none;
+}
+
+.canvas-context__model-details {
+	padding: 16px;
+	background-color: var(--background-secondary);
+	border-radius: 8px;
+	font-size: 0.8rem;
+	line-height: 1.4;
+}
+
+.canvas-context__model-details-title {
+	font-weight: 600;
+	margin-bottom: 16px;
+	color: var(--text-normal);
+	font-size: 1rem;
+}
+
+.canvas-context__model-details-grid {
+	display: grid;
+	gap: 8px;
+}
+
+.canvas-context__model-details-row {
+	display: flex;
+	justify-content: space-between;
+}
+
+.canvas-context__model-details-label {
+	color: var(--text-muted);
+}
+
+.canvas-context__model-details-value {
+	font-weight: 500;
+	text-transform: capitalize;
+}
+
+.canvas-context__model-details-value--monospace {
+	font-weight: 500;
+	font-family: var(--font-monospace);
+}
+
+.canvas-context__model-details-value--small {
+	font-weight: 400;
+	font-family: var(--font-monospace);
+	font-size: 0.8rem;
+	word-break: break-all;
+}
+
+/* Error Section */
+.canvas-context__error-section {
+	padding: 16px;
+	background-color: var(--background-primary-alt);
+	border-radius: 8px;
+	border: 1px solid var(--background-modifier-error);
+	font-size: 1rem;
+	line-height: 1.4;
+}
+
+.canvas-context__error-title {
+	font-weight: 600;
+	margin-bottom: 16px;
+	color: var(--text-error);
+	font-size: 1rem;
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.canvas-context__error-item {
+	margin-bottom: 16px;
+	padding-bottom: 16px;
+	border-bottom: 1px solid var(--background-modifier-border);
+}
+
+.canvas-context__error-item:last-child {
+	margin-bottom: 0;
+	padding-bottom: 0;
+	border-bottom: none;
+}
+
+.canvas-context__error-type {
+	font-size: 0.8rem;
+	color: var(--text-error);
+	font-weight: 500;
+	margin-bottom: 8px;
+	text-transform: capitalize;
+}
+
+.canvas-context__error-message {
+	font-size: 0.8rem;
+	color: var(--text-muted);
+	word-break: break-word;
+	line-height: 1.4;
+}
+
+.canvas-context__error-timestamp {
+	font-size: 0.8rem;
+	color: var(--text-faint);
+	margin-top: 8px;
+}
+
+/* Run Inference Button */
+.canvas-context__run-button {
+	width: 100%;
+	padding: 8px 16px;
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 4px;
+	font-size: 0.9rem;
+	font-weight: 600;
+	transition: all 0.2s;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 8px;
+}
+
+.canvas-context__run-button--enabled {
+	background-color: var(--interactive-accent);
+	color: var(--text-on-accent);
+	cursor: pointer;
+}
+
+.canvas-context__run-button--disabled {
+	/*background-color: var(--background-modifier-border);*/
+	color: var(--text-muted);
+	cursor: not-allowed;
+}
+
+.canvas-context__run-button-spinner {
+	display: inline-block;
+	width: 16px;
+	height: 16px;
+	border: 2px solid var(--text-on-accent);
+	border-top: 2px solid transparent;
+	border-radius: 50%;
+	animation: spin 1s linear infinite;
 }

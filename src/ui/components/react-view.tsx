@@ -59,46 +59,15 @@ export const ReactView: React.FC<ReactViewProps> = ({ plugin }) => {
 	];
 
 	return (
-		<div style={{ padding: "20px", maxWidth: "400px" }}>
-			<div
-				style={{
-					display: "flex",
-					alignItems: "center",
-					justifyContent: "space-between",
-					marginBottom: "24px",
-				}}
-			>
-				<h3
-					style={{
-						margin: 0,
-						fontSize: "18px",
-						fontWeight: "600",
-						color: "var(--text-normal)",
-					}}
-				>
-					Canvas Context
-				</h3>
+		<div className={"canvas-context__wrapper"}>
+			<div className="canvas-context__header">
+				<h3 className="canvas-context__title">Canvas Context</h3>
 			</div>
 
-			<Separator
-				style={{
-					height: "1px",
-					backgroundColor: "var(--background-modifier-border)",
-					marginBottom: "20px",
-					border: "none",
-				}}
-			/>
+			<Separator className={"canvas-context__hr"} />
 
 			<Field.Root>
-				<Field.Label
-					style={{
-						display: "block",
-						marginBottom: "12px",
-						fontSize: "14px",
-						fontWeight: "500",
-						color: "var(--text-normal)",
-					}}
-				>
+				<Field.Label className={"canvas-context__label"}>
 					Current Model
 				</Field.Label>
 
@@ -107,82 +76,35 @@ export const ReactView: React.FC<ReactViewProps> = ({ plugin }) => {
 					value={currentModel || null}
 					onValueChange={handleModelChange}
 				>
-					<Select.Trigger
-						style={{
-							width: "100%",
-							minHeight: "36px",
-							padding: "8px 12px",
-							border: "1px solid var(--background-modifier-border)",
-							borderRadius: "6px",
-							backgroundColor: "var(--background-primary)",
-							color: "var(--text-normal)",
-							fontSize: "14px",
-							cursor: "pointer",
-							display: "flex",
-							alignItems: "center",
-							justifyContent: "space-between",
-							transition: "border-color 0.2s, box-shadow 0.2s",
-						}}
-					>
-						<Select.Value style={{ flex: 1 }}>
+					<Select.Trigger className={"canvas-context__select-trigger"}>
+						<Select.Value className={"canvas-context__select-value"}>
 							{currentModelConfig ? (
 								<div>
-									<div style={{ fontWeight: "500" }}>
+									<div className="canvas-context__select-value-label">
 										{currentModelConfig.name}
 									</div>
-									<div
-										style={{
-											fontSize: "12px",
-											color: "var(--text-muted)",
-											marginTop: "2px",
-										}}
-									>
+									<div className="canvas-context__select-value-description">
 										{currentModelConfig.provider} •{" "}
 										{currentModelConfig.modelName}
 									</div>
 								</div>
 							) : (
-								<span style={{ color: "var(--text-muted)" }}>
+								<span className="canvas-context__select-placeholder">
 									Select a model
 								</span>
 							)}
 						</Select.Value>
-						<Select.Icon
-							style={{
-								marginLeft: "8px",
-								fontSize: "12px",
-								color: "var(--text-muted)",
-							}}
-						>
-							▼
-						</Select.Icon>
+						<Select.Icon className="canvas-context__select-icon">▼</Select.Icon>
 					</Select.Trigger>
 
 					<Select.Portal>
 						<Select.Positioner>
-							<Select.Popup
-								style={{
-									backgroundColor: "var(--background-primary)",
-									border: "1px solid var(--background-modifier-border)",
-									borderRadius: "8px",
-									boxShadow: "0 8px 16px rgba(0,0,0,0.15)",
-									padding: "8px",
-									minWidth: "300px",
-									zIndex: 1000,
-								}}
-							>
+							<Select.Popup className="canvas-context__select-popup">
 								{enabledModels.length === 0 ? (
-									<div
-										style={{
-											padding: "12px",
-											color: "var(--text-muted)",
-											textAlign: "center",
-											fontSize: "14px",
-										}}
-									>
+									<div className="canvas-context__select-empty-state">
 										No models configured.
 										<br />
-										<span style={{ fontSize: "12px" }}>
+										<span className="canvas-context__select-empty-subtext">
 											Go to settings to add models.
 										</span>
 									</div>
@@ -191,45 +113,25 @@ export const ReactView: React.FC<ReactViewProps> = ({ plugin }) => {
 										<Select.Item
 											key={item.label}
 											value={item.value}
-											style={{
-												padding: "10px 12px",
-												cursor: "pointer",
-												borderRadius: "4px",
-												display: "flex",
-												alignItems: "center",
-												gap: "8px",
-												fontSize: "14px",
-												transition: "background-color 0.2s",
-											}}
+											className="canvas-context__select-item"
 										>
-											<Select.ItemIndicator
-												style={{
-													fontSize: "12px",
-													color: "var(--text-accent)",
-												}}
-											>
+											<Select.ItemIndicator className="canvas-context__select-item-indicator">
 												✓
 											</Select.ItemIndicator>
-											<Select.ItemText style={{ flex: 1 }}>
+											<Select.ItemText className="canvas-context__select-item-text">
 												{item.value ? (
 													<div>
-														<div style={{ fontWeight: "500" }}>
+														<div className="canvas-context__select-item-label">
 															{item.label}
 														</div>
 														{item.description && (
-															<div
-																style={{
-																	fontSize: "12px",
-																	color: "var(--text-muted)",
-																	marginTop: "2px",
-																}}
-															>
+															<div className="canvas-context__select-item-description">
 																{item.description}
 															</div>
 														)}
 													</div>
 												) : (
-													<span style={{ color: "var(--text-muted)" }}>
+													<span className="canvas-context__select-placeholder">
 														{item.label}
 													</span>
 												)}
@@ -245,69 +147,34 @@ export const ReactView: React.FC<ReactViewProps> = ({ plugin }) => {
 
 			{currentModelConfig && (
 				<>
-					<Separator
-						style={{
-							height: "1px",
-							backgroundColor: "var(--background-modifier-border)",
-							margin: "20px 0",
-							border: "none",
-						}}
-					/>
+					<Separator className="canvas-context__separator" />
 
-					<div
-						style={{
-							padding: "16px",
-							backgroundColor: "var(--background-secondary)",
-							borderRadius: "8px",
-							fontSize: "13px",
-							lineHeight: "1.4",
-						}}
-					>
-						<div
-							style={{
-								fontWeight: "600",
-								marginBottom: "12px",
-								color: "var(--text-normal)",
-								fontSize: "14px",
-							}}
-						>
+					<div className="canvas-context__model-details">
+						<div className="canvas-context__model-details-title">
 							Model Details
 						</div>
-						<div
-							style={{
-								display: "grid",
-								gap: "8px",
-							}}
-						>
-							<div style={{ display: "flex", justifyContent: "space-between" }}>
-								<span style={{ color: "var(--text-muted)" }}>Provider:</span>
-								<span
-									style={{ fontWeight: "500", textTransform: "capitalize" }}
-								>
+						<div className="canvas-context__model-details-grid">
+							<div className="canvas-context__model-details-row">
+								<span className="canvas-context__model-details-label">
+									Provider:
+								</span>
+								<span className="canvas-context__model-details-value">
 									{currentModelConfig.provider}
 								</span>
 							</div>
-							<div style={{ display: "flex", justifyContent: "space-between" }}>
-								<span style={{ color: "var(--text-muted)" }}>Model:</span>
-								<span
-									style={{
-										fontWeight: "500",
-										fontFamily: "var(--font-monospace)",
-									}}
-								>
+							<div className="canvas-context__model-details-row">
+								<span className="canvas-context__model-details-label">
+									Model:
+								</span>
+								<span className="canvas-context__model-details-value--monospace">
 									{currentModelConfig.modelName}
 								</span>
 							</div>
-							<div style={{ display: "flex", justifyContent: "space-between" }}>
-								<span style={{ color: "var(--text-muted)" }}>Base URL:</span>
-								<span
-									style={{
-										fontWeight: "400",
-										fontFamily: "var(--font-monospace)",
-										fontSize: "11px",
-										wordBreak: "break-all",
-									}}
-								>
+							<div className="canvas-context__model-details-row">
+								<span className="canvas-context__model-details-label">
+									Base URL:
+								</span>
+								<span className="canvas-context__model-details-value--small">
 									{currentModelConfig.baseURL}
 								</span>
 							</div>
@@ -318,79 +185,20 @@ export const ReactView: React.FC<ReactViewProps> = ({ plugin }) => {
 
 			{plugin.recentErrors.length > 0 && (
 				<>
-					<Separator
-						style={{
-							height: "1px",
-							backgroundColor: "var(--background-modifier-border)",
-							margin: "20px 0",
-							border: "none",
-						}}
-					/>
+					<Separator className="canvas-context__separator" />
 
-					<div
-						style={{
-							padding: "16px",
-							backgroundColor: "var(--background-primary-alt)",
-							borderRadius: "8px",
-							border: "1px solid var(--background-modifier-error)",
-							fontSize: "13px",
-							lineHeight: "1.4",
-						}}
-					>
-						<div
-							style={{
-								fontWeight: "600",
-								marginBottom: "12px",
-								color: "var(--text-error)",
-								fontSize: "14px",
-								display: "flex",
-								alignItems: "center",
-								gap: "6px",
-							}}
-						>
-							⚠️ Recent Errors
-						</div>
+					<div className="canvas-context__error-section">
+						<div className="canvas-context__error-title">⚠️ Recent Errors</div>
 						{plugin.recentErrors.slice(0, 3).map((error, index) => (
-							<div
-								key={index}
-								style={{
-									marginBottom: index < 2 ? "12px" : "0",
-									paddingBottom: index < 2 ? "12px" : "0",
-									borderBottom:
-										index < 2
-											? "1px solid var(--background-modifier-border)"
-											: "none",
-								}}
-							>
-								<div
-									style={{
-										fontSize: "12px",
-										color: "var(--text-error)",
-										fontWeight: "500",
-										marginBottom: "4px",
-										textTransform: "capitalize",
-									}}
-								>
+							<div key={index} className="canvas-context__error-item">
+								<div className="canvas-context__error-type">
 									{error.errorType || "Unknown"} Error
 								</div>
-								<div
-									style={{
-										fontSize: "11px",
-										color: "var(--text-muted)",
-										wordBreak: "break-word",
-										lineHeight: "1.3",
-									}}
-								>
+								<div className="canvas-context__error-message">
 									{error.error}
 								</div>
 								{(error as any).timestamp && (
-									<div
-										style={{
-											fontSize: "10px",
-											color: "var(--text-faint)",
-											marginTop: "4px",
-										}}
-									>
+									<div className="canvas-context__error-timestamp">
 										{new Date((error as any).timestamp).toLocaleTimeString()}
 									</div>
 								)}
@@ -400,57 +208,20 @@ export const ReactView: React.FC<ReactViewProps> = ({ plugin }) => {
 				</>
 			)}
 
-			<Separator
-				style={{
-					height: "1px",
-					backgroundColor: "var(--background-modifier-border)",
-					margin: "20px 0",
-					border: "none",
-				}}
-			/>
+			<Separator className="canvas-context__separator" />
 
 			<button
 				onClick={handleRunInference}
 				disabled={isRunningInference || !currentModelConfig}
-				style={{
-					width: "100%",
-					padding: "12px 16px",
-					backgroundColor:
-						currentModelConfig && !isRunningInference
-							? "var(--interactive-accent)"
-							: "var(--background-modifier-border)",
-					color:
-						currentModelConfig && !isRunningInference
-							? "var(--text-on-accent)"
-							: "var(--text-muted)",
-					border: "1px solid var(--background-modifier-border)",
-					borderRadius: "8px",
-					fontSize: "14px",
-					fontWeight: "600",
-					cursor:
-						currentModelConfig && !isRunningInference
-							? "pointer"
-							: "not-allowed",
-					transition: "all 0.2s",
-					display: "flex",
-					alignItems: "center",
-					justifyContent: "center",
-					gap: "8px",
-				}}
+				className={`canvas-context__run-button ${
+					currentModelConfig && !isRunningInference
+						? "canvas-context__run-button--enabled"
+						: "canvas-context__run-button--disabled"
+				}`}
 			>
 				{isRunningInference ? (
 					<>
-						<span
-							style={{
-								display: "inline-block",
-								width: "16px",
-								height: "16px",
-								border: "2px solid var(--text-on-accent)",
-								borderTop: "2px solid transparent",
-								borderRadius: "50%",
-								animation: "spin 1s linear infinite",
-							}}
-						/>
+						<span className="canvas-context__run-button-spinner" />
 						Running Canvas Context...
 					</>
 				) : (
