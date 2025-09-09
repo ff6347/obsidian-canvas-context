@@ -132,48 +132,71 @@ The plugin uses **Vercel's AI SDK** for unified LLM provider support, making it 
 #### Current Provider Support
 
 1. **Ollama Integration** (`ollama-ai-provider-v2`)
+
 ```typescript
 interface OllamaConfig {
-  baseUrl: string;        // Default: http://localhost:11434
-  model: string;          // e.g., "llama3.1", "codellama"
+	baseUrl: string; // Default: http://localhost:11434
+	model: string; // e.g., "llama3.1", "codellama"
 }
 ```
 
 2. **LM Studio Support** (`@ai-sdk/openai-compatible`)
+
 ```typescript
 interface LMStudioConfig {
-  baseUrl: string;        // Default: http://localhost:1234
-  model: string;          // Model identifier
+	baseUrl: string; // Default: http://localhost:1234
+	model: string; // Model identifier
 }
 ```
 
 3. **OpenAI Integration** (`@ai-sdk/openai`)
+
 ```typescript
 interface OpenAIConfig {
-  apiKey: string;         // Required: API key authentication
-  baseUrl?: string;       // Default: https://api.openai.com
-  model: string;          // e.g., "gpt-4", "gpt-3.5-turbo"
+	apiKey: string; // Required: API key authentication
+	baseUrl?: string; // Default: https://api.openai.com
+	model: string; // e.g., "gpt-4", "gpt-3.5-turbo"
+}
+```
+
+4. **OpenRouter Integration** (`@openrouter/ai-sdk-provider`)
+
+```typescript
+interface OpenRouterConfig {
+	apiKey: string; // Required: API key authentication
+	baseUrl?: string; // Default: https://openrouter.ai/api/v1
+	model: string; // e.g., "anthropic/claude-3.5-sonnet", "meta-llama/llama-3.1-405b-instruct"
 }
 ```
 
 #### Provider Interface Pattern
 
 All providers follow the same interface pattern:
+
 ```typescript
 export const providerName = "provider-name" as const;
 
 export function createProvider(apiKey?: string, baseURL?: string) {
-  return providerSDK({ /* provider-specific config */ });
+	return providerSDK({
+		/* provider-specific config */
+	});
 }
 
-export async function isProviderAlive(apiKey?: string, baseURL?: string): Promise<boolean> {
-  // Health check implementation
+export async function isProviderAlive(
+	apiKey?: string,
+	baseURL?: string,
+): Promise<boolean> {
+	// Health check implementation
 }
 
-export async function listModels(apiKey?: string, baseURL?: string): Promise<string[]> {
-  // Model enumeration with alphabetical sorting
+export async function listModels(
+	apiKey?: string,
+	baseURL?: string,
+): Promise<string[]> {
+	// Model enumeration with alphabetical sorting
 }
 ```
+
 ```
 
 #### Adding New Providers
@@ -283,7 +306,7 @@ To add a new LLM provider (e.g., Anthropic, Google Gemini):
 - ✅ Example canvas structure created for testing
 - ✅ Canvas node content extraction (file nodes with Obsidian's built-in methods)
 - ✅ Tree walking algorithm implementation (parent chain + horizontal context)
-- ✅ Multi-provider LLM integration (Ollama, LM Studio, OpenAI) with Vercel AI SDK
+- ✅ Multi-provider LLM integration (Ollama, LM Studio, OpenAI, OpenRouter) with Vercel AI SDK
 - ✅ Right-click "Send to LLM" functionality
 - ✅ Canvas selection toolbar integration with waypoints icon
 - ✅ Response node creation and positioning
@@ -292,7 +315,7 @@ To add a new LLM provider (e.g., Anthropic, Google Gemini):
 
 ### Enhanced Features (Should Have)
 
-- ✅ Multi-provider support (Ollama, LM Studio, OpenAI)
+- ✅ Multi-provider support (Ollama, LM Studio, OpenAI, OpenRouter)
 - ✅ Settings panel with model configuration UI
 - ✅ API key authentication for cloud providers
 - ✅ Model listing and validation for all providers
@@ -312,61 +335,67 @@ To add a new LLM provider (e.g., Anthropic, Google Gemini):
 ## File Structure
 
 ```
+
 src/
-├── main.ts                 # Plugin entry point
+├── main.ts # Plugin entry point
 ├── canvas/
-│   ├── parser.ts           # Canvas file parsing
-│   ├── walker.ts           # Tree walking algorithm
-│   └── context.ts          # Context building logic
+│ ├── parser.ts # Canvas file parsing
+│ ├── walker.ts # Tree walking algorithm
+│ └── context.ts # Context building logic
 ├── llm/
-│   ├── client.ts           # LLM HTTP client
-│   ├── ollama.ts           # Ollama-specific implementation
-│   ├── lmstudio.ts         # LMStudio integration
-│   └── response.ts         # Response processing
+│ ├── client.ts # LLM HTTP client
+│ ├── ollama.ts # Ollama-specific implementation
+│ ├── lmstudio.ts # LMStudio integration
+│ └── response.ts # Response processing
 ├── frontmatter/
-│   ├── parser.ts           # YAML frontmatter parsing
-│   ├── schema.ts           # Property validation schema
-│   └── editor.ts           # Frontmatter editing UI
+│ ├── parser.ts # YAML frontmatter parsing
+│ ├── schema.ts # Property validation schema
+│ └── editor.ts # Frontmatter editing UI
 ├── ui/
-│   ├── context-menu.ts     # Right-click menu
-│   ├── settings.ts         # Settings panel
-│   └── modal.ts            # Modal dialogs
+│ ├── context-menu.ts # Right-click menu
+│ ├── settings.ts # Settings panel
+│ └── modal.ts # Modal dialogs
 └── types/
-    ├── canvas.ts           # Canvas-related types
-    ├── llm.ts              # LLM API types
-    └── settings.ts         # Plugin settings types
+├── canvas.ts # Canvas-related types
+├── llm.ts # LLM API types
+└── settings.ts # Plugin settings types
+
 ```
 
 ## Example Workflow
 
 1. **User Creates Canvas Structure**:
 
-   ```
-   [Research Notes] ← [Data Source] → [Analysis Method]
-            ↓
-   [Question: "What trends do you see?"]
-            ↓
-   [Response] (to be generated)
-   ```
+```
+
+[Research Notes] ← [Data Source] → [Analysis Method]
+↓
+[Question: "What trends do you see?"]
+↓
+[Response] (to be generated)
+
+```
 
 2. **User Right-Clicks on Question Node**:
-   - Plugin extracts parent chain: Research Notes
-   - Includes spatial context: Data Source, Analysis Method
-   - Builds LLM message array with proper roles
+- Plugin extracts parent chain: Research Notes
+- Includes spatial context: Data Source, Analysis Method
+- Builds LLM message array with proper roles
 
 3. **Context Sent to LLM**:
 
-   ```
-   Messages: [
-     {role: "system", content: "Research Notes content"},
-     {role: "user", content: "Data Source + Analysis Method + Question"}
-   ]
-   ```
+```
+
+Messages: [
+{role: "system", content: "Research Notes content"},
+{role: "user", content: "Data Source + Analysis Method + Question"}
+]
+
+```
 
 4. **Response Integrated**:
-   - New node created below question
-   - Content populated with LLM response
-   - Frontmatter added: `role: assistant`, `source_model: llama3.1`
+- New node created below question
+- Content populated with LLM response
+- Frontmatter added: `role: assistant`, `source_model: llama3.1`
 
 ## Success Metrics
 
@@ -416,87 +445,87 @@ src/
 ### ✅ Completed (Sep 5-7, 2025)
 
 1. **Canvas Tree Walking Rules**: Defined simplified branching logic
-   - Walk UP the parent chain (main conversation thread)
-   - Include horizontal context from all nodes in parent chain
-   - Exclude sibling conversation branches (not context materials)
-   - No left/right distinction needed
+- Walk UP the parent chain (main conversation thread)
+- Include horizontal context from all nodes in parent chain
+- Exclude sibling conversation branches (not context materials)
+- No left/right distinction needed
 
 2. **Frontmatter Properties Simplified**: Removed over-engineering
-   - `role: system | user | assistant` (maps to LLM APIs)
-   - `tags: ["context"]` for organization only
-   - Model/temperature selection in plugin UI, not per-node
+- `role: system | user | assistant` (maps to LLM APIs)
+- `tags: ["context"]` for organization only
+- Model/temperature selection in plugin UI, not per-node
 
 3. **Test Structure Created**: Complete example canvas ready for testing
-   - 9 markdown files with realistic ML conversation content
-   - Canvas structure matches mermaid diagram from plan
-   - Clear branching scenario to validate tree walking algorithm
+- 9 markdown files with realistic ML conversation content
+- Canvas structure matches mermaid diagram from plan
+- Clear branching scenario to validate tree walking algorithm
 
 4. **Vitest Testing Setup**: Complete test infrastructure configured
-   - Vitest with jsdom environment for DOM testing
-   - Mock Obsidian API setup in test configuration
-   - Test scripts: `pnpm test`, `pnpm test:watch`, `pnpm test:ui`, `pnpm test:coverage`
-   - Placeholder test files for all major modules (canvas walker, frontmatter parser, Ollama client)
-   - TypeScript configuration with path aliases for clean imports
+- Vitest with jsdom environment for DOM testing
+- Mock Obsidian API setup in test configuration
+- Test scripts: `pnpm test`, `pnpm test:watch`, `pnpm test:ui`, `pnpm test:coverage`
+- Placeholder test files for all major modules (canvas walker, frontmatter parser, Ollama client)
+- TypeScript configuration with path aliases for clean imports
 
 5. **Canvas Walker Implementation**: Complete tree walking algorithm
-   - Parent chain traversal with cycle detection
-   - Horizontal context collection for all nodes in parent chain
-   - File node content extraction using Obsidian's `getFrontMatterInfo()` and metadata cache
-   - Text nodes excluded (would require manual frontmatter maintenance)
-   - System messages properly ordered first in output array
-   - Role validation with fallback to "user" for invalid roles
-   - Horizontal context wrapped in `<additional-document>` tags for LLM clarity
+- Parent chain traversal with cycle detection
+- Horizontal context collection for all nodes in parent chain
+- File node content extraction using Obsidian's `getFrontMatterInfo()` and metadata cache
+- Text nodes excluded (would require manual frontmatter maintenance)
+- System messages properly ordered first in output array
+- Role validation with fallback to "user" for invalid roles
+- Horizontal context wrapped in `<additional-document>` tags for LLM clarity
 
 6. **Canvas Walker Testing**: Complete test suite with all fixes implemented
-   - Fixed parent chain walking bug (no longer includes child nodes)
-   - Test coverage for all walker scenarios: linear chains, horizontal context, branching
-   - Proper CanvasViewDataEdge type definitions with fromNode, toNode, fromSide, toSide
-   - Mock setup for Obsidian API components (TFile, metadata cache, vault operations)
-   - Fixed TFile mock constructor issue (path parameter missing)
-   - Fixed import issue (using mock TFile instead of real Obsidian TFile in tests)
-   - All 14 tests passing with correct behavior validation
+- Fixed parent chain walking bug (no longer includes child nodes)
+- Test coverage for all walker scenarios: linear chains, horizontal context, branching
+- Proper CanvasViewDataEdge type definitions with fromNode, toNode, fromSide, toSide
+- Mock setup for Obsidian API components (TFile, metadata cache, vault operations)
+- Fixed TFile mock constructor issue (path parameter missing)
+- Fixed import issue (using mock TFile instead of real Obsidian TFile in tests)
+- All 14 tests passing with correct behavior validation
 
 7. **Canvas Text Card Support Implementation**: Full integration with canvas workflow
-   - **Gray-matter Integration**: Added frontmatter parsing for canvas text nodes
-   - **Text Node Processing**: Canvas text cards now supported alongside file nodes
-   - **Default Role Assignment**: Cards without frontmatter default to `role: "user"`
-   - **LLM Response Node Creation**: Automatic creation of assistant response nodes on canvas
-   - **Canvas API Integration**: Uses proper Obsidian Canvas API (getData, importData, requestFrame)
-   - **Visual Positioning**: Response nodes positioned below source with bottom-to-top connections
-   - **Color Coding**: Assistant response nodes use color "3" for visual distinction
-   - **Status Bar Loading**: Shows "Running inference..." with spinner during LLM calls
-   - **Frontmatter Format**: Assistant responses include proper YAML frontmatter with empty lines
+- **Gray-matter Integration**: Added frontmatter parsing for canvas text nodes
+- **Text Node Processing**: Canvas text cards now supported alongside file nodes
+- **Default Role Assignment**: Cards without frontmatter default to `role: "user"`
+- **LLM Response Node Creation**: Automatic creation of assistant response nodes on canvas
+- **Canvas API Integration**: Uses proper Obsidian Canvas API (getData, importData, requestFrame)
+- **Visual Positioning**: Response nodes positioned below source with bottom-to-top connections
+- **Color Coding**: Assistant response nodes use color "3" for visual distinction
+- **Status Bar Loading**: Shows "Running inference..." with spinner during LLM calls
+- **Frontmatter Format**: Assistant responses include proper YAML frontmatter with empty lines
 
 8. **Enhanced User Experience**: Streamlined canvas-native workflow
-   - **Drag-and-Drop Support**: Users can create text cards by dragging from connectors
-   - **Mixed Node Types**: Supports both file nodes and text cards in same canvas
-   - **Automatic Edge Creation**: Connects response nodes to source nodes
-   - **Enhanced Loading Indicators**: Status bar with animated spinner, pulsing background, and fade-pulse text effects
+- **Drag-and-Drop Support**: Users can create text cards by dragging from connectors
+- **Mixed Node Types**: Supports both file nodes and text cards in same canvas
+- **Automatic Edge Creation**: Connects response nodes to source nodes
+- **Enhanced Loading Indicators**: Status bar with animated spinner, pulsing background, and fade-pulse text effects
 
 9. **Loading UX Implementation**: Comprehensive visual feedback system
-   - **Status Bar Integration**: Non-blocking loading indicator in familiar location
-   - **Multiple Animation Layers**: Background pulse (2s), text fade-pulse (1.5s), spinner rotation (0.8s)
-   - **Enhanced Visibility**: Larger spinner (14px), bold text (font-weight 500), accent color highlights
-   - **User-Centered Design**: Rejected modal and floating approaches for subtle status bar enhancement
+- **Status Bar Integration**: Non-blocking loading indicator in familiar location
+- **Multiple Animation Layers**: Background pulse (2s), text fade-pulse (1.5s), spinner rotation (0.8s)
+- **Enhanced Visibility**: Larger spinner (14px), bold text (font-weight 500), accent color highlights
+- **User-Centered Design**: Rejected modal and floating approaches for subtle status bar enhancement
 
 10. **React UI with Base UI Components**: Modern settings interface foundation
-    - **Layout Component Fixed**: Resolved object rendering errors with proper React.FC typing
-    - **Base UI Integration**: Successfully integrated Switch components with state management
-    - **Component Architecture**: Established proper TypeScript interfaces and event handlers
-    - **Working Foundation**: Ready for advanced UI components (Select, Input, Dialog, etc.)
+ - **Layout Component Fixed**: Resolved object rendering errors with proper React.FC typing
+ - **Base UI Integration**: Successfully integrated Switch components with state management
+ - **Component Architecture**: Established proper TypeScript interfaces and event handlers
+ - **Working Foundation**: Ready for advanced UI components (Select, Input, Dialog, etc.)
 
 11. **Release Workflow Enhancement**: Fully automated Obsidian plugin deployment
-    - **Semantic-Release GitHub Plugin**: Configured to upload plugin assets automatically
-    - **Asset Management**: Automated upload of main.js, manifest.json, styles.css, versions.json
-    - **CI/CD Optimization**: Removed redundant manual asset upload steps from workflow
-    - **Version Management**: Enhanced version-bump.js to only update versions.json when minAppVersion changes
+ - **Semantic-Release GitHub Plugin**: Configured to upload plugin assets automatically
+ - **Asset Management**: Automated upload of main.js, manifest.json, styles.css, versions.json
+ - **CI/CD Optimization**: Removed redundant manual asset upload steps from workflow
+ - **Version Management**: Enhanced version-bump.js to only update versions.json when minAppVersion changes
 
 12. **Canvas Selection Toolbar Integration**: Complete UI integration with mutation observers
-    - **Dual Approach Implementation**: Mutation observers + event handler backup for maximum compatibility
-    - **Default Functionality Preserved**: All default Obsidian toolbar options remain intact
-    - **Smart Button Insertion**: Waypoints icon appears only for single node selection
-    - **Global Icon System**: `PLUGIN_ICON` constant for consistent branding across all interfaces
-    - **Production Ready**: Clean code with debug logging removed, proper cleanup on unload
+ - **Dual Approach Implementation**: Mutation observers + event handler backup for maximum compatibility
+ - **Default Functionality Preserved**: All default Obsidian toolbar options remain intact
+ - **Smart Button Insertion**: Waypoints icon appears only for single node selection
+ - **Global Icon System**: `PLUGIN_ICON` constant for consistent branding across all interfaces
+ - **Production Ready**: Clean code with debug logging removed, proper cleanup on unload
 
 ## ✅ Canvas Selection Toolbar Implementation (Jan 2025)
 
@@ -505,13 +534,13 @@ src/
 Canvas selection toolbar now works correctly with dual approach:
 
 1. **Mutation Observer Approach**: Primary method using DOM observation
-   - Watches for canvas menu changes without interfering with default functionality
-   - Adds waypoints icon button only for single node selection
-   - Preserves all default toolbar options (Delete, Set color, Zoom, Edit)
+- Watches for canvas menu changes without interfering with default functionality
+- Adds waypoints icon button only for single node selection
+- Preserves all default toolbar options (Delete, Set color, Zoom, Edit)
 
 2. **Event Handler Backup**: `canvas:selection-menu` event registration
-   - Provides fallback compatibility for different Obsidian versions
-   - Clean event-driven integration
+- Provides fallback compatibility for different Obsidian versions
+- Clean event-driven integration
 
 ### Final Behavior
 
@@ -561,3 +590,4 @@ Canvas selection toolbar now works correctly with dual approach:
 - **Color Theming**: Could match colors to Obsidian theme or user preferences
 
 This approach successfully combines file-based and canvas-native workflows, giving users flexibility to use either markdown files or quick text cards for LLM conversations.
+```
