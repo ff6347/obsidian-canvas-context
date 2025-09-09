@@ -442,7 +442,7 @@ Messages: [
 
 ## Current Progress (Updated)
 
-### ✅ Completed (Sep 5-7, 2025)
+### ✅ Completed (Sep 5-7, 2025 - Jan 9, 2025)
 
 1. **Canvas Tree Walking Rules**: Defined simplified branching logic
 - Walk UP the parent chain (main conversation thread)
@@ -582,6 +582,26 @@ Canvas selection toolbar now works correctly with dual approach:
 - **Canvas Toolbar Integration**: Mutation observer approach chosen over menu patching for compatibility
 - **Global Icon System**: `PLUGIN_ICON = "waypoints"` constant for consistent branding
 - **Dual Fallback Strategy**: Primary mutation observers + backup event handlers for maximum compatibility
+
+13. **Named API Key Management System**: Complete reusable API key infrastructure (Jan 9, 2025)
+- **Centralized API Key Storage**: `ApiKeyConfiguration` structure with ID, name, provider, description
+- **API Key Modal Interface**: Complete CRUD operations for managing named API keys  
+- **Model Configuration Enhancement**: Models reference API keys by ID instead of storing directly
+- **Backward Compatibility**: Legacy direct API keys supported during migration period
+- **Smart Validation**: Prevents deletion of API keys in use by models
+- **Enhanced Display**: Shows friendly API key names and consistent masked key format (••••••••pVqL)
+- **Reusability**: Single API key can be shared across multiple model configurations
+- **Security**: Secure storage with proper key masking and reference-based access
+
+14. **Model Duplication & UI Improvements**: Streamlined configuration management (Jan 9, 2025)
+- **One-Click Duplication**: "Duplicate" button for easy model configuration copying
+- **Smart Naming**: Auto-adds "(Copy)" suffix with disabled state to prevent conflicts
+- **Multi-Line Layout**: Improved readability with each config detail on separate lines
+- **Consistent Formatting**: Standardized API key display length prevents layout issues
+- **API Key Input Management**: Text input disabled/enabled based on named key selection
+- **Visual Feedback**: Clear indicators when named API keys are selected vs direct entry
+- **Enhanced User Experience**: Reduced cognitive load with cleaner, organized interface
+- **Provider Documentation Links**: Easy access to provider docs and model-specific information
 
 ### 💡 Future Enhancement Notes
 
