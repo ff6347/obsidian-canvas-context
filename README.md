@@ -51,3 +51,13 @@ The connection should be from **bottom** of the system prompt to the **top** of 
 	- Select the last card and use the little waypoint button to run the inference.
 	- Use the waypoint icon in the left ribbon toolbar to open the canvas context panel and run the inference from there using the button.
 - The result will be added as a new card to the canvas and will be connected to the last card/note.
+
+
+## Development
+
+- Clone the repository into your plugins folder.
+- Run `pnpm install` to install dependencies.
+- Run `pnpm dev` to start the development server.
+- Open Obsidian and enable the plugin in the settings.
+- Make changes to the code and see the changes in Obsidian.
+- Run `pnpm build` to build the plugin for production.
