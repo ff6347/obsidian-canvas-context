@@ -125,56 +125,75 @@ tags: ["context"] # Identifies as context material
 
 Use Vercels AI SDK for flexible LLM provider support. No need for hitting the APIs bare bones.
 
-### Phase 1: Ollama Integration
+### Provider Architecture with Vercel AI SDK
 
+The plugin uses **Vercel's AI SDK** for unified LLM provider support, making it straightforward to add new providers with consistent interfaces.
+
+#### Current Provider Support
+
+1. **Ollama Integration** (`ollama-ai-provider-v2`)
 ```typescript
 interface OllamaConfig {
   baseUrl: string;        // Default: http://localhost:11434
   model: string;          // e.g., "llama3.1", "codellama"
-  timeout: number;        // Request timeout in ms
-}
-
-// API Endpoint
-POST /v1/chat/completions
-{
-  "model": "model-name",
-  "messages": [
-    {"role": "system", "content": "..."},
-    {"role": "user", "content": "..."}
-  ],
-  "temperature": 0.7,
-  "max_tokens": 1000
 }
 ```
 
-### Phase 2: LMStudio Support
-
+2. **LM Studio Support** (`@ai-sdk/openai-compatible`)
 ```typescript
 interface LMStudioConfig {
   baseUrl: string;        // Default: http://localhost:1234
   model: string;          // Model identifier
-  apiKey?: string;        // Optional API key
-}
-
-// OpenAI-Compatible API
-POST /v1/chat/completions
-{
-  "model": "model-name",
-  "messages": [
-    {"role": "system", "content": "..."},
-    {"role": "user", "content": "..."}
-  ],
-  "temperature": 0.7,
-  "max_tokens": 1000
 }
 ```
 
+3. **OpenAI Integration** (`@ai-sdk/openai`)
+```typescript
+interface OpenAIConfig {
+  apiKey: string;         // Required: API key authentication
+  baseUrl?: string;       // Default: https://api.openai.com
+  model: string;          // e.g., "gpt-4", "gpt-3.5-turbo"
+}
+```
+
+#### Provider Interface Pattern
+
+All providers follow the same interface pattern:
+```typescript
+export const providerName = "provider-name" as const;
+
+export function createProvider(apiKey?: string, baseURL?: string) {
+  return providerSDK({ /* provider-specific config */ });
+}
+
+export async function isProviderAlive(apiKey?: string, baseURL?: string): Promise<boolean> {
+  // Health check implementation
+}
+
+export async function listModels(apiKey?: string, baseURL?: string): Promise<string[]> {
+  // Model enumeration with alphabetical sorting
+}
+```
+```
+
+#### Adding New Providers
+
+To add a new LLM provider (e.g., Anthropic, Google Gemini):
+
+1. **Install AI SDK package**: `pnpm add @ai-sdk/anthropic`
+2. **Create provider file**: `src/llm/providers/anthropic.ts`
+3. **Implement interface**: Follow the standard provider pattern
+4. **Register provider**: Add to `providers.ts` registry
+5. **Update types**: Add to `CurrentProviderType` in `llm-types.ts`
+6. **Update UI**: Add option to provider dropdown in modal
+
 ### Model Management
 
-- **Auto-detection**: Scan for available models on startup
-- **Model Switching**: Per-node model selection via frontmatter
-- **Fallback Strategy**: Default to fastest available model
-- **Health Checks**: Verify LLM service availability
+- **Unified Interface**: All providers use Vercel AI SDK's consistent API
+- **Model Discovery**: Dynamic model listing with alphabetical sorting
+- **Authentication Handling**: Flexible API key support where required
+- **Health Checks**: Provider availability verification before use
+- **Configuration Storage**: Secure API key storage in plugin settings
 
 ## Technical Implementation Phases
 
@@ -264,16 +283,19 @@ POST /v1/chat/completions
 - ✅ Example canvas structure created for testing
 - ✅ Canvas node content extraction (file nodes with Obsidian's built-in methods)
 - ✅ Tree walking algorithm implementation (parent chain + horizontal context)
-- ✅ Ollama/lmstudio/openai/anthropic/gemini integration with text generation
+- ✅ Multi-provider LLM integration (Ollama, LM Studio, OpenAI) with Vercel AI SDK
 - ✅ Right-click "Send to LLM" functionality
 - ✅ Canvas selection toolbar integration with waypoints icon
 - ✅ Response node creation and positioning
+- ✅ API key authentication and secure storage for cloud providers
 - ✅ Basic error handling and user feedback
 
 ### Enhanced Features (Should Have)
 
-- ✅ LMStudio integration
-- ✅ Settings panel for configuration
+- ✅ Multi-provider support (Ollama, LM Studio, OpenAI)
+- ✅ Settings panel with model configuration UI
+- ✅ API key authentication for cloud providers
+- ✅ Model listing and validation for all providers
 - ❌ Visual node styling by role (using Obsidian canvas colors)
 - ❌ Frontmatter editing interface (use Obsidian's native editing)
 - ⏳ Context preview before sending
