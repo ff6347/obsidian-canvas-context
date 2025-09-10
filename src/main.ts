@@ -1,4 +1,4 @@
-import { Plugin, Menu, WorkspaceLeaf, ItemView, setIcon } from "obsidian";
+import { Plugin, Menu, WorkspaceLeaf, ItemView, setIcon, Events } from "obsidian";
 import NodeActions from "./canvas/nodes-actions.ts";
 import type { CanvasConnection } from "obsidian-typings";
 import {
@@ -29,6 +29,7 @@ export default class CanvasContextPlugin extends Plugin {
 	statusEl: HTMLElement | null = null;
 	recentErrors: InferenceResult[] = [];
 	settings: CanvasContextSettings = DEFAULT_SETTINGS;
+	settingsEvents: Events = new Events();
 	async onload() {
 		await this.loadSettings();
 		this.registerView(
@@ -102,6 +103,7 @@ export default class CanvasContextPlugin extends Plugin {
 	}
 	async saveSettings() {
 		await this.saveData(this.settings);
+		this.settingsEvents.trigger('settings-changed', this.settings);
 	}
 
 	async activateView() {
