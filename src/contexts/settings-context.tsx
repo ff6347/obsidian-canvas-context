@@ -18,10 +18,12 @@ export function SettingsProvider({ children, plugin }: SettingsProviderProps) {
 	const [settings, setSettings] = useState<CanvasContextSettings>(plugin.settings);
 
 	const updateSettings = async (updater: (prev: CanvasContextSettings) => CanvasContextSettings) => {
-		const newSettings = updater(settings);
-		plugin.settings = newSettings;
-		await plugin.saveSettings();
-		setSettings(newSettings);
+		setSettings(prevSettings => {
+			const newSettings = updater(prevSettings);
+			plugin.settings = newSettings;
+			plugin.saveSettings();
+			return newSettings;
+		});
 	};
 
 	useEffect(() => {
