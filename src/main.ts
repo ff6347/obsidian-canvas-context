@@ -5,8 +5,8 @@ import {
 	type CanvasContextSettings,
 	CanvasContextSettingTab,
 	DEFAULT_SETTINGS,
-	resolveApiKey,
 } from "./ui/settings.ts";
+import { resolveApiKey } from "./lib/settings-utils.ts";
 import { CanvasContextView } from "./ui/view.tsx";
 import { Notice } from "obsidian";
 import { inference, type InferenceResult } from "./llm/llm.ts";

@@ -1,7 +1,7 @@
 import { App, Modal, Setting, Notice, ButtonComponent } from "obsidian";
 import type CanvasContextPlugin from "../main.ts";
 import type { ModelConfiguration, ApiKeyConfiguration } from "./settings.ts";
-import { computeDisplayName } from "./settings.ts";
+import { computeDisplayName } from "../lib/settings-utils.ts";
 import type { CurrentProviderType } from "../types/llm-types.ts";
 import { providers } from "../llm/providers/providers.ts";
 import { getProviderDocs } from "../llm/providers/providers.ts";

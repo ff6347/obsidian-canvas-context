@@ -11,6 +11,7 @@ import { ApiKeyModal } from "./api-key-modal.ts";
 import { providers } from "../llm/providers/providers.ts";
 import type { CurrentProviderType } from "../types/llm-types.ts";
 import { getProviderDocs, getModelPageUrl } from "../llm/providers/providers.ts";
+import { maskApiKey as _maskApiKey, resolveApiKey as _resolveApiKey, computeDisplayName as _computeDisplayName } from "../lib/settings-utils.ts";
 
 export interface ApiKeyConfiguration {
 	id: string;
@@ -43,33 +44,12 @@ export const DEFAULT_SETTINGS: CanvasContextSettings = {
 	apiKeys: [],
 };
 
-function maskApiKey(apiKey: string): string {
-	if (!apiKey) return "";
-	
-	// Always show exactly 8 masked characters + last 4 characters = 12 total
-	// This ensures consistent length regardless of actual API key length
-	const lastFour = apiKey.slice(-4);
-	return "••••••••" + lastFour;
-}
-
-
-export function resolveApiKey(
-	config: ModelConfiguration,
-	apiKeys: ApiKeyConfiguration[]
-): string | undefined {
-	if (config.apiKeyId) {
-		const apiKeyConfig = apiKeys.find(key => key.id === config.apiKeyId);
-		return apiKeyConfig?.apiKey;
-	}
-	return undefined;
-}
-
-export function computeDisplayName(provider: CurrentProviderType | undefined, modelName: string): string {
-	if (!provider || !modelName) {
-		return "";
-	}
-	return `${provider}:${modelName}`;
-}
+// Re-export utilities for convenience
+export { 
+	maskApiKey, 
+	resolveApiKey, 
+	computeDisplayName 
+} from "../lib/settings-utils.ts";
 
 export class CanvasContextSettingTab extends PluginSettingTab {
 	plugin: CanvasContextPlugin;
@@ -80,7 +60,7 @@ export class CanvasContextSettingTab extends PluginSettingTab {
 	}
 
 	private resolveApiKey(config: ModelConfiguration): string | undefined {
-		return resolveApiKey(config, this.plugin.settings.apiKeys);
+		return _resolveApiKey(config, this.plugin.settings.apiKeys);
 	}
 
 	display(): void {
@@ -212,10 +192,10 @@ export class CanvasContextSettingTab extends PluginSettingTab {
 			if (config.apiKeyId) {
 				const apiKeyConfig = this.plugin.settings.apiKeys.find(key => key.id === config.apiKeyId);
 				const keyName = apiKeyConfig?.name || "Unknown Key";
-				descEl.createDiv({ text: `API Key: ${keyName} (${maskApiKey(resolvedApiKey)})` });
+				descEl.createDiv({ text: `API Key: ${keyName} (${_maskApiKey(resolvedApiKey)})` });
 			} else {
 				// Legacy direct API key
-				descEl.createDiv({ text: `API Key: ${maskApiKey(resolvedApiKey)} (Legacy)` });
+				descEl.createDiv({ text: `API Key: ${_maskApiKey(resolvedApiKey)} (Legacy)` });
 			}
 		}
 
@@ -322,7 +302,7 @@ export class CanvasContextSettingTab extends PluginSettingTab {
 		
 		// Add each line as a separate div element
 		descEl.createDiv({ text: `Provider: ${apiKey.provider}` });
-		descEl.createDiv({ text: `API Key: ${maskApiKey(apiKey.apiKey)}` });
+		descEl.createDiv({ text: `API Key: ${_maskApiKey(apiKey.apiKey)}` });
 		if (apiKey.description) {
 			descEl.createDiv({ text: `Description: ${apiKey.description}` });
 		}
