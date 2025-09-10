@@ -1,34 +1,28 @@
 import { Select } from "@base-ui-components/react/select";
 import { Field } from "@base-ui-components/react/field";
 import { Separator } from "@base-ui-components/react/separator";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import type CanvasContextPlugin from "../../main.ts";
 import { PLUGIN_DISPLAY_NAME } from "../../lib/constants.ts";
+import { useSettings } from "../../contexts/settings-context.tsx";
 
 interface ReactViewProps {
 	plugin: CanvasContextPlugin;
 }
 
 export const ReactView: React.FC<ReactViewProps> = ({ plugin }) => {
-	const [currentModel, setCurrentModel] = useState(
-		plugin.settings.currentModel,
-	);
-	const [modelConfigs, setModelConfigs] = useState(
-		plugin.settings.modelConfigurations,
-	);
+	const { settings, updateSettings } = useSettings();
 	const [isRunningInference, setIsRunningInference] = useState(false);
 
-	// Update local state when plugin settings change
-	useEffect(() => {
-		setCurrentModel(plugin.settings.currentModel);
-		setModelConfigs(plugin.settings.modelConfigurations);
-	}, [plugin.settings.currentModel, plugin.settings.modelConfigurations]);
+	const currentModel = settings.currentModel;
+	const modelConfigs = settings.modelConfigurations;
 
 	const handleModelChange = async (value: string | null) => {
 		const selectedValue = value || "";
-		plugin.settings.currentModel = selectedValue;
-		await plugin.saveSettings();
-		setCurrentModel(selectedValue);
+		await updateSettings(prev => ({
+			...prev,
+			currentModel: selectedValue
+		}));
 	};
 
 	const handleRunInference = async () => {
