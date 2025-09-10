@@ -9,6 +9,7 @@ import {
 	VIEW_TYPE_CANVAS_CONTEXT,
 } from "../lib/constants.ts";
 import { ReactView } from "./components/react-view.tsx";
+import { SettingsProvider } from "../contexts/settings-context.tsx";
 
 export class CanvasContextView extends ItemView {
 	root: Root | null = null;
@@ -35,9 +36,11 @@ export class CanvasContextView extends ItemView {
 		this.root = createRoot(this.contentEl);
 		this.root.render(
 			<StrictMode>
-				<Layout>
-					<ReactView plugin={this.plugin} />
-				</Layout>
+				<SettingsProvider plugin={this.plugin}>
+					<Layout>
+						<ReactView plugin={this.plugin} />
+					</Layout>
+				</SettingsProvider>
 			</StrictMode>,
 		);
 	}
