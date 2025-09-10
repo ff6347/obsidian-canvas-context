@@ -40,7 +40,7 @@ export function SettingsProvider({ children, plugin }: SettingsProviderProps) {
 	const contextValue = useMemo(() => ({
 		settings,
 		updateSettings,
-	}), [settings]);
+	}), [settings, updateSettings]);
 
 	return (
 		<SettingsContext.Provider value={contextValue}>
