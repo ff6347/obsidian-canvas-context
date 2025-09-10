@@ -1,8 +1,10 @@
 import { App, Modal, Setting, Notice, ButtonComponent } from "obsidian";
 import type CanvasContextPlugin from "../main.ts";
-import type { ModelConfiguration } from "./settings.ts";
+import type { ModelConfiguration, ApiKeyConfiguration } from "./settings.ts";
+import { computeDisplayName } from "./settings.ts";
 import type { CurrentProviderType } from "../types/llm-types.ts";
 import { providers } from "../llm/providers/providers.ts";
+import { getProviderDocs } from "../llm/providers/providers.ts";
 
 export class AddModelModal extends Modal {
 	plugin: CanvasContextPlugin;
@@ -13,6 +15,10 @@ export class AddModelModal extends Modal {
 	isLoadingModels: boolean = false;
 	modelDropdown: HTMLSelectElement | null = null;
 	apiKeySetting: Setting | null = null;
+	apiKeyDropdown: HTMLSelectElement | null = null;
+	providerDocsButton: ButtonComponent | null = null;
+	baseURLInput: HTMLInputElement | null = null;
+	nameInput: HTMLInputElement | null = null;
 
 	constructor(
 		app: App,
@@ -27,7 +33,7 @@ export class AddModelModal extends Modal {
 			? { ...modelConfig }
 			: {
 					name: "",
-					provider: "" as CurrentProviderType,
+					provider: undefined,
 					modelName: "",
 					baseURL: "",
 					enabled: true,
@@ -46,20 +52,42 @@ export class AddModelModal extends Modal {
 		});
 
 		// Model Name
-		new Setting(contentEl)
+		// Display Name with Custom Toggle
+		const nameSetting = new Setting(contentEl)
 			.setName("Display Name")
-			.setDesc("A friendly name for this model configuration")
+			.setDesc("Auto-computed from provider:model, or set custom name")
 			.addText((text) => {
+				this.nameInput = text.inputEl;
 				text
-					.setPlaceholder("e.g., GPT-4 via Ollama")
-					.setValue(this.modelConfig.name || "")
+					.setValue(this.getDisplayName())
 					.onChange((value) => {
-						this.modelConfig.name = value;
+						if (this.modelConfig.useCustomDisplayName) {
+							this.modelConfig.name = value;
+						}
+					});
+			})
+			.addToggle((toggle) => {
+				toggle
+					.setValue(this.modelConfig.useCustomDisplayName || false)
+					.setTooltip("Enable to set custom display name")
+					.onChange((value) => {
+						this.modelConfig.useCustomDisplayName = value;
+						if (value) {
+							// Switching to custom - enable input and keep current value
+							this.updateNameFieldState();
+						} else {
+							// Switching to auto - recompute and disable input
+							this.modelConfig.name = this.getDisplayName();
+							this.updateNameFieldState();
+						}
 					});
 			});
 
+		// Initialize name field state
+		this.updateNameFieldState();
+
 		// Provider
-		new Setting(contentEl)
+		const providerSetting = new Setting(contentEl)
 			.setName("Provider")
 			.setDesc("The LLM provider")
 			.addDropdown((dropdown) => {
@@ -71,12 +99,30 @@ export class AddModelModal extends Modal {
 					.addOption("openrouter", "OpenRouter")
 					.setValue(this.modelConfig.provider || "")
 					.onChange((value) => {
-						this.modelConfig.provider = value as CurrentProviderType;
-						if (baseURLInput) {
-							this.updateBaseURLPlaceholder(baseURLInput);
+						this.modelConfig.provider = value === "" ? undefined : (value as CurrentProviderType);
+						// Clear model name since available models change with provider
+						this.modelConfig.modelName = "";
+						// Clear available models and reset dropdown
+						this.availableModels = [];
+						if (this.modelDropdown) {
+							this.modelDropdown.innerHTML = "";
+							const defaultOption = this.modelDropdown.createEl("option", {
+								value: "",
+								text: "Select a model",
+							});
+							this.modelDropdown.appendChild(defaultOption);
+						}
+						if (this.baseURLInput) {
+							this.updateBaseURLPlaceholder(this.baseURLInput);
 						}
 						// Show/hide API key field based on provider
 						this.updateApiKeyFieldVisibility();
+						// Update API key dropdown options
+						this.updateApiKeyDropdown();
+						// Update display name if in auto mode
+						this.updateNameFieldState();
+						// Update provider documentation link
+						this.updateProviderDocsLink();
 						// Load models when provider and required params are available
 						if (this.canLoadModels()) {
 							this.loadModels();
@@ -84,13 +130,15 @@ export class AddModelModal extends Modal {
 					});
 			});
 
+		// Add provider documentation link button
+		this.addProviderDocsButton(providerSetting);
+
 		// Base URL
-		let baseURLInput: HTMLInputElement;
 		new Setting(contentEl)
 			.setName("Base URL")
 			.setDesc("The base URL for the provider")
 			.addText((text) => {
-				baseURLInput = text.inputEl;
+				this.baseURLInput = text.inputEl;
 				text.setValue(this.modelConfig.baseURL || "").onChange((value) => {
 					this.modelConfig.baseURL = value;
 					// Load models when provider and required params are available
@@ -98,25 +146,31 @@ export class AddModelModal extends Modal {
 						this.loadModels();
 					}
 				});
-				this.updateBaseURLPlaceholder(baseURLInput);
+				this.updateBaseURLPlaceholder(this.baseURLInput);
 			});
 
-		// API Key (for OpenAI)
+		// API Key Selection (for cloud providers)
 		this.apiKeySetting = new Setting(contentEl)
 			.setName("API Key")
-			.setDesc("Your OpenAI API key")
-			.addText((text) => {
-				text.inputEl.type = "password";
-				text
-					.setPlaceholder("sk-...")
-					.setValue(this.modelConfig.apiKey || "")
-					.onChange((value) => {
-						this.modelConfig.apiKey = value;
-						// Load models when provider and required params are available
-						if (this.canLoadModels()) {
-							this.loadModels();
-						}
-					});
+			.setDesc("Select a named API key from the centralized store")
+			.addDropdown((dropdown) => {
+				this.apiKeyDropdown = dropdown.selectEl;
+				this.updateApiKeyDropdown();
+				
+				dropdown.onChange((value) => {
+					if (value === "") {
+						// No API key selected
+						delete this.modelConfig.apiKeyId;
+					} else {
+						// Selected a named API key
+						this.modelConfig.apiKeyId = value;
+					}
+					
+					// Load models when provider and required params are available
+					if (this.canLoadModels()) {
+						this.loadModels();
+					}
+				});
 			});
 
 		// Initially hide API key field
@@ -137,11 +191,8 @@ export class AddModelModal extends Modal {
 
 				dropdown.onChange((value) => {
 					this.modelConfig.modelName = value;
-					// Auto-populate display name if empty
-					if (!this.modelConfig.name && value) {
-						this.modelConfig.name = `${this.modelConfig.provider} - ${value}`;
-						this.updateDisplayName();
-					}
+					// Update display name if in auto mode
+					this.updateNameFieldState();
 				});
 
 				// Load models if provider and required params are available
@@ -193,7 +244,13 @@ export class AddModelModal extends Modal {
 				placeholders[this.modelConfig.provider as keyof typeof placeholders] ||
 				"";
 			baseURLInput.placeholder = placeholder;
-			if (!this.modelConfig.baseURL) {
+			
+			// Update the baseURL to match the provider, unless user has manually customized it
+			// Check if current value matches any of the default placeholder values
+			const currentValue = this.modelConfig.baseURL;
+			const isDefaultValue = currentValue && Object.values(placeholders).includes(currentValue);
+			
+			if (!this.modelConfig.baseURL || isDefaultValue) {
 				this.modelConfig.baseURL = placeholder;
 				baseURLInput.value = placeholder;
 			}
@@ -216,11 +273,14 @@ export class AddModelModal extends Modal {
 				throw new Error("Provider not found");
 			}
 
-			// For OpenAI, pass the API key as the first parameter
+			// For OpenAI and OpenRouter, pass the API key as the first parameter
+			const resolvedApiKey = this.getResolvedApiKey();
 			const models =
-				this.modelConfig.provider === "openai" && this.modelConfig.apiKey
+				(this.modelConfig.provider === "openai" || 
+				 this.modelConfig.provider === "openrouter") && 
+				resolvedApiKey
 					? await providerGenerator.listModels(
-							this.modelConfig.apiKey,
+							resolvedApiKey,
 							this.modelConfig.baseURL!,
 						)
 					: await providerGenerator.listModels(this.modelConfig.baseURL!);
@@ -256,7 +316,7 @@ export class AddModelModal extends Modal {
 		if (
 			(this.modelConfig.provider === "openai" ||
 				this.modelConfig.provider === "openrouter") &&
-			!this.modelConfig.apiKey
+			!this.getResolvedApiKey()
 		) {
 			new Notice("API Key is required for OpenAI and OpenRouter providers.");
 			return;
@@ -319,11 +379,14 @@ export class AddModelModal extends Modal {
 				throw new Error("Provider not found");
 			}
 
-			// For OpenAI, pass the API key as the first parameter
+			// For OpenAI and OpenRouter, pass the API key as the first parameter
+			const resolvedApiKey = this.getResolvedApiKey();
 			const models =
-				this.modelConfig.provider === "openai" && this.modelConfig.apiKey
+				(this.modelConfig.provider === "openai" || 
+				 this.modelConfig.provider === "openrouter") && 
+				resolvedApiKey
 					? await providerGenerator.listModels(
-							this.modelConfig.apiKey,
+							resolvedApiKey,
 							this.modelConfig.baseURL!,
 						)
 					: await providerGenerator.listModels(this.modelConfig.baseURL!);
@@ -368,14 +431,6 @@ export class AddModelModal extends Modal {
 		this.isLoadingModels = false;
 	}
 
-	updateDisplayName() {
-		const nameInput = this.contentEl.querySelector(
-			'input[type="text"]',
-		) as HTMLInputElement;
-		if (nameInput && this.modelConfig.name) {
-			nameInput.value = this.modelConfig.name;
-		}
-	}
 
 	updateApiKeyFieldVisibility() {
 		if (!this.apiKeySetting) return;
@@ -390,6 +445,7 @@ export class AddModelModal extends Modal {
 		}
 	}
 
+
 	canLoadModels(): boolean {
 		if (!this.modelConfig.provider || !this.modelConfig.baseURL) {
 			return false;
@@ -399,12 +455,118 @@ export class AddModelModal extends Modal {
 		if (
 			(this.modelConfig.provider === "openai" ||
 				this.modelConfig.provider === "openrouter") &&
-			!this.modelConfig.apiKey
+			!this.getResolvedApiKey()
 		) {
 			return false;
 		}
 
 		return true;
+	}
+
+	addProviderDocsButton(providerSetting: Setting) {
+		providerSetting.addButton((button) => {
+			this.providerDocsButton = button;
+			button
+				.setButtonText("📚 Docs")
+				.setTooltip("View provider documentation")
+				.onClick(() => {
+					const docs = getProviderDocs(this.modelConfig.provider!);
+					if (docs) {
+						window.open(docs.docsUrl, "_blank");
+					}
+				});
+		});
+		this.updateProviderDocsLink();
+	}
+
+	updateProviderDocsLink() {
+		if (!this.providerDocsButton) return;
+		
+		const docs = getProviderDocs(this.modelConfig.provider!);
+		if (docs) {
+			this.providerDocsButton.setDisabled(false);
+			this.providerDocsButton.setTooltip(`View ${docs.displayName} documentation`);
+		} else {
+			this.providerDocsButton.setDisabled(true);
+			this.providerDocsButton.setTooltip("Select a provider first");
+		}
+	}
+
+	updateApiKeyDropdown() {
+		if (!this.apiKeyDropdown) return;
+
+		// Clear existing options
+		this.apiKeyDropdown.innerHTML = "";
+
+		// Add default option
+		const defaultOption = this.apiKeyDropdown.createEl("option", {
+			value: "",
+			text: "Select an API key",
+		});
+		this.apiKeyDropdown.appendChild(defaultOption);
+
+		// Add named API keys for the current provider
+		if (this.modelConfig.provider === "openai" || this.modelConfig.provider === "openrouter") {
+			const relevantKeys = this.plugin.settings.apiKeys.filter(
+				key => key.provider === this.modelConfig.provider
+			);
+
+			relevantKeys.forEach(key => {
+				const option = this.apiKeyDropdown!.createEl("option", {
+					value: key.id,
+					text: key.name,
+				});
+				this.apiKeyDropdown!.appendChild(option);
+			});
+
+			// Set current value
+			if (this.modelConfig.apiKeyId) {
+				this.apiKeyDropdown.value = this.modelConfig.apiKeyId;
+			}
+		}
+	}
+
+	getResolvedApiKey(): string | undefined {
+		if (this.modelConfig.apiKeyId) {
+			const apiKeyConfig = this.plugin.settings.apiKeys.find(key => key.id === this.modelConfig.apiKeyId);
+			return apiKeyConfig?.apiKey;
+		}
+		return undefined;
+	}
+
+	getDisplayName(): string {
+		// If using custom name and it exists, return it
+		if (this.modelConfig.useCustomDisplayName && this.modelConfig.name) {
+			return this.modelConfig.name;
+		}
+		// Otherwise compute from provider:model
+		return computeDisplayName(this.modelConfig.provider, this.modelConfig.modelName || "");
+	}
+
+	updateNameFieldState(): void {
+		if (!this.nameInput) return;
+
+		const shouldUseCustom = this.modelConfig.useCustomDisplayName || false;
+		
+		// Update field state
+		this.nameInput.disabled = !shouldUseCustom;
+		this.nameInput.style.opacity = shouldUseCustom ? "1" : "0.6";
+		
+		// Update value and placeholder
+		if (shouldUseCustom) {
+			this.nameInput.placeholder = "Enter custom display name";
+			// Keep current value if it exists, otherwise use computed value
+			if (!this.modelConfig.name) {
+				this.modelConfig.name = this.getDisplayName();
+				this.nameInput.value = this.modelConfig.name;
+			}
+		} else {
+			this.nameInput.placeholder = "Auto-computed from provider:model";
+			// Always show computed value when in auto mode
+			const computedName = computeDisplayName(this.modelConfig.provider, this.modelConfig.modelName || "");
+			this.nameInput.value = computedName;
+			this.modelConfig.name = computedName;
+		}
 	}
 
 	onClose() {
