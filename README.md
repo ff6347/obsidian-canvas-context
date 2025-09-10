@@ -4,6 +4,9 @@ This plugin uses the Obsidian Canvas to control what context gets send to a LLM.
 We (this is I) also use the spatial arrangment on the canvas for better navigation of our context.
 This is a pretty early stage of an idea and I am not sure if this might get useful or not.
 
+
+![a short video showing the usage of the plugin](docs/demo.gif)
+
 ## Prerequisites
 
 - [Obsidian](https://obsidian.md) 1.9.12 or higher
@@ -21,15 +24,19 @@ This is a pretty early stage of an idea and I am not sure if this might get usef
 
 ## Setup
 
-- Install the plugin by cloning it into the plugins folder of your vault.
+- Until the plugin is in the community plugins list you need to use the [BRAT](https://tfthacker.com/BRAT) plugin to install it.
+- Or you download the latest release from the [releases](https://github.com/ff6347/obsidian-canvas-context/releases) and copy the files to your plugins folder.
 
 ```bash
-cd path/to/your/vault
-mkdir -p .obsidian/plugins
-git clone https://github.com/ff6347/obsidian-canvas-context.git .obsidian/plugins/obsidian-canvas-context`
+# create the folder
+mkdir -p <your vault>/.obsidian/plugins/obsidian-canvas-context
+# copy the files
+cp main.js <your vault>/.obsidian/plugins/obsidian-canvas-context/main.js
+cp manifest.json <your vault>/.obsidian/plugins/obsidian-canvas-context/manifest.json
+cp styles.css <your vault>/.obsidian/plugins/obsidian-canvas-context/styles.css
+
 ```
 
-- **TODO:** Install the plugin from the community plugins tab in Obsidian.
 - Enable the plugin in the settings.
 - Go to the settings and add a model by selecting one of the providers and adding a model from the dropdown.
   - If you want to use non local models add a API key first. These will be selectable when you add a model.
