@@ -1,4 +1,7 @@
-import type { ModelConfiguration, ApiKeyConfiguration } from "../ui/settings.ts";
+import type {
+	ModelConfiguration,
+	ApiKeyConfiguration,
+} from "../ui/settings.ts";
 import type { CurrentProviderType } from "../types/llm-types.ts";
 
 /**
@@ -6,7 +9,7 @@ import type { CurrentProviderType } from "../types/llm-types.ts";
  */
 export function maskApiKey(apiKey: string): string {
 	if (!apiKey) return "";
-	
+
 	// Always show exactly 8 masked characters + last 4 characters = 12 total
 	// This ensures consistent length regardless of actual API key length
 	const lastFour = apiKey.slice(-4);
@@ -18,10 +21,10 @@ export function maskApiKey(apiKey: string): string {
  */
 export function resolveApiKey(
 	config: ModelConfiguration,
-	apiKeys: ApiKeyConfiguration[]
+	apiKeys: ApiKeyConfiguration[],
 ): string | undefined {
 	if (config.apiKeyId) {
-		const apiKeyConfig = apiKeys.find(key => key.id === config.apiKeyId);
+		const apiKeyConfig = apiKeys.find((key) => key.id === config.apiKeyId);
 		return apiKeyConfig?.apiKey;
 	}
 	return undefined;
@@ -30,7 +33,10 @@ export function resolveApiKey(
 /**
  * Computes a display name from provider and model name in the format "provider:model"
  */
-export function computeDisplayName(provider: CurrentProviderType | undefined, modelName: string): string {
+export function computeDisplayName(
+	provider: CurrentProviderType | undefined,
+	modelName: string,
+): string {
 	if (!provider || !modelName) {
 		return "";
 	}

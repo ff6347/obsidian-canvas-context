@@ -41,7 +41,9 @@ export class ApiKeyModal extends Modal {
 		// Display Name
 		new Setting(contentEl)
 			.setName("Display Name")
-			.setDesc("A friendly name to identify this API key (e.g., 'Personal OpenAI', 'Work Account')")
+			.setDesc(
+				"A friendly name to identify this API key (e.g., 'Personal OpenAI', 'Work Account')",
+			)
 			.addText((text) => {
 				text
 					.setPlaceholder("e.g., Personal OpenAI")
@@ -62,7 +64,8 @@ export class ApiKeyModal extends Modal {
 					.addOption("openrouter", "OpenRouter")
 					.setValue(this.apiKeyConfig.provider || "")
 					.onChange((value) => {
-						this.apiKeyConfig.provider = value === "" ? undefined : (value as CurrentProviderType);
+						this.apiKeyConfig.provider =
+							value === "" ? undefined : (value as CurrentProviderType);
 						this.updateProviderDocsLink();
 					});
 			});
@@ -139,11 +142,13 @@ export class ApiKeyModal extends Modal {
 
 	updateProviderDocsLink() {
 		if (!this.providerDocsButton) return;
-		
+
 		const docs = getProviderDocs(this.apiKeyConfig.provider!);
 		if (docs) {
 			this.providerDocsButton.setDisabled(false);
-			this.providerDocsButton.setTooltip(`View ${docs.displayName} documentation`);
+			this.providerDocsButton.setTooltip(
+				`View ${docs.displayName} documentation`,
+			);
 		} else {
 			this.providerDocsButton.setDisabled(true);
 			this.providerDocsButton.setTooltip("Select a provider first");
@@ -166,13 +171,16 @@ export class ApiKeyModal extends Modal {
 			this.apiKeyConfig.provider !== "openai" &&
 			this.apiKeyConfig.provider !== "openrouter"
 		) {
-			new Notice("API keys are only supported for OpenAI and OpenRouter providers.");
+			new Notice(
+				"API keys are only supported for OpenAI and OpenRouter providers.",
+			);
 			return;
 		}
 
 		// Check for duplicate names
 		const existingKeys = this.plugin.settings.apiKeys.filter(
-			key => key.id !== this.apiKeyConfig.id && key.name === this.apiKeyConfig.name
+			(key) =>
+				key.id !== this.apiKeyConfig.id && key.name === this.apiKeyConfig.name,
 		);
 		if (existingKeys.length > 0) {
 			new Notice(`API key name "${this.apiKeyConfig.name}" is already in use.`);
@@ -200,11 +208,7 @@ export class ApiKeyModal extends Modal {
 		}
 
 		await this.plugin.saveSettings();
-		new Notice(
-			this.isEditing
-				? "API key updated!"
-				: "API key added!",
-		);
+		new Notice(this.isEditing ? "API key updated!" : "API key added!");
 		this.onSave();
 		this.close();
 	}

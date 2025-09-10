@@ -10,8 +10,15 @@ import { AddModelModal } from "./add-model-modal.ts";
 import { ApiKeyModal } from "./api-key-modal.ts";
 import { providers } from "../llm/providers/providers.ts";
 import type { CurrentProviderType } from "../types/llm-types.ts";
-import { getProviderDocs, getModelPageUrl } from "../llm/providers/providers.ts";
-import { maskApiKey as _maskApiKey, resolveApiKey as _resolveApiKey, computeDisplayName as _computeDisplayName } from "../lib/settings-utils.ts";
+import {
+	getProviderDocs,
+	getModelPageUrl,
+} from "../llm/providers/providers.ts";
+import {
+	maskApiKey as _maskApiKey,
+	resolveApiKey as _resolveApiKey,
+	computeDisplayName as _computeDisplayName,
+} from "../lib/settings-utils.ts";
 
 export interface ApiKeyConfiguration {
 	id: string;
@@ -45,10 +52,10 @@ export const DEFAULT_SETTINGS: CanvasContextSettings = {
 };
 
 // Re-export utilities for convenience
-export { 
-	maskApiKey, 
-	resolveApiKey, 
-	computeDisplayName 
+export {
+	maskApiKey,
+	resolveApiKey,
+	computeDisplayName,
 } from "../lib/settings-utils.ts";
 
 export class CanvasContextSettingTab extends PluginSettingTab {
@@ -92,7 +99,7 @@ export class CanvasContextSettingTab extends PluginSettingTab {
 		// API Keys Section
 		const apiKeysSection = containerEl.createDiv();
 		apiKeysSection.createEl("h3", { text: "API Keys" });
-		
+
 		// Add API Key Button
 		new Setting(apiKeysSection)
 			.setName("Add API Key")
@@ -173,16 +180,16 @@ export class CanvasContextSettingTab extends PluginSettingTab {
 
 		// Model info
 		setting.setName(config.name);
-		
+
 		// Create a custom description element with proper line breaks
 		const descEl = setting.descEl;
 		descEl.empty();
-		
+
 		// Add each line as a separate div element
 		descEl.createDiv({ text: `Provider: ${config.provider}` });
 		descEl.createDiv({ text: `Model: ${config.modelName}` });
 		descEl.createDiv({ text: `Base URL: ${config.baseURL}` });
-		
+
 		// Show API key information (new system or legacy)
 		const resolvedApiKey = this.resolveApiKey(config);
 		if (
@@ -190,12 +197,18 @@ export class CanvasContextSettingTab extends PluginSettingTab {
 			resolvedApiKey
 		) {
 			if (config.apiKeyId) {
-				const apiKeyConfig = this.plugin.settings.apiKeys.find(key => key.id === config.apiKeyId);
+				const apiKeyConfig = this.plugin.settings.apiKeys.find(
+					(key) => key.id === config.apiKeyId,
+				);
 				const keyName = apiKeyConfig?.name || "Unknown Key";
-				descEl.createDiv({ text: `API Key: ${keyName} (${_maskApiKey(resolvedApiKey)})` });
+				descEl.createDiv({
+					text: `API Key: ${keyName} (${_maskApiKey(resolvedApiKey)})`,
+				});
 			} else {
 				// Legacy direct API key
-				descEl.createDiv({ text: `API Key: ${_maskApiKey(resolvedApiKey)} (Legacy)` });
+				descEl.createDiv({
+					text: `API Key: ${_maskApiKey(resolvedApiKey)} (Legacy)`,
+				});
 			}
 		}
 
@@ -295,11 +308,11 @@ export class CanvasContextSettingTab extends PluginSettingTab {
 
 		// API Key info
 		setting.setName(apiKey.name);
-		
+
 		// Create a custom description element with proper line breaks
 		const descEl = setting.descEl;
 		descEl.empty();
-		
+
 		// Add each line as a separate div element
 		descEl.createDiv({ text: `Provider: ${apiKey.provider}` });
 		descEl.createDiv({ text: `API Key: ${_maskApiKey(apiKey.apiKey)}` });
@@ -328,14 +341,15 @@ export class CanvasContextSettingTab extends PluginSettingTab {
 				.setWarning()
 				.onClick(async () => {
 					// Check if any models are using this API key
-					const modelsUsingKey = this.plugin.settings.modelConfigurations.filter(
-						config => config.apiKeyId === apiKey.id
-					);
+					const modelsUsingKey =
+						this.plugin.settings.modelConfigurations.filter(
+							(config) => config.apiKeyId === apiKey.id,
+						);
 
 					if (modelsUsingKey.length > 0) {
-						const modelNames = modelsUsingKey.map(m => m.name).join(", ");
+						const modelNames = modelsUsingKey.map((m) => m.name).join(", ");
 						new Notice(
-							`Cannot delete API key "${apiKey.name}". It's being used by: ${modelNames}`
+							`Cannot delete API key "${apiKey.name}". It's being used by: ${modelNames}`,
 						);
 						return;
 					}

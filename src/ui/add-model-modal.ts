@@ -58,13 +58,11 @@ export class AddModelModal extends Modal {
 			.setDesc("Auto-computed from provider:model, or set custom name")
 			.addText((text) => {
 				this.nameInput = text.inputEl;
-				text
-					.setValue(this.getDisplayName())
-					.onChange((value) => {
-						if (this.modelConfig.useCustomDisplayName) {
-							this.modelConfig.name = value;
-						}
-					});
+				text.setValue(this.getDisplayName()).onChange((value) => {
+					if (this.modelConfig.useCustomDisplayName) {
+						this.modelConfig.name = value;
+					}
+				});
 			})
 			.addToggle((toggle) => {
 				toggle
@@ -99,7 +97,8 @@ export class AddModelModal extends Modal {
 					.addOption("openrouter", "OpenRouter")
 					.setValue(this.modelConfig.provider || "")
 					.onChange((value) => {
-						this.modelConfig.provider = value === "" ? undefined : (value as CurrentProviderType);
+						this.modelConfig.provider =
+							value === "" ? undefined : (value as CurrentProviderType);
 						// Clear model name since available models change with provider
 						this.modelConfig.modelName = "";
 						// Clear available models and reset dropdown
@@ -156,7 +155,7 @@ export class AddModelModal extends Modal {
 			.addDropdown((dropdown) => {
 				this.apiKeyDropdown = dropdown.selectEl;
 				this.updateApiKeyDropdown();
-				
+
 				dropdown.onChange((value) => {
 					if (value === "") {
 						// No API key selected
@@ -165,7 +164,7 @@ export class AddModelModal extends Modal {
 						// Selected a named API key
 						this.modelConfig.apiKeyId = value;
 					}
-					
+
 					// Load models when provider and required params are available
 					if (this.canLoadModels()) {
 						this.loadModels();
@@ -244,12 +243,13 @@ export class AddModelModal extends Modal {
 				placeholders[this.modelConfig.provider as keyof typeof placeholders] ||
 				"";
 			baseURLInput.placeholder = placeholder;
-			
+
 			// Update the baseURL to match the provider, unless user has manually customized it
 			// Check if current value matches any of the default placeholder values
 			const currentValue = this.modelConfig.baseURL;
-			const isDefaultValue = currentValue && Object.values(placeholders).includes(currentValue);
-			
+			const isDefaultValue =
+				currentValue && Object.values(placeholders).includes(currentValue);
+
 			if (!this.modelConfig.baseURL || isDefaultValue) {
 				this.modelConfig.baseURL = placeholder;
 				baseURLInput.value = placeholder;
@@ -276,8 +276,8 @@ export class AddModelModal extends Modal {
 			// For OpenAI and OpenRouter, pass the API key as the first parameter
 			const resolvedApiKey = this.getResolvedApiKey();
 			const models =
-				(this.modelConfig.provider === "openai" || 
-				 this.modelConfig.provider === "openrouter") && 
+				(this.modelConfig.provider === "openai" ||
+					this.modelConfig.provider === "openrouter") &&
 				resolvedApiKey
 					? await providerGenerator.listModels(
 							resolvedApiKey,
@@ -382,8 +382,8 @@ export class AddModelModal extends Modal {
 			// For OpenAI and OpenRouter, pass the API key as the first parameter
 			const resolvedApiKey = this.getResolvedApiKey();
 			const models =
-				(this.modelConfig.provider === "openai" || 
-				 this.modelConfig.provider === "openrouter") && 
+				(this.modelConfig.provider === "openai" ||
+					this.modelConfig.provider === "openrouter") &&
 				resolvedApiKey
 					? await providerGenerator.listModels(
 							resolvedApiKey,
@@ -431,7 +431,6 @@ export class AddModelModal extends Modal {
 		this.isLoadingModels = false;
 	}
 
-
 	updateApiKeyFieldVisibility() {
 		if (!this.apiKeySetting) return;
 
@@ -444,7 +443,6 @@ export class AddModelModal extends Modal {
 			this.apiKeySetting.settingEl.style.display = "none";
 		}
 	}
-
 
 	canLoadModels(): boolean {
 		if (!this.modelConfig.provider || !this.modelConfig.baseURL) {
@@ -481,11 +479,13 @@ export class AddModelModal extends Modal {
 
 	updateProviderDocsLink() {
 		if (!this.providerDocsButton) return;
-		
+
 		const docs = getProviderDocs(this.modelConfig.provider!);
 		if (docs) {
 			this.providerDocsButton.setDisabled(false);
-			this.providerDocsButton.setTooltip(`View ${docs.displayName} documentation`);
+			this.providerDocsButton.setTooltip(
+				`View ${docs.displayName} documentation`,
+			);
 		} else {
 			this.providerDocsButton.setDisabled(true);
 			this.providerDocsButton.setTooltip("Select a provider first");
@@ -506,12 +506,15 @@ export class AddModelModal extends Modal {
 		this.apiKeyDropdown.appendChild(defaultOption);
 
 		// Add named API keys for the current provider
-		if (this.modelConfig.provider === "openai" || this.modelConfig.provider === "openrouter") {
+		if (
+			this.modelConfig.provider === "openai" ||
+			this.modelConfig.provider === "openrouter"
+		) {
 			const relevantKeys = this.plugin.settings.apiKeys.filter(
-				key => key.provider === this.modelConfig.provider
+				(key) => key.provider === this.modelConfig.provider,
 			);
 
-			relevantKeys.forEach(key => {
+			relevantKeys.forEach((key) => {
 				const option = this.apiKeyDropdown!.createEl("option", {
 					value: key.id,
 					text: key.name,
@@ -528,7 +531,9 @@ export class AddModelModal extends Modal {
 
 	getResolvedApiKey(): string | undefined {
 		if (this.modelConfig.apiKeyId) {
-			const apiKeyConfig = this.plugin.settings.apiKeys.find(key => key.id === this.modelConfig.apiKeyId);
+			const apiKeyConfig = this.plugin.settings.apiKeys.find(
+				(key) => key.id === this.modelConfig.apiKeyId,
+			);
 			return apiKeyConfig?.apiKey;
 		}
 		return undefined;
@@ -540,18 +545,21 @@ export class AddModelModal extends Modal {
 			return this.modelConfig.name;
 		}
 		// Otherwise compute from provider:model
-		return computeDisplayName(this.modelConfig.provider, this.modelConfig.modelName || "");
+		return computeDisplayName(
+			this.modelConfig.provider,
+			this.modelConfig.modelName || "",
+		);
 	}
 
 	updateNameFieldState(): void {
 		if (!this.nameInput) return;
 
 		const shouldUseCustom = this.modelConfig.useCustomDisplayName || false;
-		
+
 		// Update field state
 		this.nameInput.disabled = !shouldUseCustom;
 		this.nameInput.style.opacity = shouldUseCustom ? "1" : "0.6";
-		
+
 		// Update value and placeholder
 		if (shouldUseCustom) {
 			this.nameInput.placeholder = "Enter custom display name";
@@ -563,7 +571,10 @@ export class AddModelModal extends Modal {
 		} else {
 			this.nameInput.placeholder = "Auto-computed from provider:model";
 			// Always show computed value when in auto mode
-			const computedName = computeDisplayName(this.modelConfig.provider, this.modelConfig.modelName || "");
+			const computedName = computeDisplayName(
+				this.modelConfig.provider,
+				this.modelConfig.modelName || "",
+			);
 			this.nameInput.value = computedName;
 			this.modelConfig.name = computedName;
 		}
