@@ -7,33 +7,68 @@ import {
 } from "obsidian";
 import type CanvasContextPlugin from "../main.ts";
 import { AddModelModal } from "./add-model-modal.ts";
+import { ApiKeyModal } from "./api-key-modal.ts";
 import { providers } from "../llm/providers/providers.ts";
 import type { CurrentProviderType } from "../types/llm-types.ts";
+import { getProviderDocs, getModelPageUrl } from "../llm/providers/providers.ts";
+
+export interface ApiKeyConfiguration {
+	id: string;
+	name: string; // User-friendly name like "Personal OpenAI", "Work Account"
+	provider: CurrentProviderType | undefined;
+	apiKey: string;
+	description?: string;
+}
 
 export interface ModelConfiguration {
 	id: string;
 	name: string;
-	provider: CurrentProviderType;
+	provider: CurrentProviderType | undefined;
 	modelName: string;
 	baseURL: string;
 	enabled: boolean;
-	apiKey?: string; // Optional API key for providers that require authentication
+	apiKeyId?: string; // Reference to ApiKeyConfiguration.id
+	useCustomDisplayName?: boolean; // default false - when false, name is auto-computed from provider:model
 }
 
 export interface CanvasContextSettings {
 	currentModel: string;
 	modelConfigurations: ModelConfiguration[];
+	apiKeys: ApiKeyConfiguration[];
 }
 
 export const DEFAULT_SETTINGS: CanvasContextSettings = {
 	currentModel: "",
 	modelConfigurations: [],
+	apiKeys: [],
 };
 
 function maskApiKey(apiKey: string): string {
 	if (!apiKey) return "";
-	if (apiKey.length <= 8) return "•".repeat(apiKey.length);
-	return "•".repeat(apiKey.length - 4) + apiKey.slice(-4);
+	
+	// Always show exactly 8 masked characters + last 4 characters = 12 total
+	// This ensures consistent length regardless of actual API key length
+	const lastFour = apiKey.slice(-4);
+	return "••••••••" + lastFour;
+}
+
+
+export function resolveApiKey(
+	config: ModelConfiguration,
+	apiKeys: ApiKeyConfiguration[]
+): string | undefined {
+	if (config.apiKeyId) {
+		const apiKeyConfig = apiKeys.find(key => key.id === config.apiKeyId);
+		return apiKeyConfig?.apiKey;
+	}
+	return undefined;
+}
+
+export function computeDisplayName(provider: CurrentProviderType | undefined, modelName: string): string {
+	if (!provider || !modelName) {
+		return "";
+	}
+	return `${provider}:${modelName}`;
 }
 
 export class CanvasContextSettingTab extends PluginSettingTab {
@@ -42,6 +77,10 @@ export class CanvasContextSettingTab extends PluginSettingTab {
 	constructor(app: App, plugin: CanvasContextPlugin) {
 		super(app, plugin);
 		this.plugin = plugin;
+	}
+
+	private resolveApiKey(config: ModelConfiguration): string | undefined {
+		return resolveApiKey(config, this.plugin.settings.apiKeys);
 	}
 
 	display(): void {
@@ -69,6 +108,43 @@ export class CanvasContextSettingTab extends PluginSettingTab {
 						await this.plugin.saveSettings();
 					});
 			});
+
+		// API Keys Section
+		const apiKeysSection = containerEl.createDiv();
+		apiKeysSection.createEl("h3", { text: "API Keys" });
+		
+		// Add API Key Button
+		new Setting(apiKeysSection)
+			.setName("Add API Key")
+			.setDesc("Add a named API key for cloud providers")
+			.addButton((button) => {
+				button
+					.setButtonText("Add API Key")
+					.setCta()
+					.onClick(() => {
+						const modal = new ApiKeyModal(
+							this.app,
+							this.plugin,
+							undefined,
+							() => {
+								this.display(); // Refresh the settings page
+							},
+						);
+						modal.open();
+					});
+			});
+
+		// API Keys List
+		if (this.plugin.settings.apiKeys.length === 0) {
+			apiKeysSection.createDiv({
+				text: "No API keys configured. Cloud providers (OpenAI, OpenRouter) require API keys.",
+				cls: "setting-item-description",
+			});
+		} else {
+			this.plugin.settings.apiKeys.forEach((apiKey, index) => {
+				this.renderApiKeyConfiguration(apiKeysSection, apiKey, index);
+			});
+		}
 
 		// Model Configurations Section
 		const modelSection = containerEl.createDiv();
@@ -117,14 +193,31 @@ export class CanvasContextSettingTab extends PluginSettingTab {
 
 		// Model info
 		setting.setName(config.name);
-		const descParts = [config.provider, config.modelName, config.baseURL];
+		
+		// Create a custom description element with proper line breaks
+		const descEl = setting.descEl;
+		descEl.empty();
+		
+		// Add each line as a separate div element
+		descEl.createDiv({ text: `Provider: ${config.provider}` });
+		descEl.createDiv({ text: `Model: ${config.modelName}` });
+		descEl.createDiv({ text: `Base URL: ${config.baseURL}` });
+		
+		// Show API key information (new system or legacy)
+		const resolvedApiKey = this.resolveApiKey(config);
 		if (
 			(config.provider === "openai" || config.provider === "openrouter") &&
-			config.apiKey
+			resolvedApiKey
 		) {
-			descParts.push(`API Key: ${maskApiKey(config.apiKey)}`);
+			if (config.apiKeyId) {
+				const apiKeyConfig = this.plugin.settings.apiKeys.find(key => key.id === config.apiKeyId);
+				const keyName = apiKeyConfig?.name || "Unknown Key";
+				descEl.createDiv({ text: `API Key: ${keyName} (${maskApiKey(resolvedApiKey)})` });
+			} else {
+				// Legacy direct API key
+				descEl.createDiv({ text: `API Key: ${maskApiKey(resolvedApiKey)} (Legacy)` });
+			}
 		}
-		setting.setDesc(descParts.join(" • "));
 
 		// Enable/Disable toggle
 		setting.addToggle((toggle) => {
@@ -137,6 +230,19 @@ export class CanvasContextSettingTab extends PluginSettingTab {
 			});
 		});
 
+		// Model docs button
+		const modelPageUrl = getModelPageUrl(config.provider, config.modelName);
+		if (modelPageUrl) {
+			setting.addButton((button) => {
+				button
+					.setButtonText("📄 Model")
+					.setTooltip(`View ${config.modelName} details`)
+					.onClick(() => {
+						window.open(modelPageUrl, "_blank");
+					});
+			});
+		}
+
 		// Verify button
 		setting.addButton((button) => {
 			button
@@ -144,6 +250,25 @@ export class CanvasContextSettingTab extends PluginSettingTab {
 				.setTooltip("Test connection")
 				.onClick(async () => {
 					await this.verifyModelConfiguration(config, button);
+				});
+		});
+
+		// Duplicate button
+		setting.addButton((button) => {
+			button
+				.setButtonText("Duplicate")
+				.setTooltip("Duplicate configuration")
+				.onClick(() => {
+					const duplicatedConfig: ModelConfiguration = {
+						...config,
+						id: this.plugin.generateId(),
+						name: `${config.name} (Copy)`,
+						enabled: false, // Start disabled to avoid conflicts
+					};
+					this.plugin.settings.modelConfigurations.push(duplicatedConfig);
+					this.plugin.saveSettings();
+					this.display(); // Refresh the settings page
+					new Notice("Model configuration duplicated.");
 				});
 		});
 
@@ -181,6 +306,69 @@ export class CanvasContextSettingTab extends PluginSettingTab {
 		});
 	}
 
+	renderApiKeyConfiguration(
+		containerEl: HTMLElement,
+		apiKey: ApiKeyConfiguration,
+		index: number,
+	) {
+		const setting = new Setting(containerEl);
+
+		// API Key info
+		setting.setName(apiKey.name);
+		
+		// Create a custom description element with proper line breaks
+		const descEl = setting.descEl;
+		descEl.empty();
+		
+		// Add each line as a separate div element
+		descEl.createDiv({ text: `Provider: ${apiKey.provider}` });
+		descEl.createDiv({ text: `API Key: ${maskApiKey(apiKey.apiKey)}` });
+		if (apiKey.description) {
+			descEl.createDiv({ text: `Description: ${apiKey.description}` });
+		}
+
+		// Edit button
+		setting.addButton((button) => {
+			button
+				.setButtonText("Edit")
+				.setTooltip("Edit API key")
+				.onClick(() => {
+					const modal = new ApiKeyModal(this.app, this.plugin, apiKey, () => {
+						this.display(); // Refresh the settings page
+					});
+					modal.open();
+				});
+		});
+
+		// Delete button
+		setting.addButton((button) => {
+			button
+				.setButtonText("Delete")
+				.setTooltip("Delete API key")
+				.setWarning()
+				.onClick(async () => {
+					// Check if any models are using this API key
+					const modelsUsingKey = this.plugin.settings.modelConfigurations.filter(
+						config => config.apiKeyId === apiKey.id
+					);
+
+					if (modelsUsingKey.length > 0) {
+						const modelNames = modelsUsingKey.map(m => m.name).join(", ");
+						new Notice(
+							`Cannot delete API key "${apiKey.name}". It's being used by: ${modelNames}`
+						);
+						return;
+					}
+
+					// Remove from array
+					this.plugin.settings.apiKeys.splice(index, 1);
+					await this.plugin.saveSettings();
+					this.display(); // Refresh the settings page
+					new Notice("API key deleted.");
+				});
+		});
+	}
+
 	async verifyModelConfiguration(
 		config: ModelConfiguration,
 		button: ButtonComponent,
@@ -196,11 +384,14 @@ export class CanvasContextSettingTab extends PluginSettingTab {
 				throw new Error("Provider not found");
 			}
 
+			// Resolve API key using new system
+			const resolvedApiKey = this.resolveApiKey(config);
+
 			// For OpenAI and OpenRouter, pass the API key as the first parameter
 			const models =
 				(config.provider === "openai" || config.provider === "openrouter") &&
-				config.apiKey
-					? await providerGenerator.listModels(config.apiKey, config.baseURL)
+				resolvedApiKey
+					? await providerGenerator.listModels(resolvedApiKey, config.baseURL)
 					: await providerGenerator.listModels(config.baseURL);
 			new Notice(
 				`${config.name}: Connection successful! Found ${models.length} models.`,
