@@ -29,6 +29,7 @@
 		"eslint": "9.34.0",
 		"happy-dom": "18.0.1",
 		"jsdom": "26.1.0",
+		"msw": "2.11.1",
 		"obsidian": "1.8.7",
 		"prettier": "3.6.2",
 		"rolldown": "1.0.0-beta.35",

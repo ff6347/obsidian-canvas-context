@@ -101,8 +101,8 @@ tags: ["context", "research", "sibling-branch"]
 
 ```yaml
 role: system
-model: "llama3.1" # Optional, defaults to plugin setting
-temperature: 0.7 # Optional, defaults to plugin setting
+model: "llama3.1" # Optional, defaults to plugin setting not yet implemented
+temperature: 0.7 # Optional, defaults to plugin setting not yet implemented
 ```
 
 ### Context Materials
@@ -131,84 +131,43 @@ The plugin uses **Vercel's AI SDK** for unified LLM provider support, making it 
 
 #### Current Provider Support
 
-1. **Ollama Integration** (`ollama-ai-provider-v2`)
+The plugin supports four LLM providers through the Vercel AI SDK:
 
-```typescript
-interface OllamaConfig {
-	baseUrl: string; // Default: http://localhost:11434
-	model: string; // e.g., "llama3.1", "codellama"
-}
-```
+1. **Ollama Integration** (`ollama-ai-provider-v2`)
+   - Local inference server, default: http://localhost:11434
+   - No API key required
 
 2. **LM Studio Support** (`@ai-sdk/openai-compatible`)
-
-```typescript
-interface LMStudioConfig {
-	baseUrl: string; // Default: http://localhost:1234
-	model: string; // Model identifier
-}
-```
+   - Local inference server, default: http://localhost:1234
+   - No API key required
 
 3. **OpenAI Integration** (`@ai-sdk/openai`)
-
-```typescript
-interface OpenAIConfig {
-	apiKey: string; // Required: API key authentication
-	baseUrl?: string; // Default: https://api.openai.com
-	model: string; // e.g., "gpt-4", "gpt-3.5-turbo"
-}
-```
+   - Cloud service requiring API key authentication
+   - Default endpoint: https://api.openai.com
 
 4. **OpenRouter Integration** (`@openrouter/ai-sdk-provider`)
-
-```typescript
-interface OpenRouterConfig {
-	apiKey: string; // Required: API key authentication
-	baseUrl?: string; // Default: https://openrouter.ai/api/v1
-	model: string; // e.g., "anthropic/claude-3.5-sonnet", "meta-llama/llama-3.1-405b-instruct"
-}
-```
+   - Universal API gateway requiring API key authentication
+   - Default endpoint: https://openrouter.ai/api/v1
 
 #### Provider Interface Pattern
 
-All providers follow the same interface pattern:
+All providers in `src/llm/providers/` implement a consistent interface with:
 
-```typescript
-export const providerName = "provider-name" as const;
-
-export function createProvider(apiKey?: string, baseURL?: string) {
-	return providerSDK({
-		/* provider-specific config */
-	});
-}
-
-export async function isProviderAlive(
-	apiKey?: string,
-	baseURL?: string,
-): Promise<boolean> {
-	// Health check implementation
-}
-
-export async function listModels(
-	apiKey?: string,
-	baseURL?: string,
-): Promise<string[]> {
-	// Model enumeration with alphabetical sorting
-}
-```
-
-```
+- `providerName` constant for identification
+- `createProvider()` function for SDK initialization
+- `isProviderAlive()` health check function
+- `listModels()` model enumeration function
 
 #### Adding New Providers
 
-To add a new LLM provider (e.g., Anthropic, Google Gemini):
+To add a new LLM provider:
 
-1. **Install AI SDK package**: `pnpm add @ai-sdk/anthropic`
-2. **Create provider file**: `src/llm/providers/anthropic.ts`
-3. **Implement interface**: Follow the standard provider pattern
-4. **Register provider**: Add to `providers.ts` registry
-5. **Update types**: Add to `CurrentProviderType` in `llm-types.ts`
-6. **Update UI**: Add option to provider dropdown in modal
+1. **Install AI SDK package** for the provider
+2. **Create provider file** in `src/llm/providers/`
+3. **Implement interface** following existing provider patterns
+4. **Register provider** in `src/llm/providers/providers.ts` registry
+5. **Update types** in `src/types/llm-types.ts`
+6. **Update UI** by adding option to provider dropdown
 
 ### Model Management
 
@@ -334,68 +293,59 @@ To add a new LLM provider (e.g., Anthropic, Google Gemini):
 
 ## File Structure
 
+Current codebase structure:
+
 ```
-
 src/
-├── main.ts # Plugin entry point
+├── main.ts                    # Plugin entry point
 ├── canvas/
-│ ├── parser.ts # Canvas file parsing
-│ ├── walker.ts # Tree walking algorithm
-│ └── context.ts # Context building logic
+│   ├── walker.ts              # Tree walking algorithm
+│   └── nodes-actions.ts       # Canvas node actions and context menu
+├── lib/
+│   ├── constants.ts           # Plugin constants
+│   └── settings-utils.ts      # Settings utility functions
 ├── llm/
-│ ├── client.ts # LLM HTTP client
-│ ├── ollama.ts # Ollama-specific implementation
-│ ├── lmstudio.ts # LMStudio integration
-│ └── response.ts # Response processing
-├── frontmatter/
-│ ├── parser.ts # YAML frontmatter parsing
-│ ├── schema.ts # Property validation schema
-│ └── editor.ts # Frontmatter editing UI
-├── ui/
-│ ├── context-menu.ts # Right-click menu
-│ ├── settings.ts # Settings panel
-│ └── modal.ts # Modal dialogs
-└── types/
-├── canvas.ts # Canvas-related types
-├── llm.ts # LLM API types
-└── settings.ts # Plugin settings types
-
+│   ├── llm.ts                 # Main LLM inference logic
+│   └── providers/             # Provider implementations
+│       ├── providers.ts       # Provider registry
+│       ├── ollama.ts          # Ollama provider
+│       ├── lmstudio.ts        # LM Studio provider
+│       ├── openai.ts          # OpenAI provider
+│       └── openrouter.ts      # OpenRouter provider
+├── types/
+│   ├── canvas-types.ts        # Canvas-related types
+│   └── llm-types.ts          # LLM and provider types
+└── ui/
+    ├── settings.ts            # Settings panel
+    ├── add-model-modal.ts     # Model configuration modal
+    ├── api-key-modal.ts       # API key management modal
+    ├── layout.tsx             # React layout component
+    ├── view.tsx               # Main plugin view
+    └── components/
+        └── react-view.tsx     # React component wrapper
 ```
 
 ## Example Workflow
 
 1. **User Creates Canvas Structure**:
+   - Canvas nodes with text content or linked files
+   - Spatial connections define conversation flow
+   - Frontmatter in nodes defines roles (system, user, assistant)
 
-```
-
-[Research Notes] ← [Data Source] → [Analysis Method]
-↓
-[Question: "What trends do you see?"]
-↓
-[Response] (to be generated)
-
-```
-
-2. **User Right-Clicks on Question Node**:
-- Plugin extracts parent chain: Research Notes
-- Includes spatial context: Data Source, Analysis Method
-- Builds LLM message array with proper roles
+2. **User Clicks Canvas Context Button**:
+   - Plugin walks UP the parent chain (conversation thread)
+   - Collects horizontal context from connected nodes
+   - Excludes sibling conversation branches
 
 3. **Context Sent to LLM**:
-
-```
-
-Messages: [
-{role: "system", content: "Research Notes content"},
-{role: "user", content: "Data Source + Analysis Method + Question"}
-]
-
-```
+   - System messages ordered first
+   - Parent chain forms main conversation
+   - Horizontal context wrapped in additional-document tags
 
 4. **Response Integrated**:
-- New node created below question
-- Content populated with LLM response
-- Frontmatter added: `role: assistant`, `source_model: llama3.1`
+   - New assistant node created below source
+   - Positioned with proper canvas connections
+   - Includes frontmatter with role and timestamp
 
 ## Success Metrics
 
@@ -440,27 +390,52 @@ Messages: [
 - **Data Loss**: Implement backup/recovery, atomic operations
 - **Privacy Concerns**: Local-first approach, clear data handling docs
 
+## Build & Development
+
+- `pnpm dev` - Development build with watch mode (using Rolldown)
+- `pnpm build` - Production build (using Rolldown)
+- `pnpm typecheck` - TypeScript compilation check: `npx tsc --noEmit`
+- `pnpm test` - Run unit tests with Vitest
+- `pnpm format` - Run prettier on all source files
+
+### Build System
+
+- **Migrated from esbuild to Rolldown** (January 2025)
+- Native TypeScript support without Babel transpilation
+- Uses `builtin-modules` package for Node.js externals
+- TypeScript config enables `allowImportingTsExtensions` for .ts/.tsx imports
+
+## Code Style
+
+- Uses TypeScript with strict settings
+- Prettier configured with tabs, semicolons, double quotes
+- Target: Obsidian plugin development
+
 ## Current Progress (Updated)
 
-### ✅ Completed (Sep 5-7, 2025)
+### ✅ Completed (Sep 5-7, 2025 - Jan 9, 2025)
 
 1. **Canvas Tree Walking Rules**: Defined simplified branching logic
+
 - Walk UP the parent chain (main conversation thread)
 - Include horizontal context from all nodes in parent chain
 - Exclude sibling conversation branches (not context materials)
 - No left/right distinction needed
 
 2. **Frontmatter Properties Simplified**: Removed over-engineering
+
 - `role: system | user | assistant` (maps to LLM APIs)
 - `tags: ["context"]` for organization only
 - Model/temperature selection in plugin UI, not per-node
 
 3. **Test Structure Created**: Complete example canvas ready for testing
+
 - 9 markdown files with realistic ML conversation content
 - Canvas structure matches mermaid diagram from plan
 - Clear branching scenario to validate tree walking algorithm
 
 4. **Vitest Testing Setup**: Complete test infrastructure configured
+
 - Vitest with jsdom environment for DOM testing
 - Mock Obsidian API setup in test configuration
 - Test scripts: `pnpm test`, `pnpm test:watch`, `pnpm test:ui`, `pnpm test:coverage`
@@ -468,6 +443,7 @@ Messages: [
 - TypeScript configuration with path aliases for clean imports
 
 5. **Canvas Walker Implementation**: Complete tree walking algorithm
+
 - Parent chain traversal with cycle detection
 - Horizontal context collection for all nodes in parent chain
 - File node content extraction using Obsidian's `getFrontMatterInfo()` and metadata cache
@@ -477,6 +453,7 @@ Messages: [
 - Horizontal context wrapped in `<additional-document>` tags for LLM clarity
 
 6. **Canvas Walker Testing**: Complete test suite with all fixes implemented
+
 - Fixed parent chain walking bug (no longer includes child nodes)
 - Test coverage for all walker scenarios: linear chains, horizontal context, branching
 - Proper CanvasViewDataEdge type definitions with fromNode, toNode, fromSide, toSide
@@ -486,6 +463,7 @@ Messages: [
 - All 14 tests passing with correct behavior validation
 
 7. **Canvas Text Card Support Implementation**: Full integration with canvas workflow
+
 - **Gray-matter Integration**: Added frontmatter parsing for canvas text nodes
 - **Text Node Processing**: Canvas text cards now supported alongside file nodes
 - **Default Role Assignment**: Cards without frontmatter default to `role: "user"`
@@ -497,35 +475,40 @@ Messages: [
 - **Frontmatter Format**: Assistant responses include proper YAML frontmatter with empty lines
 
 8. **Enhanced User Experience**: Streamlined canvas-native workflow
+
 - **Drag-and-Drop Support**: Users can create text cards by dragging from connectors
 - **Mixed Node Types**: Supports both file nodes and text cards in same canvas
 - **Automatic Edge Creation**: Connects response nodes to source nodes
 - **Enhanced Loading Indicators**: Status bar with animated spinner, pulsing background, and fade-pulse text effects
 
 9. **Loading UX Implementation**: Comprehensive visual feedback system
+
 - **Status Bar Integration**: Non-blocking loading indicator in familiar location
 - **Multiple Animation Layers**: Background pulse (2s), text fade-pulse (1.5s), spinner rotation (0.8s)
 - **Enhanced Visibility**: Larger spinner (14px), bold text (font-weight 500), accent color highlights
 - **User-Centered Design**: Rejected modal and floating approaches for subtle status bar enhancement
 
 10. **React UI with Base UI Components**: Modern settings interface foundation
- - **Layout Component Fixed**: Resolved object rendering errors with proper React.FC typing
- - **Base UI Integration**: Successfully integrated Switch components with state management
- - **Component Architecture**: Established proper TypeScript interfaces and event handlers
- - **Working Foundation**: Ready for advanced UI components (Select, Input, Dialog, etc.)
+
+- **Layout Component Fixed**: Resolved object rendering errors with proper React.FC typing
+- **Base UI Integration**: Successfully integrated Switch components with state management
+- **Component Architecture**: Established proper TypeScript interfaces and event handlers
+- **Working Foundation**: Ready for advanced UI components (Select, Input, Dialog, etc.)
 
 11. **Release Workflow Enhancement**: Fully automated Obsidian plugin deployment
- - **Semantic-Release GitHub Plugin**: Configured to upload plugin assets automatically
- - **Asset Management**: Automated upload of main.js, manifest.json, styles.css, versions.json
- - **CI/CD Optimization**: Removed redundant manual asset upload steps from workflow
- - **Version Management**: Enhanced version-bump.js to only update versions.json when minAppVersion changes
+
+- **Semantic-Release GitHub Plugin**: Configured to upload plugin assets automatically
+- **Asset Management**: Automated upload of main.js, manifest.json, styles.css, versions.json
+- **CI/CD Optimization**: Removed redundant manual asset upload steps from workflow
+- **Version Management**: Enhanced version-bump.js to only update versions.json when minAppVersion changes
 
 12. **Canvas Selection Toolbar Integration**: Complete UI integration with mutation observers
- - **Dual Approach Implementation**: Mutation observers + event handler backup for maximum compatibility
- - **Default Functionality Preserved**: All default Obsidian toolbar options remain intact
- - **Smart Button Insertion**: Waypoints icon appears only for single node selection
- - **Global Icon System**: `PLUGIN_ICON` constant for consistent branding across all interfaces
- - **Production Ready**: Clean code with debug logging removed, proper cleanup on unload
+
+- **Dual Approach Implementation**: Mutation observers + event handler backup for maximum compatibility
+- **Default Functionality Preserved**: All default Obsidian toolbar options remain intact
+- **Smart Button Insertion**: Waypoints icon appears only for single node selection
+- **Global Icon System**: `PLUGIN_ICON` constant for consistent branding across all interfaces
+- **Production Ready**: Clean code with debug logging removed, proper cleanup on unload
 
 ## ✅ Canvas Selection Toolbar Implementation (Jan 2025)
 
@@ -534,11 +517,13 @@ Messages: [
 Canvas selection toolbar now works correctly with dual approach:
 
 1. **Mutation Observer Approach**: Primary method using DOM observation
+
 - Watches for canvas menu changes without interfering with default functionality
 - Adds waypoints icon button only for single node selection
 - Preserves all default toolbar options (Delete, Set color, Zoom, Edit)
 
 2. **Event Handler Backup**: `canvas:selection-menu` event registration
+
 - Provides fallback compatibility for different Obsidian versions
 - Clean event-driven integration
 
@@ -583,6 +568,66 @@ Canvas selection toolbar now works correctly with dual approach:
 - **Global Icon System**: `PLUGIN_ICON = "waypoints"` constant for consistent branding
 - **Dual Fallback Strategy**: Primary mutation observers + backup event handlers for maximum compatibility
 
+13. **Named API Key Management System**: Complete reusable API key infrastructure (Jan 9, 2025)
+
+- **Centralized API Key Storage**: `ApiKeyConfiguration` structure with ID, name, provider, description
+- **API Key Modal Interface**: Complete CRUD operations for managing named API keys
+- **Model Configuration Enhancement**: Models reference API keys by ID instead of storing directly
+- **Backward Compatibility**: Legacy direct API keys supported during migration period
+- **Smart Validation**: Prevents deletion of API keys in use by models
+- **Enhanced Display**: Shows friendly API key names and consistent masked key format (••••••••pVqL)
+- **Reusability**: Single API key can be shared across multiple model configurations
+- **Security**: Secure storage with proper key masking and reference-based access
+
+14. **Model Duplication & UI Improvements**: Streamlined configuration management (Jan 9, 2025)
+
+- **One-Click Duplication**: "Duplicate" button for easy model configuration copying
+- **Smart Naming**: Auto-adds "(Copy)" suffix with disabled state to prevent conflicts
+- **Multi-Line Layout**: Improved readability with each config detail on separate lines
+- **Consistent Formatting**: Standardized API key display length prevents layout issues
+- **API Key Input Management**: Text input disabled/enabled based on named key selection
+- **Visual Feedback**: Clear indicators when named API keys are selected vs direct entry
+- **Enhanced User Experience**: Reduced cognitive load with cleaner, organized interface
+- **Provider Documentation Links**: Easy access to provider docs and model-specific information
+
+15. **Major Architecture Refactoring**: Provider system consolidation and type system cleanup (Jan 2025)
+
+- **Provider Documentation Integration**: Moved documentation from separate file into main providers.ts registry
+- **Type System Simplification**: Removed empty string from CurrentProviderType union type
+- **Centralized API Key Resolution**: Single resolveApiKey function eliminating code duplication
+- **Legacy System Removal**: Complete cleanup of old direct API key storage approach
+- **Interface Consistency**: All provider configurations follow unified pattern with docs, models, and validation
+- **Import Optimization**: Streamlined imports throughout codebase removing unused dependencies
+
+16. **Toggle-Based Display Names**: Transparent user control over model naming (Jan 2025)
+
+- **useCustomDisplayName Flag**: Boolean toggle for user choice between custom and auto-computed names
+- **Auto-Computed Format**: "provider:modelName" pattern for consistent naming
+- **Real-Time Updates**: Display name updates immediately when provider/model changes
+- **Clear Visual Indicators**: Toggle shows current state (custom vs computed) with descriptive text
+- **Model Clearing Fix**: Prevents stale model names when provider changes
+- **Transparent UX**: Users see exactly how names are generated, no hidden behavior
+
+17. **Comprehensive Unit Testing**: Robust test coverage for utility functions (Jan 2025)
+
+- **Settings Utilities Module**: Extracted testable functions to dedicated module
+- **24 Test Cases**: Complete coverage for maskApiKey, resolveApiKey, and computeDisplayName
+- **Edge Case Coverage**: Handles empty strings, null/undefined values, various key formats
+- **Vitest Integration**: Modern testing framework with TypeScript support
+- **Mock Isolation**: Tests run independently of Obsidian dependencies
+- **CI/CD Ready**: Tests run on every commit ensuring code quality
+
+18. **MSW Provider Testing Infrastructure**: Comprehensive mocking without real network requests (Jan 2025)
+
+- **Mock Service Worker Setup**: Complete MSW integration for Node.js testing environment
+- **Provider Mock Handlers**: Realistic mock responses for Ollama, LM Studio, OpenAI, OpenRouter APIs
+- **Authentication Testing**: API key validation, header requirements, and error responses
+- **57 Comprehensive Tests**: Full coverage of happy path, error scenarios, network failures, malformed responses
+- **Error Simulation**: Server errors (500), unauthorized (401), network timeouts, invalid JSON
+- **Vitest MSW Lifecycle**: Proper beforeAll/afterEach/afterAll hooks for clean test isolation
+- **Zero External Dependencies**: All provider tests run without making real HTTP requests
+- **Improved Provider Robustness**: Fixed missing error handling in Ollama provider isProviderAlive function
+
 ### 💡 Future Enhancement Notes
 
 - **Hex Color Support**: Canvas also supports hex color values (e.g., `"color": "#ff6b6b"`) for more precise color control
@@ -590,4 +635,76 @@ Canvas selection toolbar now works correctly with dual approach:
 - **Color Theming**: Could match colors to Obsidian theme or user preferences
 
 This approach successfully combines file-based and canvas-native workflows, giving users flexibility to use either markdown files or quick text cards for LLM conversations.
+
+## Key Design Decisions
+
+- **Multi-provider Architecture**: Support local (Ollama/LMStudio) and cloud (OpenAI/OpenRouter) providers
+- **Vercel AI SDK**: Unified interface for all LLM providers
+- **Secure Authentication**: API key storage with masking for cloud providers
+- **Extensible Design**: Easy addition of new providers following standard pattern
+- **Minimal complexity**: Focus on core spatial context value
+- **Standard roles only**: No invented LLM API properties
+- **Plugin-level config**: Model selection in UI, not per-node
+- **Reference-based API Keys**: API keys stored separately and referenced by models for reusability
+- **Backward Compatibility**: Legacy configurations continue working while new features are added
+- **DOM-first UI**: Direct DOM manipulation for Obsidian compatibility instead of complex React components
+
+## Adding New Providers
+
+To add a new LLM provider:
+
+1. **Install dependency** for the AI SDK package
+2. **Create provider file** in `src/llm/providers/` following existing patterns
+3. **Implement required functions**: `createProvider`, `listModels`, `isProviderAlive`
+4. **Register in providers.ts** registry with documentation and configuration
+5. **Update types** in `src/types/llm-types.ts`
+6. **Update UI** by adding option to provider dropdown in settings
+
+All providers follow the established interface pattern for seamless integration with the UI and authentication system.
+
+## OpenRouter Benefits
+
+OpenRouter provides unique advantages as a universal API gateway:
+
+- **Universal Model Access**: One API key for hundreds of models from leading providers (Anthropic, Google, Meta, Mistral, OpenAI, and more)
+- **Cost-Effective**: Pay-as-you-go pricing with transparent per-token costs and no monthly fees
+- **High Availability**: Enterprise-grade infrastructure with automatic failover
+- **Latest Models**: Immediate access to new models as they're released
+- **Simplified Integration**: Standardized API across all models with consistent interfaces
+
+For users who want access to multiple model providers without managing separate API keys, OpenRouter is an excellent choice that complements the direct provider integrations.
+
+## Implementation Patterns & Lessons Learned
+
+### API Key Management
+
+- **Reference Pattern**: Use ID-based references instead of embedding sensitive data directly
+- **Validation Strategy**: Check dependencies before allowing deletions to maintain data integrity
+- **Migration Approach**: Support both old and new patterns simultaneously during transitions
+- **Security Best Practices**: Consistent masking patterns for displaying sensitive information
+
+### Obsidian UI Development
+
+- **DOM Manipulation**: Direct DOM APIs work better than React for Obsidian's modal system
+- **Line Breaks**: Use `descEl.createDiv()` instead of string concatenation with `\n` for proper line breaks
+- **TypeScript Strict Mode**: Use `delete` operator instead of assigning `undefined` for optional properties
+- **State Management**: Store UI references as class properties when they need to persist across events
+
+### User Experience Patterns
+
+- **Progressive Enhancement**: Add advanced features while keeping simple alternatives
+- **Contextual Help**: Place documentation links directly in relevant UI sections
+- **Visual Consistency**: Standardize spacing, sizing, and layout across all configuration elements
+- **Error Prevention**: Disable conflicting options instead of showing error messages after submission
+
+## Next Implementation Steps
+
+1. **Additional Provider Support**: Add Anthropic Claude, Google Gemini, Mistral AI (Note: OpenRouter already provides access to these models)
+2. **Enhanced UI Components**: Advanced Base UI components (Select, Input, Dialog)
+3. **Context Preview**: Show users what context will be sent before inference
+4. **Debugging Tools**: Context visualization and troubleshooting features
+5. **Performance Optimization**: Caching, batch processing, large canvas handling
+
+```
+
 ```

@@ -31,9 +31,13 @@ export function createProvider(baseURL: string = "http://localhost:11434") {
 export async function isProviderAlive(
 	baseURL: string = "http://localhost:11434",
 ) {
-	const response = await fetch(`${baseURL}`);
-
-	return response.ok && response.status === 200;
+	try {
+		const response = await fetch(`${baseURL}`);
+		return response.ok && response.status === 200;
+	} catch (error) {
+		console.error("Error checking Ollama availability:", error);
+		return false;
+	}
 }
 
 /**
