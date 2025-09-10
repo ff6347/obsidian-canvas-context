@@ -32,6 +32,7 @@ git clone https://github.com/ff6347/obsidian-canvas-context.git .obsidian/plugin
 - **TODO:** Install the plugin from the community plugins tab in Obsidian.
 - Enable the plugin in the settings.
 - Go to the settings and add a model by selecting one of the providers and adding a model from the dropdown.
+	- If you want to use non local models add a API key first. These will be selectable when you add a model.
 - Set the model as default.
 
 ## Usage
