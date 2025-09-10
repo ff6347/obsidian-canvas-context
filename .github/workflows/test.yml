@@ -5,9 +5,10 @@ permissions:
   packages: write
 on:
   push:
-    branches: [main]
+    branches: [main, beta]
+    tags: ["*"]
   pull_request:
-    branches: [main]
+    branches: [main, beta]
 
 jobs:
   build:
@@ -33,6 +34,8 @@ jobs:
           github_token: ${{ secrets.GH_TOKEN }}
       - run: |
           pnpm install
+          node version-bump.js
+          pnpm run build
           pnpm exec semantic-release --ci
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}

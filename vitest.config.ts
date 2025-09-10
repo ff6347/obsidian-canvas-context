@@ -12,12 +12,12 @@ export default defineConfig({
 			reporter: ["text", "json", "html"],
 			exclude: ["node_modules/", "src/types/", "**/*.test.ts", "**/*.d.ts"],
 		},
-		setupFiles: ["./tests/setup.ts"],
+		setupFiles: ["./tests/setup.ts", "./tests/vitest.setup.ts"],
 	},
 	resolve: {
 		alias: {
 			"@": resolve(__dirname, "./src"),
-			"obsidian": resolve(__dirname, "./tests/mocks/obsidian.ts"),
+			obsidian: resolve(__dirname, "./tests/mocks/obsidian.ts"),
 		},
 	},
 });

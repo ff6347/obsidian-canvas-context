@@ -1,15 +1,23 @@
 import { ItemView, WorkspaceLeaf } from "obsidian";
 import { StrictMode } from "react";
 import { type Root, createRoot } from "react-dom/client";
-import { ReactView } from "./components/react-view.js";
-
-export const VIEW_TYPE_CANVAS_CONTEXT = "canvas-context-view";
+import { Layout } from "./layout.tsx";
+import type CanvasContextPlugin from "../main.ts";
+import {
+	PLUGIN_DISPLAY_NAME,
+	PLUGIN_ICON,
+	VIEW_TYPE_CANVAS_CONTEXT,
+} from "../lib/constants.ts";
+import { ReactView } from "./components/react-view.tsx";
+import { SettingsProvider } from "../contexts/settings-context.tsx";
 
 export class CanvasContextView extends ItemView {
 	root: Root | null = null;
+	plugin: CanvasContextPlugin;
 
-	constructor(leaf: WorkspaceLeaf) {
+	constructor(leaf: WorkspaceLeaf, plugin: CanvasContextPlugin) {
 		super(leaf);
+		this.plugin = plugin;
 	}
 
 	getViewType() {
@@ -17,34 +25,24 @@ export class CanvasContextView extends ItemView {
 	}
 
 	getDisplayText() {
-		return "Example view";
+		return PLUGIN_DISPLAY_NAME;
+	}
+
+	getIcon() {
+		return PLUGIN_ICON;
 	}
 
 	async onOpen() {
 		this.root = createRoot(this.contentEl);
 		this.root.render(
 			<StrictMode>
-				<ReactView />
+				<SettingsProvider plugin={this.plugin}>
+					<Layout>
+						<ReactView plugin={this.plugin} />
+					</Layout>
+				</SettingsProvider>
 			</StrictMode>,
 		);
-
-		// const container = this.contentEl;
-		// container.empty();
-		// container.createEl("h1", { text: "Canvas Context" });
-		// container.createEl("p", { text: "This is an example view." });
-		// I want to have here some options and infos.
-		// basic infos
-		// the current estimated token count
-		// the current provider
-		//  which model is used
-		// we should be able to switch the model and the provider here
-		// Each provider will have some specific view if needed
-		// first will be LM Studio and ollama with a dropdown
-		// then the model selection
-		// we need to be able to refresh the available models
-		// - which options do we surface
-		// - temperature
-		// - max tokens
 	}
 
 	async onClose() {
