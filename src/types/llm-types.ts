@@ -6,5 +6,4 @@ export type CurrentProviderType =
 	| typeof ollama
 	| typeof lmstudio
 	| typeof openai
-	| typeof openrouter
-	| "";
+	| typeof openrouter;

@@ -5,6 +5,7 @@ import {
 	type CanvasContextSettings,
 	CanvasContextSettingTab,
 	DEFAULT_SETTINGS,
+	resolveApiKey,
 } from "./ui/settings.ts";
 import { CanvasContextView } from "./ui/view.tsx";
 import { Notice } from "obsidian";
@@ -161,7 +162,7 @@ export default class CanvasContextPlugin extends Plugin {
 						config.id === this.settings.currentModel && config.enabled,
 				);
 
-				if (!currentModelConfig) {
+				if (!currentModelConfig || !currentModelConfig.provider) {
 					new Notice("Please select a valid model configuration in settings.");
 					this.hideLoadingStatus();
 					return;
@@ -174,9 +175,13 @@ export default class CanvasContextPlugin extends Plugin {
 					baseURL: currentModelConfig.baseURL,
 				};
 
-				// Add API key if available
-				if (currentModelConfig.apiKey) {
-					(inferenceOptions as any).apiKey = currentModelConfig.apiKey;
+				// Resolve API key from centralized store or fall back to legacy
+				const resolvedApiKey = resolveApiKey(
+					currentModelConfig,
+					this.settings.apiKeys,
+				);
+				if (resolvedApiKey) {
+					(inferenceOptions as any).apiKey = resolvedApiKey;
 				}
 
 				const result = await inference(inferenceOptions);
