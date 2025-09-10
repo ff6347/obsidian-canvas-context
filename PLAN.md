@@ -603,6 +603,30 @@ Canvas selection toolbar now works correctly with dual approach:
 - **Enhanced User Experience**: Reduced cognitive load with cleaner, organized interface
 - **Provider Documentation Links**: Easy access to provider docs and model-specific information
 
+15. **Major Architecture Refactoring**: Provider system consolidation and type system cleanup (Jan 2025)
+- **Provider Documentation Integration**: Moved documentation from separate file into main providers.ts registry
+- **Type System Simplification**: Removed empty string from CurrentProviderType union type
+- **Centralized API Key Resolution**: Single resolveApiKey function eliminating code duplication
+- **Legacy System Removal**: Complete cleanup of old direct API key storage approach
+- **Interface Consistency**: All provider configurations follow unified pattern with docs, models, and validation
+- **Import Optimization**: Streamlined imports throughout codebase removing unused dependencies
+
+16. **Toggle-Based Display Names**: Transparent user control over model naming (Jan 2025)
+- **useCustomDisplayName Flag**: Boolean toggle for user choice between custom and auto-computed names
+- **Auto-Computed Format**: "provider:modelName" pattern for consistent naming
+- **Real-Time Updates**: Display name updates immediately when provider/model changes
+- **Clear Visual Indicators**: Toggle shows current state (custom vs computed) with descriptive text
+- **Model Clearing Fix**: Prevents stale model names when provider changes
+- **Transparent UX**: Users see exactly how names are generated, no hidden behavior
+
+17. **Comprehensive Unit Testing**: Robust test coverage for utility functions (Jan 2025)
+- **Settings Utilities Module**: Extracted testable functions to dedicated module
+- **24 Test Cases**: Complete coverage for maskApiKey, resolveApiKey, and computeDisplayName
+- **Edge Case Coverage**: Handles empty strings, null/undefined values, various key formats
+- **Vitest Integration**: Modern testing framework with TypeScript support
+- **Mock Isolation**: Tests run independently of Obsidian dependencies
+- **CI/CD Ready**: Tests run on every commit ensuring code quality
+
 ### 💡 Future Enhancement Notes
 
 - **Hex Color Support**: Canvas also supports hex color values (e.g., `"color": "#ff6b6b"`) for more precise color control

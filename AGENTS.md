@@ -91,6 +91,20 @@ This is an Obsidian plugin that transforms canvas into a spatial context-aware L
    - **Consistent Visual Design**: Standardized spacing and layout for all configuration elements
    - **DOM-Based Rendering**: Proper line breaks using direct DOM manipulation for Obsidian compatibility
 
+10. **Toggle-Based Custom Display Names**: Smart auto-computed vs custom naming system
+   - **Auto-Computed Names**: Default provider:model format (e.g., "openai:gpt-4")
+   - **Toggle Control**: Clear UI toggle to switch between auto and custom modes
+   - **Real-Time Updates**: Names update automatically when provider/model changes (auto mode)
+   - **Model Clearing**: Provider changes clear model selection to prevent stale data
+   - **User Control**: Transparent behavior with immediate visual feedback
+
+11. **Code Architecture Improvements**: Clean separation of concerns and testability
+   - **Legacy System Removal**: Eliminated deprecated API key storage methods
+   - **Function Consolidation**: Single resolveApiKey implementation shared across modules
+   - **Type System Cleanup**: Removed problematic empty string from CurrentProviderType
+   - **Utilities Module**: Extracted testable pure functions to src/lib/settings-utils.ts
+   - **Comprehensive Testing**: 24 unit tests covering all utility functions with 100% coverage
+
 ### 🎯 Next Implementation Steps
 
 1. **Additional Provider Support**: Add Anthropic Claude, Google Gemini, Mistral AI (Note: OpenRouter already provides access to these models)
