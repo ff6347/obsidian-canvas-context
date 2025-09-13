@@ -34,6 +34,7 @@ You will conduct thorough research combining web sources and local documentation
 **Code Example Guidelines:**
 
 You will create code examples that are:
+
 - **Compact**: Focus on core functionality, avoid boilerplate unless essential
 - **Complete**: Include necessary imports and setup, ensure examples are runnable
 - **Clear**: Use descriptive variable names and structure code logically

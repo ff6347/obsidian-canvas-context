@@ -551,11 +551,12 @@ Canvas selection toolbar now works correctly with dual approach:
 
 ### 🎯 Ready for Next Session
 
-1. **Advanced Base UI Components**: Implement Select, Input, Dialog components for settings
-2. **Settings Panel Enhancement**: Full configuration UI for LLM providers
-3. **Advanced Context Features**: Preview context before sending, debug visualization
-4. **Error Handling Improvements**: Better error messages, retry mechanisms
-5. **Performance Optimization**: Large canvas handling, context caching
+1. **Canvas Name Display Debugging**: Investigate issue #26 - runtime debugging of canvas file name extraction
+2. **Advanced Base UI Components**: Implement Select, Input, Dialog components for settings
+3. **Settings Panel Enhancement**: Full configuration UI for LLM providers
+4. **Advanced Context Features**: Preview context before sending, debug visualization
+5. **Error Handling Improvements**: Better error messages, retry mechanisms
+6. **Performance Optimization**: Large canvas handling, context caching
 
 ### 📋 Technical Decisions Made
 
@@ -640,6 +641,25 @@ Canvas selection toolbar now works correctly with dual approach:
 - **Vitest MSW Lifecycle**: Proper beforeAll/afterEach/afterAll hooks for clean test isolation
 - **Zero External Dependencies**: All provider tests run without making real HTTP requests
 - **Improved Provider Robustness**: Fixed missing error handling in Ollama provider isProviderAlive function
+
+19. **Sidebar Canvas Integration Fix**: Resolved issue #25 with active canvas detection (Jan 2025)
+
+- **Problem Identification**: Sidebar inference button was using `getLeavesOfType("canvas")[0]` instead of active canvas
+- **Active Canvas Detection**: Switched to `TextFileView` with proper `getActiveViewOfType()` implementation
+- **Canvas Access Pattern**: Fixed `runInferenceFromSidebar()` to use `getCurrentCanvas()` method for consistency
+- **Multi-Canvas Support**: Now works correctly when users have multiple canvas files open
+- **Enhanced User Feedback**: Added clear error messaging when no canvas is active or focused
+- **Type Safety Improvements**: Removed unused `ItemView` import, added `TextFileView` for proper typing
+
+20. **Canvas Name Enhancement**: User-friendly success notices with canvas identification (Jan 2025)
+
+- **Success Notice Enhancement**: Shows actual canvas name in success messages instead of generic "canvas"
+- **Node-Specific Context**: Added `getCanvasNameFromNode()` method to get name from exact canvas used for inference
+- **Multi-Layer Fallback**: Active canvas detection → first canvas fallback → generic fallback for robustness
+- **File Name Access**: Uses `view.file.name` property for actual canvas file names
+- **Consistent Messaging**: Success notices now show `"LLM response added to 'Canvas Name.canvas'."`
+- **Issue #26 Created**: Canvas name display still showing fallbacks - deferred for runtime debugging
+- **Testing Status**: All 88 unit tests passing, TypeScript compilation clean, ready for production use
 
 ### 💡 Future Enhancement Notes
 
