@@ -31,12 +31,10 @@ export function SettingsProvider({ children, plugin }: SettingsProviderProps) {
 	const updateSettings = async (
 		updater: (prev: CanvasContextSettings) => CanvasContextSettings,
 	) => {
-		setSettings((prevSettings) => {
-			const newSettings = updater(prevSettings);
-			plugin.settings = newSettings;
-			plugin.saveSettings();
-			return newSettings;
-		});
+		const newSettings = updater(settings);
+		setSettings(newSettings);
+		plugin.settings = newSettings;
+		await plugin.saveSettings();
 	};
 
 	useEffect(() => {

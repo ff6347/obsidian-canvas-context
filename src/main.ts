@@ -251,7 +251,7 @@ export default class CanvasContextPlugin extends Plugin {
 		canvas.requestFrame();
 	}
 
-	async createErrorNode(
+	createErrorNode(
 		sourceNode: ExtendedCanvasConnection,
 		result: InferenceResult,
 	) {
@@ -411,7 +411,7 @@ export default class CanvasContextPlugin extends Plugin {
 			return false;
 		}
 
-		let selectionData, selectedNodes;
+		let selectedNodes, selectionData;
 		try {
 			selectionData = canvas.getSelectionData();
 			selectedNodes = selectionData.nodes;

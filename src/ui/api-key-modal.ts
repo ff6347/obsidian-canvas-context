@@ -90,7 +90,6 @@ export class ApiKeyModal extends Modal {
 						this.apiKeyConfig.apiKey = value;
 					});
 			});
-
 		// Description (optional)
 		new Setting(contentEl)
 			.setName("Description")
@@ -104,7 +103,6 @@ export class ApiKeyModal extends Modal {
 					});
 				text.inputEl.rows = 3;
 			});
-
 		// Action buttons
 		const buttonContainer = contentEl.createDiv({
 			cls: "modal-button-container",
@@ -113,11 +111,9 @@ export class ApiKeyModal extends Modal {
 		buttonContainer.style.justifyContent = "flex-end";
 		buttonContainer.style.gap = "10px";
 		buttonContainer.style.marginTop = "20px";
-
 		new ButtonComponent(buttonContainer).setButtonText("Cancel").onClick(() => {
 			this.close();
 		});
-
 		new ButtonComponent(buttonContainer)
 			.setButtonText(this.isEditing ? "Update" : "Add API Key")
 			.setCta()
