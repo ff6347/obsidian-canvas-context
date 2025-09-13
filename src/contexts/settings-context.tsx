@@ -1,10 +1,19 @@
-import { createContext, useContext, useState, useEffect, useMemo, type ReactNode } from "react";
+import {
+	type ReactNode,
+	createContext,
+	useContext,
+	useEffect,
+	useMemo,
+	useState,
+} from "react";
 import type { CanvasContextSettings } from "../ui/settings.ts";
 import type CanvasContextPlugin from "../main.ts";
 
 interface SettingsContextType {
 	settings: CanvasContextSettings;
-	updateSettings: (updater: (prev: CanvasContextSettings) => CanvasContextSettings) => Promise<void>;
+	updateSettings: (
+		updater: (prev: CanvasContextSettings) => CanvasContextSettings,
+	) => Promise<void>;
 }
 
 const SettingsContext = createContext<SettingsContextType | null>(null);
@@ -15,15 +24,17 @@ interface SettingsProviderProps {
 }
 
 export function SettingsProvider({ children, plugin }: SettingsProviderProps) {
-	const [settings, setSettings] = useState<CanvasContextSettings>(plugin.settings);
+	const [settings, setSettings] = useState<CanvasContextSettings>(
+		plugin.settings,
+	);
 
-	const updateSettings = async (updater: (prev: CanvasContextSettings) => CanvasContextSettings) => {
-		setSettings(prevSettings => {
-			const newSettings = updater(prevSettings);
-			plugin.settings = newSettings;
-			plugin.saveSettings();
-			return newSettings;
-		});
+	const updateSettings = async (
+		updater: (prev: CanvasContextSettings) => CanvasContextSettings,
+	) => {
+		const newSettings = updater(settings);
+		setSettings(newSettings);
+		plugin.settings = newSettings;
+		await plugin.saveSettings();
 	};
 
 	useEffect(() => {
@@ -32,17 +43,20 @@ export function SettingsProvider({ children, plugin }: SettingsProviderProps) {
 			setSettings({ ...newSettings });
 		};
 
-		plugin.settingsEvents.on('settings-changed', handleSettingsChange);
+		plugin.settingsEvents.on("settings-changed", handleSettingsChange);
 
 		return () => {
-			plugin.settingsEvents.off('settings-changed', handleSettingsChange);
+			plugin.settingsEvents.off("settings-changed", handleSettingsChange);
 		};
 	}, [plugin]);
 
-	const contextValue = useMemo(() => ({
-		settings,
-		updateSettings,
-	}), [settings, updateSettings]);
+	const contextValue = useMemo(
+		() => ({
+			settings,
+			updateSettings,
+		}),
+		[settings, updateSettings],
+	);
 
 	return (
 		<SettingsContext.Provider value={contextValue}>

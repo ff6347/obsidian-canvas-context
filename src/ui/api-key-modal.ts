@@ -1,4 +1,4 @@
-import { App, Modal, Setting, Notice, ButtonComponent } from "obsidian";
+import { App, ButtonComponent, Modal, Notice, Setting } from "obsidian";
 import type CanvasContextPlugin from "../main.ts";
 import type { ApiKeyConfiguration } from "./settings.ts";
 import type { CurrentProviderType } from "../types/llm-types.ts";
@@ -27,10 +27,14 @@ export class ApiKeyModal extends Modal {
 					apiKey: "",
 					description: "",
 				};
-		this.onSave = onSave || (() => {});
+		this.onSave =
+			onSave ||
+			(() => {
+				console.warn("No onSave callback provided to ApiKeyModal");
+			});
 	}
 
-	onOpen() {
+	override onOpen() {
 		const { contentEl } = this;
 		contentEl.empty();
 
@@ -86,7 +90,6 @@ export class ApiKeyModal extends Modal {
 						this.apiKeyConfig.apiKey = value;
 					});
 			});
-
 		// Description (optional)
 		new Setting(contentEl)
 			.setName("Description")
@@ -100,7 +103,6 @@ export class ApiKeyModal extends Modal {
 					});
 				text.inputEl.rows = 3;
 			});
-
 		// Action buttons
 		const buttonContainer = contentEl.createDiv({
 			cls: "modal-button-container",
@@ -109,11 +111,9 @@ export class ApiKeyModal extends Modal {
 		buttonContainer.style.justifyContent = "flex-end";
 		buttonContainer.style.gap = "10px";
 		buttonContainer.style.marginTop = "20px";
-
 		new ButtonComponent(buttonContainer).setButtonText("Cancel").onClick(() => {
 			this.close();
 		});
-
 		new ButtonComponent(buttonContainer)
 			.setButtonText(this.isEditing ? "Update" : "Add API Key")
 			.setCta()
@@ -141,7 +141,9 @@ export class ApiKeyModal extends Modal {
 	}
 
 	updateProviderDocsLink() {
-		if (!this.providerDocsButton) return;
+		if (!this.providerDocsButton) {
+			return;
+		}
 
 		const docs = getProviderDocs(this.apiKeyConfig.provider!);
 		if (docs) {
@@ -162,6 +164,7 @@ export class ApiKeyModal extends Modal {
 			!this.apiKeyConfig.provider ||
 			!this.apiKeyConfig.apiKey
 		) {
+			// oxlint-disable-next-line no-new
 			new Notice("Please fill in all required fields.");
 			return;
 		}
@@ -171,6 +174,7 @@ export class ApiKeyModal extends Modal {
 			this.apiKeyConfig.provider !== "openai" &&
 			this.apiKeyConfig.provider !== "openrouter"
 		) {
+			// oxlint-disable-next-line no-new
 			new Notice(
 				"API keys are only supported for OpenAI and OpenRouter providers.",
 			);
@@ -183,6 +187,7 @@ export class ApiKeyModal extends Modal {
 				key.id !== this.apiKeyConfig.id && key.name === this.apiKeyConfig.name,
 		);
 		if (existingKeys.length > 0) {
+			// oxlint-disable-next-line no-new
 			new Notice(`API key name "${this.apiKeyConfig.name}" is already in use.`);
 			return;
 		}
@@ -208,12 +213,13 @@ export class ApiKeyModal extends Modal {
 		}
 
 		await this.plugin.saveSettings();
+		// oxlint-disable-next-line no-new
 		new Notice(this.isEditing ? "API key updated!" : "API key added!");
 		this.onSave();
 		this.close();
 	}
 
-	onClose() {
+	override onClose() {
 		const { contentEl } = this;
 		contentEl.empty();
 	}

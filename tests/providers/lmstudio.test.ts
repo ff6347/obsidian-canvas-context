@@ -1,6 +1,6 @@
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
 import { server } from "../mocks/server.ts";
-import { http, HttpResponse } from "msw";
+import { HttpResponse, http } from "msw";
 import * as lmstudio from "../../src/llm/providers/lmstudio.ts";
 
 describe("LM Studio Provider", () => {

@@ -1,26 +1,26 @@
 import type { CurrentProviderType } from "../../types/llm-types.ts";
 import {
-	providerName as ollamaProviderName,
 	createProvider as createOllamaProvider,
 	listModels as listOllamaModels,
+	providerName as ollamaProviderName,
 } from "./ollama.ts";
 import {
-	providerName as lmstudioProviderName,
 	createProvider as createLMStudioProvider,
 	listModels as listLMStudioModels,
+	providerName as lmstudioProviderName,
 } from "./lmstudio.ts";
 import {
-	providerName as openaiProviderName,
 	createProvider as createOpenAIProvider,
 	listModels as listOpenAIModels,
+	providerName as openaiProviderName,
 } from "./openai.ts";
 import {
-	providerName as openrouterProviderName,
 	createProvider as createOpenRouterProvider,
 	listModels as listOpenRouterModels,
+	providerName as openrouterProviderName,
 } from "./openrouter.ts";
 
-export interface ProviderDocumentation {
+interface ProviderDocumentation {
 	displayName: string;
 	docsUrl: string;
 	modelsUrl: string;
@@ -71,19 +71,24 @@ export const providers = {
 	},
 } as const;
 
-export type ProvidersType = typeof providers;
-export type ProviderKey = keyof ProvidersType;
+type ProvidersType = typeof providers;
+type ProviderKey = keyof ProvidersType;
 export type ProviderConfig = ProvidersType[ProviderKey];
 
 export function getProviderDocs(
 	provider: CurrentProviderType | undefined,
 ): ProviderDocumentation | null {
-	if (!provider) return null;
+	if (!provider) {
+		return null;
+	}
 	const providerConfig = providers[provider as keyof typeof providers];
-	if (!providerConfig) return null;
+	if (!providerConfig) {
+		return null;
+	}
 
-	const { name, createProvider, listModels, ...docs } = providerConfig;
-	return docs as ProviderDocumentation;
+	const { displayName, docsUrl, modelsUrl, description, requiresApiKey } =
+		providerConfig;
+	return { displayName, docsUrl, modelsUrl, description, requiresApiKey };
 }
 
 export function getModelPageUrl(
@@ -91,7 +96,9 @@ export function getModelPageUrl(
 	modelName?: string,
 ): string | null {
 	const docs = getProviderDocs(provider);
-	if (!docs) return null;
+	if (!docs) {
+		return null;
+	}
 
 	switch (provider) {
 		case "ollama":

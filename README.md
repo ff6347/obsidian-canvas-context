@@ -4,7 +4,6 @@ This plugin uses the Obsidian Canvas to control what context gets send to a LLM.
 We (this is I) also use the spatial arrangment on the canvas for better navigation of our context.
 This is a pretty early stage of an idea and I am not sure if this might get useful or not.
 
-
 ![a short video showing the usage of the plugin](docs/demo.gif)
 
 ## Prerequisites

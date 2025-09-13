@@ -28,11 +28,12 @@ export class CanvasContextView extends ItemView {
 		return PLUGIN_DISPLAY_NAME;
 	}
 
-	getIcon() {
+	override getIcon() {
 		return PLUGIN_ICON;
 	}
 
-	async onOpen() {
+	// oxlint-disable-next-line require-await
+	override async onOpen() {
 		this.root = createRoot(this.contentEl);
 		this.root.render(
 			<StrictMode>
@@ -44,8 +45,8 @@ export class CanvasContextView extends ItemView {
 			</StrictMode>,
 		);
 	}
-
-	async onClose() {
+	// oxlint-disable-next-line require-await
+	override async onClose() {
 		this.root?.unmount();
 	}
 }

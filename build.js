@@ -40,31 +40,31 @@ const config = {
 };
 
 if (watchMode) {
-	console.log("Starting rolldown in watch mode...");
+	console.info("Starting rolldown in watch mode...");
 	const watcher = watch(config);
 
 	watcher.on("event", (event) => {
 		if (event.code === "BUNDLE_START") {
-			console.log("Building...");
+			console.info("Building...");
 		} else if (event.code === "BUNDLE_END") {
-			console.log("Build completed");
+			console.info("Build completed");
 		} else if (event.code === "ERROR") {
 			console.error("Build error:", event.error);
 		}
 	});
 
 	process.on("SIGINT", async () => {
-		console.log("Closing watcher...");
+		console.info("Closing watcher...");
 		await watcher.close();
 		process.exit(0);
 	});
 } else {
-	console.log(`Building for ${prod ? "production" : "development"}...`);
+	console.info(`Building for ${prod ? "production" : "development"}...`);
 
 	try {
 		const bundle = await rolldown(config);
 		await bundle.write(config.output);
-		console.log("Build completed successfully!");
+		console.info("Build completed successfully!");
 		process.exit(0);
 	} catch (error) {
 		console.error("Build failed:", error);

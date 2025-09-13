@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { canvasGraphWalker } from "../../src/canvas/walker.js";
 import type { CanvasViewData } from "obsidian-typings";
 import type { App } from "obsidian";

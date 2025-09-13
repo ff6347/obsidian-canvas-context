@@ -1,7 +1,7 @@
 import { type Menu } from "obsidian";
 import type CanvasContextPlugin from "../main.ts";
 import type { ExtendedCanvasConnection } from "../types/canvas-types.ts";
-import { PLUGIN_ICON } from "../lib/constants.ts";
+import { PLUGIN_DISPLAY_NAME, PLUGIN_ICON } from "../lib/constants.ts";
 
 export default class NodeActions {
 	plugin: CanvasContextPlugin;
@@ -11,7 +11,7 @@ export default class NodeActions {
 	buildNodeMenu(menu: Menu, node: ExtendedCanvasConnection) {
 		menu.addItem((item) =>
 			item
-				.setTitle("Canvas Context: Run Inference")
+				.setTitle(`${PLUGIN_DISPLAY_NAME}: Run Inference`)
 				.setIcon(PLUGIN_ICON)
 				.onClick(async () => {
 					if (node?.canvas?.data && node?.id) {
@@ -23,7 +23,7 @@ export default class NodeActions {
 		// Add a separator and selection-based inference if multiple nodes are selected
 		if (node?.canvas) {
 			try {
-				const canvas = node.canvas;
+				const { canvas } = node;
 
 				// Try different methods to get selection
 				let selectedCount = 0;
@@ -60,7 +60,7 @@ export default class NodeActions {
 					menu.addItem((item) =>
 						item
 							.setTitle(
-								`Canvas Context: Run on ${selectedCount} Selected Nodes`,
+								`${PLUGIN_DISPLAY_NAME}: Run on ${selectedCount} Selected Nodes`,
 							)
 							.setIcon(PLUGIN_ICON)
 							.onClick(async () => {

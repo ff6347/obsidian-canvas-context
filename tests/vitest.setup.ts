@@ -1,5 +1,5 @@
 // Vitest setup file for MSW integration
-import { beforeAll, afterEach, afterAll } from "vitest";
+import { afterAll, afterEach, beforeAll } from "vitest";
 import { server } from "./mocks/server.ts";
 
 // Start request interception before all tests

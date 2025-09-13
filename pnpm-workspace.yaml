@@ -1,5 +1,7 @@
 onlyBuiltDependencies:
   - electron
   - esbuild
+  - msw
   - obsidian-typings
+  - oxc-resolver
   - puppeteer

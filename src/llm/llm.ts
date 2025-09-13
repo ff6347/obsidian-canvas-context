@@ -1,6 +1,6 @@
-import { generateText, type ModelMessage } from "ai";
+import { type ModelMessage, generateText } from "ai";
 import type { CurrentProviderType } from "../types/llm-types.ts";
-import { providers, type ProviderConfig } from "./providers/providers.ts";
+import { type ProviderConfig, providers } from "./providers/providers.ts";
 export interface InferenceResult {
 	success: boolean;
 	text: string;

@@ -26,7 +26,7 @@ export interface CanvasTextData extends CanvasNodeData {
 	text: string;
 }
 
-export interface CanvasEdgeData {
+interface CanvasEdgeData {
 	id: string;
 	fromNode: string;
 	toNode: string;

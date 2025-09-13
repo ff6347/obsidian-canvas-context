@@ -1,24 +1,17 @@
 import {
 	App,
-	PluginSettingTab,
-	Setting,
 	ButtonComponent,
 	Notice,
+	PluginSettingTab,
+	Setting,
 } from "obsidian";
 import type CanvasContextPlugin from "../main.ts";
 import { AddModelModal } from "./add-model-modal.ts";
 import { ApiKeyModal } from "./api-key-modal.ts";
 import { providers } from "../llm/providers/providers.ts";
 import type { CurrentProviderType } from "../types/llm-types.ts";
-import {
-	getProviderDocs,
-	getModelPageUrl,
-} from "../llm/providers/providers.ts";
-import {
-	maskApiKey as _maskApiKey,
-	resolveApiKey as _resolveApiKey,
-	computeDisplayName as _computeDisplayName,
-} from "../lib/settings-utils.ts";
+import { getModelPageUrl } from "../llm/providers/providers.ts";
+import { maskApiKey, resolveApiKey } from "../lib/settings-utils.ts";
 
 export interface ApiKeyConfiguration {
 	id: string;
@@ -51,15 +44,8 @@ export const DEFAULT_SETTINGS: CanvasContextSettings = {
 	apiKeys: [],
 };
 
-// Re-export utilities for convenience
-export {
-	maskApiKey,
-	resolveApiKey,
-	computeDisplayName,
-} from "../lib/settings-utils.ts";
-
 export class CanvasContextSettingTab extends PluginSettingTab {
-	plugin: CanvasContextPlugin;
+	override plugin: CanvasContextPlugin;
 
 	constructor(app: App, plugin: CanvasContextPlugin) {
 		super(app, plugin);
@@ -67,7 +53,7 @@ export class CanvasContextSettingTab extends PluginSettingTab {
 	}
 
 	private resolveApiKey(config: ModelConfiguration): string | undefined {
-		return _resolveApiKey(config, this.plugin.settings.apiKeys);
+		return resolveApiKey(config, this.plugin.settings.apiKeys);
 	}
 
 	display(): void {
@@ -202,12 +188,12 @@ export class CanvasContextSettingTab extends PluginSettingTab {
 				);
 				const keyName = apiKeyConfig?.name || "Unknown Key";
 				descEl.createDiv({
-					text: `API Key: ${keyName} (${_maskApiKey(resolvedApiKey)})`,
+					text: `API Key: ${keyName} (${maskApiKey(resolvedApiKey)})`,
 				});
 			} else {
 				// Legacy direct API key
 				descEl.createDiv({
-					text: `API Key: ${_maskApiKey(resolvedApiKey)} (Legacy)`,
+					text: `API Key: ${maskApiKey(resolvedApiKey)} (Legacy)`,
 				});
 			}
 		}
@@ -261,6 +247,7 @@ export class CanvasContextSettingTab extends PluginSettingTab {
 					this.plugin.settings.modelConfigurations.push(duplicatedConfig);
 					this.plugin.saveSettings();
 					this.display(); // Refresh the settings page
+					// oxlint-disable-next-line no-new
 					new Notice("Model configuration duplicated.");
 				});
 		});
@@ -294,6 +281,7 @@ export class CanvasContextSettingTab extends PluginSettingTab {
 					this.plugin.settings.modelConfigurations.splice(index, 1);
 					await this.plugin.saveSettings();
 					this.display(); // Refresh the settings page
+					// oxlint-disable-next-line no-new
 					new Notice("Model configuration deleted.");
 				});
 		});
@@ -315,7 +303,7 @@ export class CanvasContextSettingTab extends PluginSettingTab {
 
 		// Add each line as a separate div element
 		descEl.createDiv({ text: `Provider: ${apiKey.provider}` });
-		descEl.createDiv({ text: `API Key: ${_maskApiKey(apiKey.apiKey)}` });
+		descEl.createDiv({ text: `API Key: ${maskApiKey(apiKey.apiKey)}` });
 		if (apiKey.description) {
 			descEl.createDiv({ text: `Description: ${apiKey.description}` });
 		}
@@ -348,6 +336,7 @@ export class CanvasContextSettingTab extends PluginSettingTab {
 
 					if (modelsUsingKey.length > 0) {
 						const modelNames = modelsUsingKey.map((m) => m.name).join(", ");
+						// oxlint-disable-next-line no-new
 						new Notice(
 							`Cannot delete API key "${apiKey.name}". It's being used by: ${modelNames}`,
 						);
@@ -358,6 +347,7 @@ export class CanvasContextSettingTab extends PluginSettingTab {
 					this.plugin.settings.apiKeys.splice(index, 1);
 					await this.plugin.saveSettings();
 					this.display(); // Refresh the settings page
+					// oxlint-disable-next-line no-new
 					new Notice("API key deleted.");
 				});
 		});
@@ -387,12 +377,14 @@ export class CanvasContextSettingTab extends PluginSettingTab {
 				resolvedApiKey
 					? await providerGenerator.listModels(resolvedApiKey, config.baseURL)
 					: await providerGenerator.listModels(config.baseURL);
+			// oxlint-disable-next-line no-new
 			new Notice(
 				`${config.name}: Connection successful! Found ${models.length} models.`,
 			);
 			button.setButtonText("✓");
 		} catch (error) {
 			console.error("Connection verification failed:", error);
+			// oxlint-disable-next-line no-new
 			new Notice(
 				`${config.name}: Connection failed. Please check the configuration.`,
 			);
