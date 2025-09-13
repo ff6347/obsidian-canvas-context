@@ -9,7 +9,7 @@ import {
 } from "obsidian";
 
 import type { ModelMessage } from "ai";
-import type { CanvasConnection } from "obsidian-typings";
+import type { CanvasConnection, CanvasView, CanvasViewCanvas, CanvasMenu } from "obsidian-typings";
 import NodeActions from "./canvas/nodes-actions.ts";
 import { canvasGraphWalker } from "./canvas/walker.ts";
 import {
@@ -31,6 +31,27 @@ import {
 	DEFAULT_SETTINGS,
 } from "./ui/settings.ts";
 import { CanvasContextView } from "./ui/view.tsx";
+
+interface ExtendedCanvasMenu extends CanvasMenu {
+	_observerSetup?: boolean;
+}
+
+interface ExtendedCanvasViewCanvas extends CanvasViewCanvas {
+	menu: ExtendedCanvasMenu;
+}
+
+interface SelectionData {
+	nodes: Array<{ id: string; [key: string]: unknown }>;
+}
+
+export function isSelectionData(data: unknown): data is SelectionData {
+	return (
+		typeof data === "object" &&
+		data !== null &&
+		"nodes" in data &&
+		Array.isArray((data as Record<string, unknown>).nodes)
+	);
+}
 
 export default class CanvasContextPlugin extends Plugin {
 	nodeActions: NodeActions | undefined;
@@ -76,7 +97,7 @@ export default class CanvasContextPlugin extends Plugin {
 		this.registerEvent(
 			this.app.workspace.on(
 				"canvas:selection-menu",
-				(menu: Menu, canvas: any) => {
+				(menu: Menu, canvas: CanvasView) => {
 					this.buildSelectionMenu(menu, canvas);
 				},
 			),
@@ -154,15 +175,24 @@ export default class CanvasContextPlugin extends Plugin {
 	 * Gathers context from connected nodes, sends to LLM, creates response node
 	 *
 	 */
-	async runInference(nodeId: string, node: ExtendedCanvasConnection) {
-		if (!node.canvas?.data) {
+	async runInference(nodeId: string, canvas?: CanvasViewCanvas) {
+		const canvasInfo = this.getCanvasInfo(canvas ? { canvas } as ExtendedCanvasConnection : undefined);
+
+		if (!canvasInfo) {
 			// oxlint-disable-next-line no-new
-			new Notice("No canvas data available on this node.");
+			new Notice("No canvas available for inference.");
 			return;
 		}
+
+		if (!canvasInfo.canvas?.data) {
+			// oxlint-disable-next-line no-new
+			new Notice("No canvas data available.");
+			return;
+		}
+
 		let messages: ModelMessage[];
 		try {
-			messages = await canvasGraphWalker(nodeId, node.canvas.data, this.app);
+			messages = await canvasGraphWalker(nodeId, canvasInfo.canvas.data, this.app);
 		} catch (error) {
 			console.error("Error in canvasGraphWalker:", error);
 			// oxlint-disable-next-line no-new
@@ -192,13 +222,12 @@ export default class CanvasContextPlugin extends Plugin {
 			});
 
 			if (result.success) {
-				this.createResponseNode(node, result.text, false);
-				const canvasName = this.getCanvasNameFromNode(node);
+				this.createResponseNode({ id: nodeId, canvas: canvasInfo.canvas } as ExtendedCanvasConnection, result.text, false);
 				// oxlint-disable-next-line no-new
-				new Notice(`LLM response added to "${canvasName}".`);
+				new Notice(`LLM response added to "${canvasInfo.name}".`);
 			} else {
 				this.addRecentError(result);
-				await this.createErrorNode(node, result);
+				await this.createErrorNode({ id: nodeId, canvas: canvasInfo.canvas } as ExtendedCanvasConnection, result);
 				// oxlint-disable-next-line no-new
 				new Notice(`Inference failed: ${result.error}`, 5000);
 			}
@@ -217,7 +246,7 @@ export default class CanvasContextPlugin extends Plugin {
 	) {
 		if (!sourceNode.canvas || !sourceNode.id) return;
 
-		const canvas = sourceNode.canvas as any;
+		const canvas = sourceNode.canvas;
 		const currentData = canvas.getData() as CanvasData;
 		if (!currentData) return;
 
@@ -248,11 +277,11 @@ export default class CanvasContextPlugin extends Plugin {
 		canvas.importData({
 			edges: [...currentData.edges, edgeData],
 			nodes: [...currentData.nodes, responseNodeData],
-		});
-		canvas.requestFrame();
+		}, undefined);
+		canvas.requestFrame(undefined);
 	}
 
-	createErrorNode(
+	async createErrorNode(
 		sourceNode: ExtendedCanvasConnection,
 		result: InferenceResult,
 	) {
@@ -378,15 +407,15 @@ export default class CanvasContextPlugin extends Plugin {
 	}
 
 	async runInferenceFromSidebar(): Promise<boolean> {
-		const canvas = this.getCurrentCanvas();
+		const canvasInfo = this.getCanvasInfo();
 
-		if (!canvas) {
+		if (!canvasInfo) {
 			// oxlint-disable-next-line no-new
 			new Notice("Please open and focus a canvas to run inference.");
 			return false;
 		}
 
-		if (!canvas.selection) {
+		if (!canvasInfo.canvas.selection) {
 			// oxlint-disable-next-line no-new
 			new Notice(
 				"Canvas selection not available. Please ensure you have a canvas open.",
@@ -394,9 +423,12 @@ export default class CanvasContextPlugin extends Plugin {
 			return false;
 		}
 
-		let selectedNodes, selectionData;
+		let selectedNodes: Array<{ id: string; [key: string]: unknown }>;
 		try {
-			selectionData = canvas.getSelectionData();
+			const selectionData = canvasInfo.canvas.getSelectionData(undefined);
+			if (!isSelectionData(selectionData)) {
+				throw new Error("Invalid selection data format");
+			}
 			selectedNodes = selectionData.nodes;
 		} catch (error) {
 			console.error("Error getting selection data:", error);
@@ -414,20 +446,14 @@ export default class CanvasContextPlugin extends Plugin {
 		}
 
 		const selectedNodeData = selectedNodes[0];
-
-		if (!selectedNodeData.id) {
+		if (!selectedNodeData || !selectedNodeData.id) {
 			// oxlint-disable-next-line no-new
 			new Notice("Selected node is not valid for inference.");
 			return false;
 		}
 
-		const nodeConnection = {
-			id: selectedNodeData.id,
-			canvas: canvas,
-		} as ExtendedCanvasConnection;
-
 		try {
-			await this.runInference(selectedNodeData.id, nodeConnection);
+			await this.runInference(selectedNodeData.id as string, canvasInfo.canvas);
 			return true;
 		} catch (error) {
 			console.error("Error running inference from sidebar:", error);
@@ -437,9 +463,12 @@ export default class CanvasContextPlugin extends Plugin {
 		}
 	}
 
-	buildSelectionMenu(menu: Menu, canvas: any) {
+	buildSelectionMenu(menu: Menu, canvasView: CanvasView) {
 		try {
-			const selectionData = canvas.getSelectionData();
+			const selectionData = canvasView.canvas.getSelectionData(undefined);
+			if (!isSelectionData(selectionData)) {
+				return;
+			}
 			const selectedNodes = selectionData.nodes;
 
 			// Only show the button if exactly one node is selected
@@ -450,13 +479,12 @@ export default class CanvasContextPlugin extends Plugin {
 						.setIcon(PLUGIN_ICON)
 						.onClick(async () => {
 							const selectedNode = selectedNodes[0];
-							const nodeConnection = {
-								id: selectedNode.id,
-								canvas: canvas,
-							} as ExtendedCanvasConnection;
+							if (!selectedNode || !selectedNode.id) {
+								return;
+							}
 
 							try {
-								await this.runInference(selectedNode.id, nodeConnection);
+								await this.runInference(selectedNode.id as string, canvasView.canvas);
 							} catch (error) {
 								console.error(
 									"Error running inference from selection menu:",
@@ -494,32 +522,33 @@ export default class CanvasContextPlugin extends Plugin {
 		);
 	}
 
-	setupObserverForCanvas(leaf: any) {
-		const canvasView = leaf?.view as any;
+	setupObserverForCanvas(leaf: WorkspaceLeaf) {
+		const canvasView = leaf?.view as CanvasView;
 		const canvas = canvasView?.canvas;
 
-		if (!canvas || !canvas.menu || (canvas.menu as any)._observerSetup) {
+		const extendedCanvas = canvas as ExtendedCanvasViewCanvas;
+		if (!extendedCanvas || !extendedCanvas.menu || extendedCanvas.menu._observerSetup) {
 			return;
 		}
 
-		(canvas.menu as any)._observerSetup = true;
+		extendedCanvas.menu._observerSetup = true;
 
 		// Create mutation observer to watch for menu changes
 		const observer = new MutationObserver((mutations) => {
 			mutations.forEach((mutation) => {
 				if (
 					mutation.type === "childList" &&
-					mutation.target === canvas.menu.menuEl
+					mutation.target === extendedCanvas.menu.menuEl
 				) {
-					this.addButtonToCanvasMenu(canvas);
+					this.addButtonToCanvasMenu(canvasView);
 				}
 			});
 		});
 
 		// Start observing when menu element is available
 		const checkMenuEl = () => {
-			if (canvas.menu.menuEl) {
-				observer.observe(canvas.menu.menuEl, {
+			if (extendedCanvas.menu.menuEl) {
+				observer.observe(extendedCanvas.menu.menuEl, {
 					childList: true,
 					subtree: false,
 				});
@@ -532,24 +561,25 @@ export default class CanvasContextPlugin extends Plugin {
 		checkMenuEl();
 	}
 
-	addButtonToCanvasMenu(canvas: any) {
+	addButtonToCanvasMenu(canvasView: CanvasView) {
 		try {
-			if (!canvas.menu.menuEl) {
+			const extendedCanvas = canvasView.canvas as ExtendedCanvasViewCanvas;
+			if (!extendedCanvas.menu.menuEl) {
 				return;
 			}
 
 			// Check if button already exists
-			const existingButton = canvas.menu.menuEl.querySelector(
+			const existingButton = extendedCanvas.menu.menuEl.querySelector(
 				".canvas-context-inference-btn",
 			);
 			if (existingButton) {
 				return;
 			}
 
-			const selectionData = canvas.getSelectionData();
+			const selectionData = canvasView.canvas.getSelectionData(undefined);
 
 			// Only add button for single node selection
-			if (selectionData?.nodes?.length === 1) {
+			if (isSelectionData(selectionData) && selectionData.nodes.length === 1) {
 				const button = document.createElement("button");
 				button.className = "clickable-icon canvas-context-inference-btn";
 				button.setAttribute("aria-label", "Canvas Context: Run Inference");
@@ -561,65 +591,64 @@ export default class CanvasContextPlugin extends Plugin {
 					e.preventDefault();
 
 					try {
-						const currentSelection = canvas.getSelectionData();
-						if (currentSelection?.nodes?.length > 0) {
+						const currentSelection = canvasView.canvas.getSelectionData(undefined);
+						if (isSelectionData(currentSelection) && currentSelection.nodes.length > 0) {
 							const firstNode = currentSelection.nodes[0];
-							await this.runInference(firstNode.id, {
-								id: firstNode.id,
-								canvas,
-							} as any);
+							if (firstNode && typeof firstNode.id === "string") {
+								await this.runInference(firstNode.id, canvasView.canvas);
+							}
 						}
 					} catch (error) {
 						console.error("Inference error:", error);
 					}
 				});
 
-				canvas.menu.menuEl.appendChild(button);
+				extendedCanvas.menu.menuEl.appendChild(button);
 			}
 		} catch (error) {
 			console.error("Error adding button to canvas menu:", error);
 		}
 	}
 
-	getCurrentCanvas(): any | null {
-		const canvasView = this.app.workspace.getActiveViewOfType(TextFileView);
-		if (canvasView?.file?.extension !== "canvas") {
-			return null;
-		}
-		return (canvasView as any)?.canvas || null;
-	}
-
-	getCanvasNameFromNode(node: ExtendedCanvasConnection): string {
-		// Try to get canvas name from the node's canvas reference
-		if (node.canvas) {
+	getCanvasInfo(node?: ExtendedCanvasConnection): { canvas: CanvasViewCanvas; name: string } | null {
+		// If node provided with canvas reference, use that canvas
+		if (node?.canvas) {
 			const canvasLeaves = this.app.workspace.getLeavesOfType("canvas");
 			for (const leaf of canvasLeaves) {
-				const view = leaf.view as any;
+				const view = leaf.view as CanvasView;
 				if (view?.canvas === node.canvas && view?.file?.name) {
-					return view.file.name;
+					return { canvas: node.canvas, name: view.file.name };
 				}
 			}
+			// If we have a canvas but can't find the name, return with fallback name
+			return { canvas: node.canvas, name: "canvas" };
 		}
 
-		// Fallback to current canvas name logic
-		return this.getCurrentCanvasName();
-	}
-
-	getCurrentCanvasName(): string {
-		// Try to get the active canvas first (proper way)
-		const canvasView = this.app.workspace.getActiveViewOfType(TextFileView);
-		if (canvasView?.file?.extension === "canvas") {
-			return canvasView.file.name || "canvas";
+		// Otherwise, get active canvas
+		const activeView = this.app.workspace.getActiveViewOfType(TextFileView);
+		if (activeView?.file?.extension === "canvas") {
+			const canvasView = activeView as CanvasView;
+			if (canvasView.canvas && canvasView.file) {
+				return {
+					canvas: canvasView.canvas,
+					name: canvasView.file.name || "canvas"
+				};
+			}
 		}
 
 		// Fallback: get the first canvas if no active canvas found
 		const canvasLeaves = this.app.workspace.getLeavesOfType("canvas");
 		if (canvasLeaves.length > 0 && canvasLeaves[0]) {
-			const view = canvasLeaves[0].view as any;
-			return view?.file?.name || "canvas";
+			const view = canvasLeaves[0].view as CanvasView;
+			if (view?.canvas && view.file) {
+				return {
+					canvas: view.canvas,
+					name: view.file.name || "canvas"
+				};
+			}
 		}
 
-		return "canvas";
+		return null;
 	}
 
 	generateId(length: number = 16): string {
