@@ -1,9 +1,9 @@
 import {
 	Events,
-	ItemView,
 	Menu,
 	Notice,
 	Plugin,
+	TextFileView,
 	WorkspaceLeaf,
 	setIcon,
 } from "obsidian";
@@ -193,8 +193,9 @@ export default class CanvasContextPlugin extends Plugin {
 
 			if (result.success) {
 				this.createResponseNode(node, result.text, false);
+				const canvasName = this.getCanvasNameFromNode(node);
 				// oxlint-disable-next-line no-new
-				new Notice("LLM response added to canvas.");
+				new Notice(`LLM response added to "${canvasName}".`);
 			} else {
 				this.addRecentError(result);
 				await this.createErrorNode(node, result);
@@ -377,29 +378,11 @@ export default class CanvasContextPlugin extends Plugin {
 	}
 
 	async runInferenceFromSidebar(): Promise<boolean> {
-		const canvasLeaves = this.app.workspace.getLeavesOfType("canvas");
-
-		if (canvasLeaves.length === 0) {
-			// oxlint-disable-next-line no-new
-			new Notice("Please open a canvas to run inference.");
-			return false;
-		}
-
-		const canvasLeaf = canvasLeaves[0];
-		if (!canvasLeaf) {
-			// oxlint-disable-next-line no-new
-			new Notice("Canvas leaf not accessible.");
-			return false;
-		}
-
-		const canvasView = canvasLeaf.view as any;
-		const canvas = canvasView.canvas;
+		const canvas = this.getCurrentCanvas();
 
 		if (!canvas) {
 			// oxlint-disable-next-line no-new
-			new Notice(
-				"Canvas not accessible. Please ensure you have a canvas open.",
-			);
+			new Notice("Please open and focus a canvas to run inference.");
 			return false;
 		}
 
@@ -599,11 +582,44 @@ export default class CanvasContextPlugin extends Plugin {
 	}
 
 	getCurrentCanvas(): any | null {
-		const canvasView = this.app.workspace.getActiveViewOfType(ItemView);
-		if (canvasView?.getViewType() !== "canvas") {
+		const canvasView = this.app.workspace.getActiveViewOfType(TextFileView);
+		if (canvasView?.file?.extension !== "canvas") {
 			return null;
 		}
 		return (canvasView as any)?.canvas || null;
+	}
+
+	getCanvasNameFromNode(node: ExtendedCanvasConnection): string {
+		// Try to get canvas name from the node's canvas reference
+		if (node.canvas) {
+			const canvasLeaves = this.app.workspace.getLeavesOfType("canvas");
+			for (const leaf of canvasLeaves) {
+				const view = leaf.view as any;
+				if (view?.canvas === node.canvas && view?.file?.name) {
+					return view.file.name;
+				}
+			}
+		}
+
+		// Fallback to current canvas name logic
+		return this.getCurrentCanvasName();
+	}
+
+	getCurrentCanvasName(): string {
+		// Try to get the active canvas first (proper way)
+		const canvasView = this.app.workspace.getActiveViewOfType(TextFileView);
+		if (canvasView?.file?.extension === "canvas") {
+			return canvasView.file.name || "canvas";
+		}
+
+		// Fallback: get the first canvas if no active canvas found
+		const canvasLeaves = this.app.workspace.getLeavesOfType("canvas");
+		if (canvasLeaves.length > 0 && canvasLeaves[0]) {
+			const view = canvasLeaves[0].view as any;
+			return view?.file?.name || "canvas";
+		}
+
+		return "canvas";
 	}
 
 	generateId(length: number = 16): string {

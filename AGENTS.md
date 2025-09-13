@@ -8,7 +8,7 @@ This is an Obsidian plugin that transforms canvas into a spatial context-aware L
 
 - `pnpm dev` - Development build with watch mode (using Rolldown)
 - `pnpm build` - Production build (using Rolldown)
-- `pnpm typecheck` - TypeScript compilation check: `npx tsc --noEmit`
+- `pnpm typecheck` - TypeScript compilation check (using tsc)
 - `pnpm test` - Run unit tests with Vitest
 - `pnpm format` - Run prettier on all source files
 - `pnpm lint` - Run ESLint on all source files
@@ -38,3 +38,4 @@ This is an Obsidian plugin that transforms canvas into a spatial context-aware L
 - Run `pnpm test` after making significant code changes
 - Run `pnpm lint` after making significant code changes
 - Run `pnpm format` after making significant code changes
+- remember to run `pnpm lint` `pnpm test` and `pnpm typecheck` and `pnpm format` after you did changes
