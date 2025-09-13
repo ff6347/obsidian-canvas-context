@@ -9,7 +9,12 @@ import {
 } from "obsidian";
 
 import type { ModelMessage } from "ai";
-import type { CanvasConnection, CanvasView, CanvasViewCanvas, CanvasMenu } from "obsidian-typings";
+import type {
+	CanvasConnection,
+	CanvasView,
+	CanvasViewCanvas,
+	CanvasMenu,
+} from "obsidian-typings";
 import NodeActions from "./canvas/nodes-actions.ts";
 import { canvasGraphWalker } from "./canvas/walker.ts";
 import {
@@ -176,7 +181,9 @@ export default class CanvasContextPlugin extends Plugin {
 	 *
 	 */
 	async runInference(nodeId: string, canvas?: CanvasViewCanvas) {
-		const canvasInfo = this.getCanvasInfo(canvas ? { canvas } as ExtendedCanvasConnection : undefined);
+		const canvasInfo = this.getCanvasInfo(
+			canvas ? ({ canvas } as ExtendedCanvasConnection) : undefined,
+		);
 
 		if (!canvasInfo) {
 			// oxlint-disable-next-line no-new
@@ -192,7 +199,11 @@ export default class CanvasContextPlugin extends Plugin {
 
 		let messages: ModelMessage[];
 		try {
-			messages = await canvasGraphWalker(nodeId, canvasInfo.canvas.data, this.app);
+			messages = await canvasGraphWalker(
+				nodeId,
+				canvasInfo.canvas.data,
+				this.app,
+			);
 		} catch (error) {
 			console.error("Error in canvasGraphWalker:", error);
 			// oxlint-disable-next-line no-new
@@ -222,12 +233,19 @@ export default class CanvasContextPlugin extends Plugin {
 			});
 
 			if (result.success) {
-				this.createResponseNode({ id: nodeId, canvas: canvasInfo.canvas } as ExtendedCanvasConnection, result.text, false);
+				this.createResponseNode(
+					{ id: nodeId, canvas: canvasInfo.canvas } as ExtendedCanvasConnection,
+					result.text,
+					false,
+				);
 				// oxlint-disable-next-line no-new
 				new Notice(`LLM response added to "${canvasInfo.name}".`);
 			} else {
 				this.addRecentError(result);
-				await this.createErrorNode({ id: nodeId, canvas: canvasInfo.canvas } as ExtendedCanvasConnection, result);
+				await this.createErrorNode(
+					{ id: nodeId, canvas: canvasInfo.canvas } as ExtendedCanvasConnection,
+					result,
+				);
 				// oxlint-disable-next-line no-new
 				new Notice(`Inference failed: ${result.error}`, 5000);
 			}
@@ -274,10 +292,13 @@ export default class CanvasContextPlugin extends Plugin {
 			toSide: "top",
 		};
 
-		canvas.importData({
-			edges: [...currentData.edges, edgeData],
-			nodes: [...currentData.nodes, responseNodeData],
-		}, undefined);
+		canvas.importData(
+			{
+				edges: [...currentData.edges, edgeData],
+				nodes: [...currentData.nodes, responseNodeData],
+			},
+			undefined,
+		);
 		canvas.requestFrame(undefined);
 	}
 
@@ -484,7 +505,10 @@ export default class CanvasContextPlugin extends Plugin {
 							}
 
 							try {
-								await this.runInference(selectedNode.id as string, canvasView.canvas);
+								await this.runInference(
+									selectedNode.id as string,
+									canvasView.canvas,
+								);
 							} catch (error) {
 								console.error(
 									"Error running inference from selection menu:",
@@ -527,7 +551,11 @@ export default class CanvasContextPlugin extends Plugin {
 		const canvas = canvasView?.canvas;
 
 		const extendedCanvas = canvas as ExtendedCanvasViewCanvas;
-		if (!extendedCanvas || !extendedCanvas.menu || extendedCanvas.menu._observerSetup) {
+		if (
+			!extendedCanvas ||
+			!extendedCanvas.menu ||
+			extendedCanvas.menu._observerSetup
+		) {
 			return;
 		}
 
@@ -591,8 +619,12 @@ export default class CanvasContextPlugin extends Plugin {
 					e.preventDefault();
 
 					try {
-						const currentSelection = canvasView.canvas.getSelectionData(undefined);
-						if (isSelectionData(currentSelection) && currentSelection.nodes.length > 0) {
+						const currentSelection =
+							canvasView.canvas.getSelectionData(undefined);
+						if (
+							isSelectionData(currentSelection) &&
+							currentSelection.nodes.length > 0
+						) {
 							const firstNode = currentSelection.nodes[0];
 							if (firstNode && typeof firstNode.id === "string") {
 								await this.runInference(firstNode.id, canvasView.canvas);
@@ -610,7 +642,9 @@ export default class CanvasContextPlugin extends Plugin {
 		}
 	}
 
-	getCanvasInfo(node?: ExtendedCanvasConnection): { canvas: CanvasViewCanvas; name: string } | null {
+	getCanvasInfo(
+		node?: ExtendedCanvasConnection,
+	): { canvas: CanvasViewCanvas; name: string } | null {
 		// If node provided with canvas reference, use that canvas
 		if (node?.canvas) {
 			const canvasLeaves = this.app.workspace.getLeavesOfType("canvas");
@@ -631,7 +665,7 @@ export default class CanvasContextPlugin extends Plugin {
 			if (canvasView.canvas && canvasView.file) {
 				return {
 					canvas: canvasView.canvas,
-					name: canvasView.file.name || "canvas"
+					name: canvasView.file.name || "canvas",
 				};
 			}
 		}
@@ -643,11 +677,10 @@ export default class CanvasContextPlugin extends Plugin {
 			if (view?.canvas && view.file) {
 				return {
 					canvas: view.canvas,
-					name: view.file.name || "canvas"
+					name: view.file.name || "canvas",
 				};
 			}
 		}
-
 		return null;
 	}
 
