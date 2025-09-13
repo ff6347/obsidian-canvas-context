@@ -670,17 +670,6 @@ export default class CanvasContextPlugin extends Plugin {
 			}
 		}
 
-		// Fallback: get the first canvas if no active canvas found
-		const canvasLeaves = this.app.workspace.getLeavesOfType("canvas");
-		if (canvasLeaves.length > 0 && canvasLeaves[0]) {
-			const view = canvasLeaves[0].view as CanvasView;
-			if (view?.canvas && view.file) {
-				return {
-					canvas: view.canvas,
-					name: view.file.name || "canvas",
-				};
-			}
-		}
 		return null;
 	}
 
