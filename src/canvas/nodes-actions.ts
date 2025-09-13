@@ -1,5 +1,6 @@
 import { type Menu } from "obsidian";
 import type CanvasContextPlugin from "../main.ts";
+import { isSelectionData } from "../main.ts";
 import type { ExtendedCanvasConnection } from "../types/canvas-types.ts";
 import { PLUGIN_DISPLAY_NAME, PLUGIN_ICON } from "../lib/constants.ts";
 
@@ -13,9 +14,9 @@ export default class NodeActions {
 			item
 				.setTitle(`${PLUGIN_DISPLAY_NAME}: Run Inference`)
 				.setIcon(PLUGIN_ICON)
-				.onClick(async () => {
+				.onClick(() => {
 					if (node?.canvas?.data && node?.id) {
-						this.plugin.runInference(node.id, node);
+						this.plugin.runInference(node.id, node.canvas);
 					}
 				}),
 		);
@@ -27,12 +28,13 @@ export default class NodeActions {
 
 				// Try different methods to get selection
 				let selectedCount = 0;
-				let selectedNodes: any[] = [];
+				let selectedNodes: Array<{ id: string; [key: string]: unknown }> = [];
 
 				// Try using canvas.selection if it exists
 				if (canvas.selection && canvas.selection.size > 0) {
 					selectedCount = canvas.selection.size;
-					selectedNodes = Array.from(canvas.selection);
+					// Selection objects may not have the same structure as nodes
+					// so we'll rely on getSelectionData for the actual node data
 				}
 
 				// Try using getSelectionData if it exists
@@ -41,12 +43,8 @@ export default class NodeActions {
 					typeof canvas.getSelectionData === "function"
 				) {
 					try {
-						const selectionData = (canvas as any).getSelectionData();
-						if (
-							selectionData &&
-							selectionData.nodes &&
-							Array.isArray(selectionData.nodes)
-						) {
+						const selectionData = canvas.getSelectionData(undefined);
+						if (isSelectionData(selectionData)) {
 							selectedNodes = selectionData.nodes;
 							selectedCount = selectedNodes.length;
 						}
@@ -65,7 +63,7 @@ export default class NodeActions {
 							.setIcon(PLUGIN_ICON)
 							.onClick(async () => {
 								if (node?.canvas?.data && node?.id) {
-									await this.plugin.runInference(node.id, node);
+									await this.plugin.runInference(node.id, node.canvas);
 								}
 							}),
 					);
