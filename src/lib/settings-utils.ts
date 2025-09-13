@@ -1,6 +1,6 @@
 import type {
-	ModelConfiguration,
 	ApiKeyConfiguration,
+	ModelConfiguration,
 } from "../ui/settings.ts";
 import type { CurrentProviderType } from "../types/llm-types.ts";
 
@@ -8,7 +8,9 @@ import type { CurrentProviderType } from "../types/llm-types.ts";
  * Masks an API key by showing only the last 4 characters and 8 dots
  */
 export function maskApiKey(apiKey: string): string {
-	if (!apiKey) return "";
+	if (!apiKey) {
+		return "";
+	}
 
 	// Always show exactly 8 masked characters + last 4 characters = 12 total
 	// This ensures consistent length regardless of actual API key length

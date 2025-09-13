@@ -90,6 +90,9 @@ function getParentChain(
 	return chain;
 }
 
+/**
+ * Only gets directly connected nodes not their children or siblings.
+ */
 function getHorizontalContext(
 	nodeId: string,
 	data: CanvasViewData,

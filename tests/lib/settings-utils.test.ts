@@ -1,12 +1,14 @@
-import { describe, it, expect } from "vitest";
+/* oxlint-disable	eslint/max-lines-per-function */
+
+import { describe, expect, it } from "vitest";
 import {
+	computeDisplayName,
 	maskApiKey,
 	resolveApiKey,
-	computeDisplayName,
 } from "../../src/lib/settings-utils.ts";
 import type {
-	ModelConfiguration,
 	ApiKeyConfiguration,
+	ModelConfiguration,
 } from "../../src/ui/settings.ts";
 
 describe("settings-utils", () => {

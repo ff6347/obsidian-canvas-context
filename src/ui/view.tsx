@@ -28,11 +28,11 @@ export class CanvasContextView extends ItemView {
 		return PLUGIN_DISPLAY_NAME;
 	}
 
-	getIcon() {
+	override getIcon() {
 		return PLUGIN_ICON;
 	}
 
-	async onOpen() {
+	override async onOpen() {
 		this.root = createRoot(this.contentEl);
 		this.root.render(
 			<StrictMode>
@@ -45,7 +45,7 @@ export class CanvasContextView extends ItemView {
 		);
 	}
 
-	async onClose() {
+	override async onClose() {
 		this.root?.unmount();
 	}
 }

@@ -19,14 +19,16 @@ export const ReactView: React.FC<ReactViewProps> = ({ plugin }) => {
 
 	const handleModelChange = async (value: string | null) => {
 		const selectedValue = value || "";
-		await updateSettings(prev => ({
+		await updateSettings((prev) => ({
 			...prev,
-			currentModel: selectedValue
+			currentModel: selectedValue,
 		}));
 	};
 
 	const handleRunInference = async () => {
-		if (isRunningInference) return;
+		if (isRunningInference) {
+			return;
+		}
 
 		setIsRunningInference(true);
 		try {

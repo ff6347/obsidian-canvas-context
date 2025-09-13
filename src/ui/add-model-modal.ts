@@ -1,6 +1,6 @@
-import { App, Modal, Setting, Notice, ButtonComponent } from "obsidian";
+import { App, ButtonComponent, Modal, Notice, Setting } from "obsidian";
 import type CanvasContextPlugin from "../main.ts";
-import type { ModelConfiguration, ApiKeyConfiguration } from "./settings.ts";
+import type { ModelConfiguration } from "./settings.ts";
 import { computeDisplayName } from "../lib/settings-utils.ts";
 import type { CurrentProviderType } from "../types/llm-types.ts";
 import { providers } from "../llm/providers/providers.ts";
@@ -38,10 +38,14 @@ export class AddModelModal extends Modal {
 					baseURL: "",
 					enabled: true,
 				};
-		this.onSave = onSave || (() => {});
+		this.onSave =
+			onSave ||
+			(() => {
+				console.warn("No onSave callback provided");
+			});
 	}
 
-	onOpen() {
+	override onOpen() {
 		const { contentEl } = this;
 		contentEl.empty();
 
@@ -53,7 +57,7 @@ export class AddModelModal extends Modal {
 
 		// Model Name
 		// Display Name with Custom Toggle
-		const nameSetting = new Setting(contentEl)
+		new Setting(contentEl)
 			.setName("Display Name")
 			.setDesc("Auto-computed from provider:model, or set custom name")
 			.addText((text) => {
@@ -259,6 +263,7 @@ export class AddModelModal extends Modal {
 
 	async verifyConnection(button: ButtonComponent) {
 		if (!this.canLoadModels()) {
+			// oxlint-disable-next-line no-new
 			new Notice("Please fill in all required fields first.");
 			return;
 		}
@@ -284,10 +289,12 @@ export class AddModelModal extends Modal {
 							this.modelConfig.baseURL!,
 						)
 					: await providerGenerator.listModels(this.modelConfig.baseURL!);
+			// oxlint-disable-next-line no-new
 			new Notice(`Connection successful! Found ${models.length} models.`);
 			button.setButtonText("✓ Connected");
 		} catch (error) {
 			console.error("Connection verification failed:", error);
+			// oxlint-disable-next-line no-new
 			new Notice(
 				"Connection failed. Please check the base URL and ensure the provider is running.",
 			);
@@ -308,6 +315,7 @@ export class AddModelModal extends Modal {
 			!this.modelConfig.modelName ||
 			!this.modelConfig.baseURL
 		) {
+			// oxlint-disable-next-line no-new
 			new Notice("Please fill in all required fields.");
 			return;
 		}
@@ -318,6 +326,7 @@ export class AddModelModal extends Modal {
 				this.modelConfig.provider === "openrouter") &&
 			!this.getResolvedApiKey()
 		) {
+			// oxlint-disable-next-line no-new
 			new Notice("API Key is required for OpenAI and OpenRouter providers.");
 			return;
 		}
@@ -343,6 +352,7 @@ export class AddModelModal extends Modal {
 		}
 
 		await this.plugin.saveSettings();
+		// oxlint-disable-next-line no-new
 		new Notice(
 			this.isEditing
 				? "Model configuration updated!"
@@ -432,7 +442,9 @@ export class AddModelModal extends Modal {
 	}
 
 	updateApiKeyFieldVisibility() {
-		if (!this.apiKeySetting) return;
+		if (!this.apiKeySetting) {
+			return;
+		}
 
 		if (
 			this.modelConfig.provider === "openai" ||
@@ -478,7 +490,9 @@ export class AddModelModal extends Modal {
 	}
 
 	updateProviderDocsLink() {
-		if (!this.providerDocsButton) return;
+		if (!this.providerDocsButton) {
+			return;
+		}
 
 		const docs = getProviderDocs(this.modelConfig.provider!);
 		if (docs) {
@@ -493,7 +507,9 @@ export class AddModelModal extends Modal {
 	}
 
 	updateApiKeyDropdown() {
-		if (!this.apiKeyDropdown) return;
+		if (!this.apiKeyDropdown) {
+			return;
+		}
 
 		// Clear existing options
 		this.apiKeyDropdown.innerHTML = "";
@@ -552,7 +568,9 @@ export class AddModelModal extends Modal {
 	}
 
 	updateNameFieldState(): void {
-		if (!this.nameInput) return;
+		if (!this.nameInput) {
+			return;
+		}
 
 		const shouldUseCustom = this.modelConfig.useCustomDisplayName || false;
 
@@ -580,7 +598,7 @@ export class AddModelModal extends Modal {
 		}
 	}
 
-	onClose() {
+	override onClose() {
 		const { contentEl } = this;
 		contentEl.empty();
 	}
