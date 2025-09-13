@@ -198,10 +198,10 @@ export const ReactView: React.FC<ReactViewProps> = ({ plugin }) => {
 									error !== null &&
 									"timestamp" in error &&
 									typeof error.timestamp === "number" && (
-									<div className="canvas-context__error-timestamp">
-										{new Date(error.timestamp).toLocaleTimeString()}
-									</div>
-								)}
+										<div className="canvas-context__error-timestamp">
+											{new Date(error.timestamp).toLocaleTimeString()}
+										</div>
+									)}
 							</div>
 						))}
 					</div>

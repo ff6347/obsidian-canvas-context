@@ -37,7 +37,10 @@ export async function canvasGraphWalker(
 	for (const nodeId of allNodeIds) {
 		const node = data.nodes.find((n) => n.id === nodeId);
 		if (node) {
-			const { role, content } = await getNodeContentAndRole(node as ExtendedCanvasViewDataNode, app);
+			const { role, content } = await getNodeContentAndRole(
+				node as ExtendedCanvasViewDataNode,
+				app,
+			);
 			// Skip nodes with no content (like text nodes)
 			if (content) {
 				const allowedRoles = ["system", "user", "assistant"];
