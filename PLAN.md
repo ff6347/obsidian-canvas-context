@@ -581,6 +581,7 @@ Canvas selection toolbar now works correctly with dual approach:
 - **Event-Driven Settings**: Plugin event system enables reactive React components without polling
 - **Settings Context Pattern**: React context with event listeners provides clean separation of concerns
 - **Race Condition Protection**: Functional setState updates prevent stale closures in rapid update scenarios
+- **Canvas Fallback Safety**: Removed dangerous first-canvas fallback to prevent inference on wrong canvas
 
 13. **Named API Key Management System**: Complete reusable API key infrastructure (Jan 9, 2025)
 
@@ -660,6 +661,16 @@ Canvas selection toolbar now works correctly with dual approach:
 - **Consistent Messaging**: Success notices now show `"LLM response added to 'Canvas Name.canvas'."`
 - **Issue #26 Created**: Canvas name display still showing fallbacks - deferred for runtime debugging
 - **Testing Status**: All 88 unit tests passing, TypeScript compilation clean, ready for production use
+
+21. **Canvas Fallback Logic Fix**: Enhanced safety for multi-canvas environments (Jan 13, 2025)
+
+- **Dangerous Fallback Removed**: Eliminated fallback logic that used "first canvas" when no active canvas found
+- **User-Centered Design**: Only runs inference on canvases the user explicitly chooses (node context) or is actively using
+- **Graceful Failure**: Returns `null` instead of guessing when no suitable canvas is available
+- **Multi-Canvas Safety**: Prevents accidental inference on unintended canvases when multiple are open
+- **Type System Integrity**: Maintained all TypeScript types and proper error handling
+- **Testing Verified**: All 88 unit tests pass, no regression in functionality
+- **Code Quality**: Passed linting, type checking, and formatting without issues
 
 ### 💡 Future Enhancement Notes
 

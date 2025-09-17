@@ -1,7 +1,12 @@
 import type { ModelMessage } from "ai";
-import type { CanvasViewData } from "obsidian-typings";
+import type { CanvasViewData, CanvasViewDataNode } from "obsidian-typings";
 import { App, TFile, getFrontMatterInfo } from "obsidian";
 import matter from "gray-matter";
+
+interface ExtendedCanvasViewDataNode extends CanvasViewDataNode {
+	text?: string;
+	url?: string;
+}
 
 export async function canvasGraphWalker(
 	currentNodeId: string,
@@ -32,7 +37,10 @@ export async function canvasGraphWalker(
 	for (const nodeId of allNodeIds) {
 		const node = data.nodes.find((n) => n.id === nodeId);
 		if (node) {
-			const { role, content } = await getNodeContentAndRole(node, app);
+			const { role, content } = await getNodeContentAndRole(
+				node as ExtendedCanvasViewDataNode,
+				app,
+			);
 			// Skip nodes with no content (like text nodes)
 			if (content) {
 				const allowedRoles = ["system", "user", "assistant"];
@@ -123,7 +131,7 @@ function getHorizontalContext(
 }
 
 async function getNodeContentAndRole(
-	node: any,
+	node: ExtendedCanvasViewDataNode,
 	app: App,
 ): Promise<{ role: string | null; content: string | null }> {
 	// Handle different node types
