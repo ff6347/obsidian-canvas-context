@@ -33,3 +33,16 @@ interface CanvasEdgeData {
 	fromSide: string;
 	toSide: string;
 }
+
+export interface InferenceContext {
+	id: string;
+	canvasFileName: string;
+	sourceNodeId: string;
+	sourceNodePosition: {
+		x: number;
+		y: number;
+		width: number;
+		height: number;
+	};
+	timestamp: number;
+}

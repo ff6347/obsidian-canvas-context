@@ -29,6 +29,7 @@ import type {
 	CanvasNodeData,
 	CanvasTextData,
 	ExtendedCanvasConnection,
+	InferenceContext,
 } from "./types/canvas-types.ts";
 import {
 	CanvasContextSettingTab,
@@ -65,6 +66,7 @@ export default class CanvasContextPlugin extends Plugin {
 	settings: CanvasContextSettings = DEFAULT_SETTINGS;
 	settingsEvents: Events = new Events();
 	private observers: MutationObserver[] = [];
+	private activeInferences = new Map<string, InferenceContext>();
 
 	override async onload() {
 		await this.loadSettings();
@@ -197,6 +199,23 @@ export default class CanvasContextPlugin extends Plugin {
 			return;
 		}
 
+		// Capture inference context immediately
+		let inferenceContext: InferenceContext;
+		try {
+			inferenceContext = this.captureInferenceContext(
+				canvasInfo.name,
+				nodeId,
+				canvasInfo.canvas,
+			);
+		} catch (error) {
+			console.error("Error capturing inference context:", error);
+			// oxlint-disable-next-line no-new
+			new Notice(
+				"Error setting up inference context. Check console for details.",
+			);
+			return;
+		}
+
 		let messages: ModelMessage[];
 		try {
 			messages = await canvasGraphWalker(
@@ -233,19 +252,18 @@ export default class CanvasContextPlugin extends Plugin {
 			});
 
 			if (result.success) {
-				this.createResponseNode(
-					{ id: nodeId, canvas: canvasInfo.canvas } as ExtendedCanvasConnection,
+				await this.createResponseNodeWithContext(
+					inferenceContext,
 					result.text,
 					false,
 				);
 				// oxlint-disable-next-line no-new
-				new Notice(`LLM response added to "${canvasInfo.name}".`);
+				new Notice(
+					`LLM response added to "${inferenceContext.canvasFileName}".`,
+				);
 			} else {
 				this.addRecentError(result);
-				await this.createErrorNode(
-					{ id: nodeId, canvas: canvasInfo.canvas } as ExtendedCanvasConnection,
-					result,
-				);
+				await this.createErrorNodeWithContext(inferenceContext, result);
 				// oxlint-disable-next-line no-new
 				new Notice(`Inference failed: ${result.error}`, 5000);
 			}
@@ -302,7 +320,7 @@ export default class CanvasContextPlugin extends Plugin {
 		canvas.requestFrame(undefined);
 	}
 
-	async createErrorNode(
+	createErrorNode(
 		sourceNode: ExtendedCanvasConnection,
 		result: InferenceResult,
 	) {
@@ -428,11 +446,40 @@ export default class CanvasContextPlugin extends Plugin {
 	}
 
 	async runInferenceFromSidebar(): Promise<boolean> {
-		const canvasInfo = this.getCanvasInfo();
+		// For sidebar inference, we need to find a canvas with selection
+		const canvasLeaves = this.app.workspace.getLeavesOfType("canvas");
+
+		if (canvasLeaves.length === 0) {
+			// oxlint-disable-next-line no-new
+			new Notice("Please open a canvas to run inference.");
+			return false;
+		}
+
+		// Find a canvas with selection
+		let canvasInfo: { canvas: CanvasViewCanvas; name: string } | null = null;
+		for (const leaf of canvasLeaves) {
+			const view = leaf.view as CanvasView;
+			if (view.canvas && view.file?.name) {
+				try {
+					const selectionData = view.canvas.getSelectionData(undefined);
+					if (
+						isSelectionData(selectionData) &&
+						selectionData.nodes.length > 0
+					) {
+						canvasInfo = { canvas: view.canvas, name: view.file.name };
+						break;
+					}
+				} catch (error) {
+					// Log error but continue to next canvas
+					console.warn("Failed to get selection data from canvas:", view.file?.name, error);
+					continue;
+				}
+			}
+		}
 
 		if (!canvasInfo) {
 			// oxlint-disable-next-line no-new
-			new Notice("Please open and focus a canvas to run inference.");
+			new Notice("Please select a node in a canvas to run inference.");
 			return false;
 		}
 
@@ -660,6 +707,8 @@ export default class CanvasContextPlugin extends Plugin {
 
 		// Otherwise, get active canvas
 		const activeView = this.app.workspace.getActiveViewOfType(TextFileView);
+
+		// First try: Active view is a canvas (normal case)
 		if (activeView?.file?.extension === "canvas") {
 			const canvasView = activeView as CanvasView;
 			if (canvasView.canvas && canvasView.file) {
@@ -670,6 +719,7 @@ export default class CanvasContextPlugin extends Plugin {
 			}
 		}
 
+		// No fallback - we need explicit canvas context for sidebar inference
 		return null;
 	}
 
@@ -679,5 +729,208 @@ export default class CanvasContextPlugin extends Plugin {
 			result.push(((16 * Math.random()) | 0).toString(16));
 		}
 		return result.join("");
+	}
+
+	private findCanvasLeaf(canvasFileName: string): WorkspaceLeaf | null {
+		const canvasLeaves = this.app.workspace.getLeavesOfType("canvas");
+
+		const targetLeaf = canvasLeaves.find((leaf) => {
+			const view = leaf.view as CanvasView;
+			const fileName = view.file?.name;
+			const filePath = view.file?.path;
+
+			// Try multiple matching strategies
+			return (
+				fileName === canvasFileName ||
+				filePath === canvasFileName ||
+				fileName === canvasFileName.replace(".canvas", "") ||
+				filePath?.endsWith(canvasFileName)
+			);
+		});
+
+		return targetLeaf || null;
+	}
+
+	private captureInferenceContext(
+		canvasFileName: string,
+		nodeId: string,
+		canvas: CanvasViewCanvas,
+	): InferenceContext {
+		const canvasData = canvas.getData() as CanvasData;
+		if (!canvasData) {
+			throw new Error(`No canvas data available for ${canvasFileName}`);
+		}
+
+		const sourceNode = canvasData.nodes.find((n) => n.id === nodeId);
+
+		if (!sourceNode) {
+			throw new Error(
+				`Source node ${nodeId} not found in canvas ${canvasFileName}`,
+			);
+		}
+
+		const context: InferenceContext = {
+			id: this.generateId(),
+			canvasFileName,
+			sourceNodeId: nodeId,
+			sourceNodePosition: {
+				x: sourceNode.x,
+				y: sourceNode.y,
+				width: sourceNode.width,
+				height: sourceNode.height,
+			},
+			timestamp: Date.now(),
+		};
+
+		this.activeInferences.set(context.id, context);
+		return context;
+	}
+
+	private async createResponseNodeWithContext(
+		context: InferenceContext,
+		response: string,
+		isError: boolean = false,
+	) {
+		// First try: Find in currently loaded canvas leaves
+		let targetLeaf = this.findCanvasLeaf(context.canvasFileName);
+
+		// Second try: If not loaded, try to open the canvas file
+		if (!targetLeaf) {
+			// Find the canvas file in the vault
+			const canvasFile = this.app.vault.getAbstractFileByPath(
+				context.canvasFileName,
+			);
+			if (canvasFile && canvasFile.path.endsWith(".canvas")) {
+				try {
+					// Open the canvas file
+					const leaf = await this.app.workspace.openLinkText(
+						context.canvasFileName,
+						"",
+						true,
+					);
+					if (leaf && leaf.view.getViewType() === "canvas") {
+						targetLeaf = leaf;
+					}
+				} catch (error) {
+					console.error("Failed to open canvas file:", error);
+				}
+			}
+		}
+
+		// Third try: Check again after potential opening
+		if (!targetLeaf) {
+			targetLeaf = this.findCanvasLeaf(context.canvasFileName);
+		}
+
+		if (!targetLeaf) {
+			// oxlint-disable-next-line no-new
+			new Notice(
+				`Canvas "${context.canvasFileName}" could not be opened for response placement`,
+			);
+			return;
+		}
+
+		const canvasView = targetLeaf.view as CanvasView;
+		const canvas = canvasView.canvas;
+
+		if (!canvas) {
+			return;
+		}
+
+		const currentData = canvas.getData() as CanvasData;
+		if (!currentData) {
+			return;
+		}
+
+		const responseId = this.generateId(16);
+
+		// Use the captured position from context
+		const responseNodeData: CanvasTextData = {
+			type: "text",
+			text: `---\nrole: ${isError ? "error" : "assistant"}\n\n---\n\n${response}`,
+			id: responseId,
+			x: context.sourceNodePosition.x,
+			y: context.sourceNodePosition.y + context.sourceNodePosition.height + 50,
+			width: 400,
+			height: 200,
+			color: isError ? "1" : "3",
+		};
+
+		const edgeData = {
+			id: this.generateId(16),
+			fromNode: context.sourceNodeId,
+			toNode: responseId,
+			fromSide: "bottom",
+			toSide: "top",
+		};
+
+		canvas.importData(
+			{
+				edges: [...currentData.edges, edgeData],
+				nodes: [...currentData.nodes, responseNodeData],
+			},
+			undefined,
+		);
+		canvas.requestFrame(undefined);
+
+		// Force save to persist changes to disk
+		try {
+			if (canvasView.file) {
+				await this.app.vault.modify(
+					canvasView.file,
+					JSON.stringify(canvas.getData()),
+				);
+			}
+		} catch (error) {
+			console.error("Failed to save canvas:", error);
+			// oxlint-disable-next-line no-new
+			new Notice(
+				"Response added but canvas save failed. Please save manually.",
+			);
+		}
+
+		// Clean up context
+		this.activeInferences.delete(context.id);
+	}
+
+	private async createErrorNodeWithContext(
+		context: InferenceContext,
+		result: InferenceResult,
+	) {
+		if (result.success) {
+			return;
+		}
+
+		// Get current model configuration for context
+		const currentModelConfig = this.settings.modelConfigurations.find(
+			(config) => config.id === this.settings.currentModel,
+		);
+
+		// Create detailed error message with configuration context
+		const errorDetails = [
+			`# ❌ Inference Error`,
+			``,
+			`**Error Type:** ${result.errorType || "unknown"}`,
+			`**Message:** ${result.error || "Unknown error occurred"}`,
+			``,
+			`## Configuration`,
+			currentModelConfig
+				? [
+						`**Model:** ${currentModelConfig.name}`,
+						`**Provider:** ${currentModelConfig.provider}`,
+						`**Model Name:** ${currentModelConfig.modelName}`,
+						`**Base URL:** ${currentModelConfig.baseURL}`,
+					].join("\n")
+				: "⚠️ No model configuration found",
+			``,
+			`## Troubleshooting`,
+			this.getErrorTroubleshootingText(
+				result.errorType,
+				currentModelConfig?.provider,
+			),
+		].join("\n");
+
+		// Use the context-based createResponseNode method with error flag
+		await this.createResponseNodeWithContext(context, errorDetails, true);
 	}
 }
