@@ -795,6 +795,20 @@ Canvas selection toolbar now works correctly with dual approach:
 - **Multi-Canvas Search**: Improved sidebar inference to search all canvases for selection instead of relying on active view
 - **Robust Response Placement**: Response nodes now correctly placed on originating canvas even when user switches during inference
 
+24. **AddModelModal Service Extraction**: Second major service refactoring for UI complexity reduction (Jan 2025)
+
+- **Modal Complexity Reduction**: Reduced add-model-modal.ts from 605 to 307 lines (49% reduction) through service extraction
+- **Three Specialized Services**: Created ModelValidationService, ModelFormService, and ModelConfigService
+- **Consistent Architecture**: Applied same dependency injection pattern used for main plugin services
+- **Validation Service**: Extracted form validation, connection testing, and model loading logic (120 lines)
+- **Form Service**: Extracted UI state management, form rendering, and event handling (200 lines)
+- **Config Service**: Extracted model configuration CRUD, API key resolution, and display name computation (80 lines)
+- **Improved Maintainability**: Each service handles one specific domain with clean interfaces
+- **Enhanced Testability**: Services can be unit tested independently with mocked dependencies
+- **Preserved Functionality**: All 88 unit tests pass, TypeScript compilation succeeds, functionality maintained
+- **Atomic Commit Pattern**: 5 conventional commits documenting each service extraction step
+- **Architecture Consistency**: Demonstrates scalability of service pattern across codebase for managing large files
+
 ### 💡 Future Enhancement Notes
 
 - **Hex Color Support**: Canvas also supports hex color values (e.g., `"color": "#ff6b6b"`) for more precise color control
