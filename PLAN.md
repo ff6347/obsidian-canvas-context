@@ -293,11 +293,11 @@ To add a new LLM provider:
 
 ## File Structure
 
-Current codebase structure:
+Current codebase structure with service-based architecture:
 
 ```
 src/
-├── main.ts                    # Plugin entry point
+├── main.ts                    # Plugin entry point (399 lines, refactored)
 ├── canvas/
 │   ├── walker.ts              # Tree walking algorithm
 │   └── nodes-actions.ts       # Canvas node actions and context menu
@@ -312,8 +312,13 @@ src/
 │       ├── lmstudio.ts        # LM Studio provider
 │       ├── openai.ts          # OpenAI provider
 │       └── openrouter.ts      # OpenRouter provider
+├── services/                  # Service layer architecture (NEW)
+│   ├── inference-service.ts   # LLM operations and error handling (118 lines)
+│   ├── canvas-service.ts      # Canvas operations and node management (232 lines)
+│   ├── menu-service.ts        # Menu building and observer management (147 lines)
+│   └── status-service.ts      # Status bar management (18 lines)
 ├── types/
-│   ├── canvas-types.ts        # Canvas-related types
+│   ├── canvas-types.ts        # Canvas-related types + service type exports
 │   └── llm-types.ts          # LLM and provider types
 └── ui/
     ├── settings.ts            # Settings panel
@@ -324,6 +329,90 @@ src/
     └── components/
         └── react-view.tsx     # React component wrapper
 ```
+
+## Service Architecture
+
+### Design Pattern: Service-Based Delegation
+
+The codebase follows a service-based architecture where the main plugin class (`CanvasContextPlugin`) delegates specific responsibilities to focused service classes. This pattern reduces complexity and improves maintainability.
+
+#### Core Services
+
+1. **InferenceService** (`src/services/inference-service.ts`)
+   - **Responsibility**: LLM operations and error management
+   - **Key Features**:
+     - Executes inference with model configuration
+     - Tracks recent errors with timestamps
+     - Provides provider-specific troubleshooting guidance
+     - Manages loading status coordination
+   - **Dependencies**: App instance, settings accessor, UI callbacks
+
+2. **CanvasService** (`src/services/canvas-service.ts`)
+   - **Responsibility**: Canvas operations and node management
+   - **Key Features**:
+     - Canvas discovery and file operations
+     - Inference context capturing and preservation
+     - Response node creation with proper positioning
+     - Canvas file opening and persistence
+   - **Dependencies**: App instance for workspace access
+
+3. **MenuService** (`src/services/menu-service.ts`)
+   - **Responsibility**: Canvas menu management and UI integration
+   - **Key Features**:
+     - Selection menu building for canvas toolbar
+     - Mutation observer setup for menu changes
+     - Canvas button injection for inference triggers
+     - Proper cleanup of DOM observers
+   - **Dependencies**: Inference callback function
+
+4. **StatusService** (`src/services/status-service.ts`)
+   - **Responsibility**: Status bar management
+   - **Key Features**:
+     - Loading status display with custom text
+     - Status bar element manipulation
+     - Simple show/hide operations
+   - **Dependencies**: Status bar element reference
+
+#### Architecture Benefits
+
+- **Separation of Concerns**: Each service handles one specific domain
+- **Reduced Complexity**: Main plugin class reduced from 936 to 399 lines (57% reduction)
+- **Improved Testability**: Services can be tested independently
+- **Better Maintainability**: Changes isolated to specific service boundaries
+- **Minimal Coupling**: Services use dependency injection rather than tight coupling
+
+#### Service Initialization Pattern
+
+```typescript
+export default class CanvasContextPlugin extends Plugin {
+    private inferenceService!: InferenceService;
+    private canvasService!: CanvasService;
+    private menuService!: MenuService;
+    private statusService!: StatusService;
+
+    override async onload() {
+        // Initialize services with dependency injection
+        this.canvasService = new CanvasService(this.app);
+        this.statusService = new StatusService(this.addStatusBarItem());
+        this.inferenceService = new InferenceService(
+            this.app,
+            () => this.settings,
+            (text) => this.statusService.showLoadingStatus(text),
+            () => this.statusService.hideLoadingStatus(),
+        );
+        this.menuService = new MenuService(
+            (nodeId, canvas) => this.runInference(nodeId, canvas),
+        );
+    }
+}
+```
+
+#### Service Communication
+
+- **Event-Driven**: Services communicate through callbacks and events
+- **Unidirectional Flow**: Main plugin coordinates, services execute
+- **Shared State**: Settings and configuration passed through accessors
+- **Clean Interfaces**: Services expose minimal public APIs
 
 ## Example Workflow
 
@@ -683,7 +772,19 @@ Canvas selection toolbar now works correctly with dual approach:
 - **Testing Verified**: All 88 unit tests pass, no regression in functionality
 - **Code Quality**: Passed linting, type checking, and formatting without issues
 
-22. **Critical Sidebar & Canvas Switching Bugs Fixed**: Enhanced inference reliability and context tracking (Jan 2025)
+22. **Service-Based Architecture Refactoring**: Major code restructuring for improved maintainability (Jan 2025)
+
+- **Main Plugin Reduction**: Reduced main.ts from 936 to 399 lines (57% reduction) through service extraction
+- **Four Core Services**: Created InferenceService, CanvasService, MenuService, and StatusService
+- **Separation of Concerns**: Each service handles one specific domain (LLM ops, canvas ops, menu management, status display)
+- **Dependency Injection Pattern**: Services receive dependencies through constructor injection instead of tight coupling
+- **Improved Testability**: Services can be unit tested independently with mocked dependencies
+- **Clean Interface Design**: Services expose minimal public APIs focused on their core responsibilities
+- **TypeScript Compliance**: All refactored code passes strict TypeScript checking with proper type safety
+- **Backward Compatibility**: All existing functionality preserved through proper service delegation
+- **Atomic Commit Strategy**: 7 conventional commits documenting each step of the refactoring process
+
+23. **Critical Sidebar & Canvas Switching Bugs Fixed**: Enhanced inference reliability and context tracking (Jan 2025)
 
 - **Sidebar Inference Resolution**: Fixed "Please open and focus a canvas" error by improving canvas detection from sidebar
 - **Context-Based Tracking System**: Implemented `InferenceContext` to capture canvas state at inference start with immutable snapshots
@@ -714,6 +815,9 @@ This approach successfully combines file-based and canvas-native workflows, givi
 - **Reference-based API Keys**: API keys stored separately and referenced by models for reusability
 - **Backward Compatibility**: Legacy configurations continue working while new features are added
 - **DOM-first UI**: Direct DOM manipulation for Obsidian compatibility instead of complex React components
+- **Service-Based Architecture**: Extract focused services to reduce main class complexity and improve maintainability
+- **Dependency Injection**: Services receive dependencies through constructors rather than accessing global state
+- **Single Responsibility**: Each service handles one domain (inference, canvas, menu, status) with minimal coupling
 
 ## Adding New Providers
 
@@ -762,6 +866,15 @@ For users who want access to multiple model providers without managing separate 
 - **Contextual Help**: Place documentation links directly in relevant UI sections
 - **Visual Consistency**: Standardize spacing, sizing, and layout across all configuration elements
 - **Error Prevention**: Disable conflicting options instead of showing error messages after submission
+
+### Code Architecture Patterns
+
+- **Service Extraction**: Break large classes into focused services when they exceed ~300-400 lines
+- **Constructor Injection**: Pass dependencies through constructors rather than property access for cleaner testing
+- **Interface Consistency**: All services expose minimal public APIs focused on their core domain
+- **Definite Assignment**: Use TypeScript `!:` assertion for properties initialized in lifecycle methods
+- **Atomic Commits**: Document refactoring work with conventional commits showing each step
+- **Backward Compatibility**: Preserve all existing functionality through proper delegation patterns
 
 ## Next Implementation Steps
 
