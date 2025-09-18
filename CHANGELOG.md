@@ -1,3 +1,10 @@
+## [1.1.1-beta.3](https://github.com/ff6347/obsidian-canvas-context/compare/v1.1.1-beta.2...v1.1.1-beta.3) (2025-09-18)
+
+
+### Bug Fixes
+
+* Manifest version ([13cd304](https://github.com/ff6347/obsidian-canvas-context/commit/13cd30486a5404730ec953e23ebaecc882b06e1c))
+
 ## [1.1.1-beta.2](https://github.com/ff6347/obsidian-canvas-context/compare/v1.1.1-beta.1...v1.1.1-beta.2) (2025-09-18)
 
 
