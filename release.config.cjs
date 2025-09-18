@@ -12,9 +12,15 @@ module.exports = {
 			},
 		],
 		[
+			"@semantic-release/exec",
+			{
+				prepareCmd: "node version-bump.js",
+			},
+		],
+		[
 			"@semantic-release/git",
 			{
-				assets: ["package.json", "package-lock.json", "CHANGELOG.md"],
+				assets: ["package.json", "package-lock.json", "CHANGELOG.md", "manifest.json", "versions.json"],
 				message: "chore(release): ${nextRelease.version} [skip ci]",
 			},
 		],
