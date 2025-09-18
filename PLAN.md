@@ -935,11 +935,284 @@ The service-based architecture pattern has been successfully applied to three fu
 
 ## Next Implementation Steps
 
-1. **Additional Provider Support**: Add Anthropic Claude, Google Gemini, Mistral AI (Note: OpenRouter already provides access to these models)
-2. **Enhanced UI Components**: Advanced Base UI components (Select, Input, Dialog)
-3. **Context Preview**: Show users what context will be sent before inference
-4. **Debugging Tools**: Context visualization and troubleshooting features
-5. **Performance Optimization**: Caching, batch processing, large canvas handling
+1. **Comprehensive Service Testing**: Complete unit and integration testing for all 10 newly extracted services to ensure robust refactored architecture
+2. **Additional Provider Support**: Add Anthropic Claude, Google Gemini, Mistral AI (Note: OpenRouter already provides access to these models)
+3. **Enhanced UI Components**: Advanced Base UI components (Select, Input, Dialog)
+4. **Context Preview**: Show users what context will be sent before inference
+5. **Debugging Tools**: Context visualization and troubleshooting features
+6. **Performance Optimization**: Caching, batch processing, large canvas handling
+
+## Comprehensive Service Testing Plan
+
+### Overview
+Create thorough unit and integration tests for all 10 newly extracted services across the codebase. This will ensure the refactored architecture remains robust and maintainable. The plan uses only existing dependencies (Vitest, MSW) and follows established testing patterns.
+
+### Testing Scope
+The refactored service architecture has created 10 services that need comprehensive testing:
+
+**Main Plugin Services (4):**
+- InferenceService - LLM operations and error management
+- CanvasService - Canvas operations and node management
+- MenuService - Canvas menu management and UI integration
+- StatusService - Status bar management
+
+**Modal Services (3):**
+- ModelValidationService - Form validation and connection testing
+- ModelFormService - UI state management and form rendering
+- ModelConfigService - Configuration CRUD and persistence
+
+**Settings Services (3):**
+- ModelConfigurationService - Model config UI and operations
+- ApiKeyConfigurationService - API key UI and management
+- SettingsUIService - Settings layout coordination
+
+### Phase 1: Test Infrastructure Setup
+
+#### 1.1 Mock Factories (`tests/mocks/factories.ts`)
+Create factory functions for common test data to ensure consistency across tests:
+
+```typescript
+// Factory functions for test data generation
+export const createMockModelConfiguration = (overrides?: Partial<ModelConfiguration>): ModelConfiguration => ({
+  id: "test-model-123",
+  name: "Test Model",
+  provider: "ollama",
+  modelName: "llama3.1",
+  baseURL: "http://localhost:11434",
+  enabled: true,
+  useCustomDisplayName: false,
+  ...overrides,
+});
+
+export const createMockApiKeyConfiguration = (overrides?: Partial<ApiKeyConfiguration>): ApiKeyConfiguration => ({
+  id: "test-key-456",
+  name: "Test API Key",
+  provider: "openai",
+  apiKey: "sk-test-1234567890abcdef",
+  description: "Test API key for unit tests",
+  ...overrides,
+});
+
+export const createMockCanvasData = (): CanvasViewData => ({
+  nodes: [
+    { id: "node1", type: "file", file: "test.md", x: 0, y: 0, width: 100, height: 100 },
+    { id: "node2", type: "text", text: "Test content", x: 0, y: 200, width: 100, height: 100 },
+  ],
+  edges: [
+    { id: "edge1", fromNode: "node1", toNode: "node2", fromSide: "bottom", toSide: "top" },
+  ],
+});
+
+export const createMockSettings = (): CanvasContextSettings => ({
+  currentModel: "test-model-123",
+  modelConfigurations: [createMockModelConfiguration()],
+  apiKeys: [createMockApiKeyConfiguration()],
+});
+```
+
+#### 1.2 Enhanced Mock Utilities (`tests/mocks/obsidian-extended.ts`)
+Extend existing Obsidian mocks with UI component mocks:
+
+```typescript
+export class MockButtonComponent {
+  buttonEl = { textContent: "Mock Button" };
+  setButtonText = vi.fn().mockReturnThis();
+  setDisabled = vi.fn().mockReturnThis();
+  setTooltip = vi.fn().mockReturnThis();
+  setCta = vi.fn().mockReturnThis();
+  setWarning = vi.fn().mockReturnThis();
+  onClick = vi.fn().mockReturnThis();
+}
+
+export class MockSetting {
+  settingEl = { style: { display: "" } };
+  descEl = {
+    empty: vi.fn(),
+    createDiv: vi.fn().mockReturnValue({ textContent: "" }),
+  };
+  setName = vi.fn().mockReturnThis();
+  setDesc = vi.fn().mockReturnThis();
+  addText = vi.fn().mockReturnThis();
+  addDropdown = vi.fn().mockReturnThis();
+  addToggle = vi.fn().mockReturnThis();
+  addButton = vi.fn().mockReturnThis();
+}
+
+export class MockNotice {
+  static notices: string[] = [];
+  constructor(message: string) {
+    MockNotice.notices.push(message);
+  }
+  static clear() {
+    MockNotice.notices = [];
+  }
+}
+```
+
+### Phase 2: Main Plugin Services Testing
+
+#### 2.1 InferenceService Tests (`tests/services/inference-service.test.ts`)
+**Critical Test Cases:**
+- **Success Flow**: Valid configuration → successful inference → loading status lifecycle
+- **Error Handling**: Missing model config, canvas walker errors, LLM failures
+- **Error Tracking**: Recent errors list management, max 5 limit, timestamps
+- **Dependencies**: Proper use of settings accessor, status callbacks, API key resolution
+
+```typescript
+describe('InferenceService', () => {
+  let service: InferenceService;
+  let mockApp: MockApp;
+  let mockGetSettings: ReturnType<typeof vi.fn>;
+  let mockShowLoading: ReturnType<typeof vi.fn>;
+  let mockHideLoading: ReturnType<typeof vi.fn>;
+
+  beforeEach(() => {
+    mockApp = createMockApp();
+    mockGetSettings = vi.fn().mockReturnValue(createMockSettings());
+    mockShowLoading = vi.fn();
+    mockHideLoading = vi.fn();
+
+    service = new InferenceService(mockApp, mockGetSettings, mockShowLoading, mockHideLoading);
+  });
+
+  describe('runInference', () => {
+    it('should complete successful inference workflow', async () => {
+      // Test success path with proper mocking
+    });
+
+    it('should handle missing model configuration', async () => {
+      // Test error case
+    });
+
+    it('should track loading status lifecycle', async () => {
+      // Verify showLoading/hideLoading calls
+    });
+  });
+});
+```
+
+#### 2.2 CanvasService Tests (`tests/services/canvas-service.test.ts`)
+**Critical Test Cases:**
+- **Canvas Discovery**: Finding active canvas, handling multiple files
+- **Context Capture**: Preserving node positions, IDs, and metadata
+- **Response Creation**: Positioning below source, proper connections, color coding
+- **File Operations**: Canvas persistence, reopening closed files, error handling
+
+#### 2.3 MenuService Tests (`tests/services/menu-service.test.ts`)
+**Critical Test Cases:**
+- **Menu Building**: Single vs multi-selection handling, button insertion
+- **Observer Management**: Setup, cleanup, DOM mutation handling
+- **Event Coordination**: Button clicks trigger inference callbacks
+
+#### 2.4 StatusService Tests (`tests/services/status-service.test.ts`)
+**Critical Test Cases:**
+- **Status Display**: Text updates, loading animations, element manipulation
+- **State Management**: Show/hide operations, cleanup
+
+### Phase 3: Modal Services Testing
+
+#### 3.1 ModelValidationService Tests
+**Focus Areas:**
+- Field validation logic for all providers
+- API key requirements per provider type
+- Connection verification flow
+- Model loading with proper state management
+
+#### 3.2 ModelFormService Tests
+**Focus Areas:**
+- UI element state management
+- Provider-specific form updates
+- Display name computation (custom vs auto)
+- Dropdown population and clearing
+
+#### 3.3 ModelConfigService Tests
+**Focus Areas:**
+- CRUD operations (create, update)
+- API key resolution by ID
+- Default configuration generation
+- Base URL management per provider
+
+### Phase 4: Settings Services Testing
+
+#### 4.1 ModelConfigurationService Tests
+**Focus Areas:**
+- Complete UI rendering workflow
+- All button operations (verify, duplicate, edit, delete)
+- State synchronization with settings
+- Current model cleanup on deletion
+
+#### 4.2 ApiKeyConfigurationService Tests
+**Focus Areas:**
+- API key rendering with masking
+- Dependency validation before deletion
+- Modal integration for editing
+
+#### 4.3 SettingsUIService Tests
+**Focus Areas:**
+- Section creation and layout
+- Modal opening callbacks
+- Empty state handling
+- Add button functionality
+
+### Phase 5: Integration Testing
+
+#### 5.1 Service Coordination Tests (`tests/integration/service-coordination.test.ts`)
+**Integration Scenarios:**
+- Plugin initialization with all services
+- Settings changes propagating to dependent services
+- Error states handled across service boundaries
+- Callback coordination between services
+
+#### 5.2 End-to-End Workflow Tests (`tests/integration/workflows.test.ts`)
+**Complete Workflows:**
+- Canvas inference: click → context building → LLM call → response node creation
+- Model management: add → configure → verify → use in inference
+- API key workflow: add → associate with model → use in cloud provider calls
+
+### Implementation Strategy
+
+#### Phase Timeline
+1. **Week 1**: Mock infrastructure and main plugin services
+2. **Week 2**: Modal services and settings services
+3. **Week 3**: Integration tests and coverage optimization
+4. **Week 4**: Documentation and refinement
+
+#### Test Execution Pattern
+```bash
+# Run specific service tests
+pnpm test tests/services/inference-service.test.ts
+
+# Run all service tests
+pnpm test tests/services/
+
+# Run integration tests
+pnpm test tests/integration/
+
+# Check coverage
+pnpm test:coverage
+```
+
+#### Quality Gates
+- **Unit Tests**: Each service has 95%+ method coverage
+- **Integration Tests**: All major workflows covered
+- **Performance**: Test suite runs in < 15 seconds
+- **Maintenance**: Tests remain stable with minimal maintenance
+
+### Success Metrics
+
+#### Quantitative Goals
+- **Test Count**: Increase from 88 to ~250+ tests
+- **Coverage**: >80% for all service files, >95% for critical paths
+- **Performance**: Full test suite < 15 seconds
+- **Zero Regression**: All existing 88 tests continue passing
+
+#### Qualitative Benefits
+- **Confidence**: Safe refactoring and feature additions
+- **Documentation**: Tests serve as service behavior documentation
+- **Debugging**: Failed tests pinpoint exact issues
+- **Onboarding**: New developers understand service contracts through tests
+
+This comprehensive testing plan ensures the refactored service architecture remains robust, maintainable, and reliable while providing excellent developer experience and confidence in future changes.
 
 ```
 
