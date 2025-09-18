@@ -180,13 +180,13 @@ export const ReactView: React.FC<ReactViewProps> = ({ plugin }) => {
 				</>
 			)}
 
-			{plugin.recentErrors.length > 0 && (
+			{plugin.getRecentErrors().length > 0 && (
 				<>
 					<Separator className="canvas-context__separator" />
 
 					<div className="canvas-context__error-section">
 						<div className="canvas-context__error-title">⚠️ Recent Errors</div>
-						{plugin.recentErrors.slice(0, 3).map((error, index) => (
+						{plugin.getRecentErrors().slice(0, 3).map((error: any, index: number) => (
 							<div key={index} className="canvas-context__error-item">
 								<div className="canvas-context__error-type">
 									{error.errorType || "Unknown"} Error
