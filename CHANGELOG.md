@@ -1,3 +1,10 @@
+## [1.1.1-beta.4](https://github.com/ff6347/obsidian-canvas-context/compare/v1.1.1-beta.3...v1.1.1-beta.4) (2025-09-18)
+
+
+### Bug Fixes
+
+* Semantic release version bump ([e316168](https://github.com/ff6347/obsidian-canvas-context/commit/e31616800ca558212070229f610a128b0896a86c))
+
 ## [1.1.1-beta.3](https://github.com/ff6347/obsidian-canvas-context/compare/v1.1.1-beta.2...v1.1.1-beta.3) (2025-09-18)
 
 
