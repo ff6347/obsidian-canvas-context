@@ -672,6 +672,17 @@ Canvas selection toolbar now works correctly with dual approach:
 - **Testing Verified**: All 88 unit tests pass, no regression in functionality
 - **Code Quality**: Passed linting, type checking, and formatting without issues
 
+22. **Critical Sidebar & Canvas Switching Bugs Fixed**: Enhanced inference reliability and context tracking (Jan 2025)
+
+- **Sidebar Inference Resolution**: Fixed "Please open and focus a canvas" error by improving canvas detection from sidebar
+- **Context-Based Tracking System**: Implemented `InferenceContext` to capture canvas state at inference start with immutable snapshots
+- **Canvas Auto-Reopening**: Added capability to reopen target canvas if unloaded during inference to ensure response placement
+- **Node Persistence Fix**: Added forced canvas save with `app.vault.modify()` to persist nodes to disk immediately after creation
+- **File-Based References**: Switched from object references to canvas file names for async operations to survive canvas switching
+- **Enhanced Error Handling**: Added proper error logging in catch blocks to maintain code quality standards
+- **Multi-Canvas Search**: Improved sidebar inference to search all canvases for selection instead of relying on active view
+- **Robust Response Placement**: Response nodes now correctly placed on originating canvas even when user switches during inference
+
 ### 💡 Future Enhancement Notes
 
 - **Hex Color Support**: Canvas also supports hex color values (e.g., `"color": "#ff6b6b"`) for more precise color control
