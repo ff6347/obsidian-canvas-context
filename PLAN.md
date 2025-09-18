@@ -397,6 +397,7 @@ src/
 - `pnpm typecheck` - TypeScript compilation check: `npx tsc --noEmit`
 - `pnpm test` - Run unit tests with Vitest
 - `pnpm format` - Run prettier on all source files
+- `pnpm lint` - Run ESLint on all source files
 
 ### Build System
 
@@ -404,6 +405,14 @@ src/
 - Native TypeScript support without Babel transpilation
 - Uses `builtin-modules` package for Node.js externals
 - TypeScript config enables `allowImportingTsExtensions` for .ts/.tsx imports
+
+### Release System
+
+- **Semantic Release Integration**: Automated versioning and publishing using semantic-release
+- **Version Synchronization**: `@semantic-release/exec` plugin runs `node version-bump.js` during prepare step
+- **Obsidian Plugin Assets**: Automated manifest.json and versions.json updates for Obsidian compatibility
+- **GitHub Release**: Automated asset uploads (main.js, manifest.json, styles.css, versions.json)
+- **CI/CD Pipeline**: Full automation from commit to plugin release
 
 ## Code Style
 
@@ -501,6 +510,8 @@ src/
 - **Asset Management**: Automated upload of main.js, manifest.json, styles.css, versions.json
 - **CI/CD Optimization**: Removed redundant manual asset upload steps from workflow
 - **Version Management**: Enhanced version-bump.js to only update versions.json when minAppVersion changes
+- **Exec Plugin Integration**: Added `@semantic-release/exec` to run version-bump.js during prepare step
+- **File Synchronization**: Git plugin now commits manifest.json and versions.json alongside package.json
 
 12. **Canvas Selection Toolbar Integration**: Complete UI integration with mutation observers
 
