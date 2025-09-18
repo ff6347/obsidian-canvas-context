@@ -3,8 +3,6 @@ import { CanvasService } from "../../src/services/canvas-service.ts";
 import { createMockApp } from "../mocks/obsidian-extended.ts";
 import {
 	createMockCanvasData,
-	createMockCanvasNode,
-	createMockCanvasTextNode,
 	createMockInferenceContext,
 } from "../mocks/factories.ts";
 import type {
@@ -238,7 +236,8 @@ describe("CanvasService", () => {
 				canvas: mockCanvas,
 				id: mockCanvasData.nodes[0].id,
 			} as any;
-			mockGenerateId = vi.fn()
+			mockGenerateId = vi
+				.fn()
 				.mockReturnValueOnce("response-node-id")
 				.mockReturnValueOnce("edge-id");
 		});
@@ -246,7 +245,12 @@ describe("CanvasService", () => {
 		it("should create assistant response node with proper formatting", () => {
 			const response = "This is the LLM response";
 
-			service.createResponseNode(mockSourceNode, response, false, mockGenerateId);
+			service.createResponseNode(
+				mockSourceNode,
+				response,
+				false,
+				mockGenerateId,
+			);
 
 			expect(mockCanvas.importData).toHaveBeenCalledWith(
 				{
@@ -306,7 +310,12 @@ describe("CanvasService", () => {
 			const sourceNodeData = mockCanvasData.nodes[0];
 			const response = "Test response";
 
-			service.createResponseNode(mockSourceNode, response, false, mockGenerateId);
+			service.createResponseNode(
+				mockSourceNode,
+				response,
+				false,
+				mockGenerateId,
+			);
 
 			const importCall = mockCanvas.importData.mock.calls[0][0];
 			const responseNode = importCall.nodes.find(
@@ -374,7 +383,8 @@ describe("CanvasService", () => {
 
 		beforeEach(() => {
 			mockContext = createMockInferenceContext();
-			mockGenerateId = vi.fn()
+			mockGenerateId = vi
+				.fn()
 				.mockReturnValueOnce("response-node-id")
 				.mockReturnValueOnce("edge-id");
 
@@ -468,7 +478,9 @@ describe("CanvasService", () => {
 
 			expect(responseNode.x).toBe(mockContext.sourceNodePosition.x);
 			expect(responseNode.y).toBe(
-				mockContext.sourceNodePosition.y + mockContext.sourceNodePosition.height + 50,
+				mockContext.sourceNodePosition.y +
+					mockContext.sourceNodePosition.height +
+					50,
 			);
 		});
 
@@ -552,7 +564,9 @@ describe("CanvasService", () => {
 			// No leaves found even after trying to open
 			mockApp.workspace.getLeavesOfType.mockReturnValue([]);
 
-			const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+			const consoleSpy = vi
+				.spyOn(console, "error")
+				.mockImplementation(() => {});
 
 			await service.createResponseNodeWithContext(
 				mockContext,
@@ -580,7 +594,10 @@ describe("CanvasService", () => {
 
 			const mockView = {
 				canvas: mockCanvas,
-				file: { name: "Test Canvas.canvas", path: "/path/to/Test Canvas.canvas" },
+				file: {
+					name: "Test Canvas.canvas",
+					path: "/path/to/Test Canvas.canvas",
+				},
 			};
 
 			const mockLeaf = { view: mockView };

@@ -39,3 +39,15 @@ This is an Obsidian plugin that transforms canvas into a spatial context-aware L
 - Run `pnpm lint` after making significant code changes
 - Run `pnpm format` after making significant code changes
 - remember to run `pnpm lint` `pnpm test` and `pnpm typecheck` and `pnpm format` after you did changes
+
+
+## Task Management with GitHub Issues
+
+To manage our tasks throughout our sessions we need to write them down. Using PLAN.md for this is not optimal as it is does not allow for easy tracking of progress. Therefore we use the GitHub issues and the `gh` CLI to manage our tasks.
+
+- ALWAYS break down large tasks into smaller, manageable subtasks
+- ALWAYS use github issues to track tasks and subtasks
+- Keep the issues as concise as possible
+- You have access to the gh CLI to manage issues
+- You can use the gh CLI to create, update, and close issues
+- You can use the gh CLI to add comments to issues
