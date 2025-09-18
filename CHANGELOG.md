@@ -1,3 +1,11 @@
+## [1.1.1-beta.2](https://github.com/ff6347/obsidian-canvas-context/compare/v1.1.1-beta.1...v1.1.1-beta.2) (2025-09-18)
+
+
+### Bug Fixes
+
+* Use error at least for warnings ([30f34c1](https://github.com/ff6347/obsidian-canvas-context/commit/30f34c113ccbe4ef73944f24989d3da3989920eb))
+* **view:** Inference can be run from view again ([007dbca](https://github.com/ff6347/obsidian-canvas-context/commit/007dbcad8f69213d7853ea41ce813dd0b2833a24))
+
 # [1.0.0-beta.2](https://github.com/ff6347/obsidian-canvas-context/compare/v1.0.0-beta.1...v1.0.0-beta.2) (2025-09-07)
 
 ### Features
