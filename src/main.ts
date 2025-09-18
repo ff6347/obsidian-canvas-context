@@ -320,7 +320,7 @@ export default class CanvasContextPlugin extends Plugin {
 		canvas.requestFrame(undefined);
 	}
 
-	async createErrorNode(
+	createErrorNode(
 		sourceNode: ExtendedCanvasConnection,
 		result: InferenceResult,
 	) {
@@ -470,7 +470,8 @@ export default class CanvasContextPlugin extends Plugin {
 						break;
 					}
 				} catch (error) {
-					// Continue to next canvas
+					// Log error but continue to next canvas
+					console.warn("Failed to get selection data from canvas:", view.file?.name, error);
 					continue;
 				}
 			}
