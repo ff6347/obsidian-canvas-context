@@ -1,6 +1,11 @@
 import { ButtonComponent, Notice } from "obsidian";
 import type { ModelConfiguration } from "../ui/settings.ts";
 import { providers } from "../llm/providers/providers.ts";
+import {
+	canLoadModels,
+	providerRequiresApiKey,
+	validateModelConfiguration,
+} from "../lib/model-validation.ts";
 
 export class ModelValidationService {
 	constructor(
@@ -8,24 +13,17 @@ export class ModelValidationService {
 	) {}
 
 	validateRequiredFields(config: Partial<ModelConfiguration>): boolean {
-		if (
-			!config.name ||
-			!config.provider ||
-			!config.modelName ||
-			!config.baseURL
-		) {
-			// oxlint-disable-next-line no-new
-			new Notice("Please fill in all required fields.");
-			return false;
-		}
+		const hasApiKey = Boolean(this.getResolvedApiKey(config));
+		const validation = validateModelConfiguration(config, hasApiKey);
 
-		// Validate API key for OpenAI and OpenRouter
-		if (
-			(config.provider === "openai" || config.provider === "openrouter") &&
-			!this.getResolvedApiKey(config)
-		) {
-			// oxlint-disable-next-line no-new
-			new Notice("API Key is required for OpenAI and OpenRouter providers.");
+		if (!validation.isValid) {
+			if (validation.missingFields) {
+				// oxlint-disable-next-line no-new
+				new Notice("Please fill in all required fields.");
+			} else if (validation.errors && validation.errors.length > 0) {
+				// oxlint-disable-next-line no-new
+				new Notice(validation.errors[0]);
+			}
 			return false;
 		}
 
@@ -33,19 +31,8 @@ export class ModelValidationService {
 	}
 
 	canLoadModels(config: Partial<ModelConfiguration>): boolean {
-		if (!config.provider || !config.baseURL) {
-			return false;
-		}
-
-		// For OpenAI and OpenRouter, also require API key
-		if (
-			(config.provider === "openai" || config.provider === "openrouter") &&
-			!this.getResolvedApiKey(config)
-		) {
-			return false;
-		}
-
-		return true;
+		const hasApiKey = Boolean(this.getResolvedApiKey(config));
+		return canLoadModels(config, hasApiKey);
 	}
 
 	async verifyConnection(
@@ -68,13 +55,12 @@ export class ModelValidationService {
 				throw new Error("Provider not found");
 			}
 
-			// For OpenAI and OpenRouter, pass the API key as the first parameter
+			// For providers requiring API keys, pass the API key as the first parameter
 			const resolvedApiKey = this.getResolvedApiKey(config);
-			const models =
-				(config.provider === "openai" || config.provider === "openrouter") &&
-				resolvedApiKey
-					? await providerGenerator.listModels(resolvedApiKey, config.baseURL!)
-					: await providerGenerator.listModels(config.baseURL!);
+			const needsApiKey = providerRequiresApiKey(config.provider);
+			const models = needsApiKey && resolvedApiKey
+				? await providerGenerator.listModels(resolvedApiKey, config.baseURL!)
+				: await providerGenerator.listModels(config.baseURL!);
 
 			// oxlint-disable-next-line no-new
 			new Notice(`Connection successful! Found ${models.length} models.`);
@@ -125,13 +111,12 @@ export class ModelValidationService {
 				throw new Error("Provider not found");
 			}
 
-			// For OpenAI and OpenRouter, pass the API key as the first parameter
+			// For providers requiring API keys, pass the API key as the first parameter
 			const resolvedApiKey = this.getResolvedApiKey(config);
-			const models =
-				(config.provider === "openai" || config.provider === "openrouter") &&
-				resolvedApiKey
-					? await providerGenerator.listModels(resolvedApiKey, config.baseURL!)
-					: await providerGenerator.listModels(config.baseURL!);
+			const needsApiKey = providerRequiresApiKey(config.provider);
+			const models = needsApiKey && resolvedApiKey
+				? await providerGenerator.listModels(resolvedApiKey, config.baseURL!)
+				: await providerGenerator.listModels(config.baseURL!);
 
 			// Populate dropdown with models
 			modelDropdown.innerHTML = "";
