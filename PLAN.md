@@ -1006,3 +1006,131 @@ The comprehensive testing framework has been successfully implemented:
 - ✅ Fast test execution (< 15 seconds total)
 
 For remaining service testing work, see GitHub Issues #34-#41 which contain detailed implementation plans following the established patterns.
+
+## Testing Strategy: Reducing Mock Dependencies
+
+### Current Testing Problems
+- Heavy reliance on mocking Obsidian API (vi.mock, createMockApp)
+- MSW for HTTP mocking (reasonable for network tests)
+- Minimal actual unit tests - most tests just verify instantiation
+- Services tightly coupled to Obsidian APIs
+- Tests don't actually test business logic
+
+### Phase 1: Extract Pure Business Logic
+**Refactor services to separate pure logic from Obsidian dependencies:**
+
+1. **Create pure utility modules** for business logic that can be tested without mocks:
+   - Canvas data transformations (node creation, positioning, connections)
+   - Model configuration validation rules
+   - API key management logic
+   - Menu state management
+   - Inference context building
+
+2. **Introduce dependency injection patterns:**
+   - Pass Obsidian dependencies as interfaces
+   - Create abstract interfaces for file operations, UI notifications
+   - Use factory functions to create services with dependencies
+
+### Phase 2: Restructure Service Architecture
+
+1. **Split services into layers:**
+   - **Core layer**: Pure business logic (no Obsidian imports)
+   - **Adapter layer**: Obsidian API integration
+   - **Service layer**: Orchestration between core and adapters
+
+2. **Example refactoring for CanvasService:**
+   ```typescript
+   // core/canvas-logic.ts - Pure, testable
+   export function calculateNodePosition(source, offset) {...}
+   export function buildCanvasData(nodes, edges) {...}
+
+   // adapters/obsidian-canvas-adapter.ts - Thin wrapper
+   export class ObsidianCanvasAdapter {
+     constructor(private app: App) {}
+     getCanvas() { return this.app.workspace... }
+   }
+
+   // services/canvas-service.ts - Orchestrator
+   export class CanvasService {
+     constructor(private logic: CanvasLogic, private adapter: CanvasAdapter) {}
+   }
+   ```
+
+### Phase 3: Testing Strategy by Type
+
+1. **Pure Unit Tests (80% of tests):**
+   - Test core business logic with zero mocks
+   - Test data transformations, validations, calculations
+   - Use simple test data fixtures instead of mocks
+
+2. **Integration Tests (15% of tests):**
+   - Keep MSW for HTTP provider tests (appropriate use)
+   - Create minimal test doubles for Obsidian interfaces
+   - Focus on service orchestration and data flow
+
+3. **Contract Tests (5% of tests):**
+   - Verify adapter implementations match Obsidian API
+   - Can use mocks but keep them minimal
+
+### Phase 4: Specific Refactoring Actions
+
+1. **Extract testable functions from services:**
+   - ModelValidationService → validation rules as pure functions
+   - CanvasService → canvas data manipulation as pure functions
+   - InferenceService → context building as pure functions
+
+2. **Create builder/factory patterns:**
+   - Replace direct instantiation with factories
+   - Enable test-time dependency injection
+
+3. **Introduce result types:**
+   - Use Result<T, E> pattern for error handling
+   - Avoid throwing errors in pure functions
+   - Make side effects explicit
+
+### Phase 5: Implementation Plan
+
+1. **Start with lib/ utilities:**
+   - Already have good examples (settings-utils.ts)
+   - Add more pure utility modules
+   - Move business logic from services to lib/
+
+2. **Refactor one service as proof of concept:**
+   - Start with ModelValidationService (simpler logic)
+   - Extract validation rules
+   - Create adapter for Notice/UI operations
+   - Write pure unit tests
+
+3. **Apply pattern to remaining services:**
+   - CanvasService (complex but high value)
+   - InferenceService
+   - MenuService
+
+4. **Update test structure:**
+   - tests/unit/ - Pure logic tests (no mocks)
+   - tests/integration/ - Service orchestration
+   - tests/providers/ - Keep MSW for HTTP tests
+
+### Benefits
+- 80% reduction in mock usage
+- Faster test execution
+- Better code organization
+- Easier to understand and maintain
+- More reliable tests
+- Better separation of concerns
+
+### Success Metrics
+- Test files with zero vi.mock() calls
+- Average test file < 100 lines
+- Test execution time < 1 second for unit tests
+- Code coverage focused on business logic, not mocks
+
+### GitHub Issues for Testing Refactoring
+The following issues will be created to track this work:
+- 🔗 Extract pure business logic from services
+- 🔗 Implement adapter pattern for Obsidian APIs
+- 🔗 Create unit tests for pure functions
+- 🔗 Refactor CanvasService with new architecture
+- 🔗 Refactor InferenceService with new architecture
+- 🔗 Refactor MenuService with new architecture
+- 🔗 Update test structure and organization
