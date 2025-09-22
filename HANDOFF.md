@@ -65,6 +65,15 @@
 - **Testing**: 6 service tests using test adapters for orchestration validation
 - **Performance**: 100x faster test execution for API key business logic (4ms vs ~400ms)
 
+#### Issue #60: MenuService Adapter Pattern Integration ✅ COMPLETE
+
+- **Integrated**: UINotificationAdapter pattern into MenuService for consistent error handling
+- **Replaced**: Direct `Notice` usage with `notificationAdapter?.showError()` pattern
+- **Updated**: MenuService constructor to accept optional UINotificationAdapter parameter
+- **Enhanced**: Service tests to use TestNotificationAdapter for proper verification
+- **Maintained**: Backward compatibility with optional adapter parameter
+- **Architecture**: MenuService now follows same adapter pattern as other refactored services
+
 ### 🎯 **Current Status: Four Major Services Complete + Canvas Walker Fixed**
 
 **All four major services successfully refactored:**
@@ -82,7 +91,8 @@
 **Infrastructure improvements:**
 
 - ✅ Issue #65: Enhanced UINotificationAdapter with generic show() method
-- 🔧 Issue #67: Notice usage inconsistency identified (needs fixing)
+- ✅ Issue #60: MenuService Notice usage inconsistency resolved
+- 🔧 Issue #67: Notice usage inconsistency in remaining services (needs fixing)
 
 **Next opportunities**: Remaining modal and settings services refactoring
 
