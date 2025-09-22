@@ -9,7 +9,7 @@ import {
 import type {
 	ApiKeyConfiguration,
 	ModelConfiguration,
-} from "../../src/ui/settings.ts";
+} from "src/types/settings-types.ts";
 
 describe("settings-utils", () => {
 	describe("maskApiKey", () => {

@@ -1,3 +1,4 @@
+/* oxlint-disable eslint/max-lines eslint/max-lines-per-function */
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { canvasGraphWalker } from "../../src/canvas/walker.js";
 import type { CanvasViewData } from "obsidian-typings";
@@ -384,6 +385,111 @@ describe("Canvas Tree Walker", () => {
 				msg.content.includes("<additional-document>"),
 			);
 			expect(contextMessages).toHaveLength(1); // only context2
+		});
+	});
+
+	describe("Multiple System Prompts", () => {
+		it("should handle two system prompts in the chain", async () => {
+			// Test case: system1 -> system2 -> user -> assistant
+			// Both system prompts should be included in the result
+
+			const canvasData: CanvasViewData = {
+				nodes: [
+					{
+						id: "system1",
+						type: "file",
+						file: "system1.md",
+						x: 0,
+						y: 0,
+						width: 100,
+						height: 100,
+					},
+					{
+						id: "system2",
+						type: "file",
+						file: "system2.md",
+						x: 0,
+						y: 100,
+						width: 100,
+						height: 100,
+					},
+					{
+						id: "user1",
+						type: "file",
+						file: "user1.md",
+						x: 0,
+						y: 200,
+						width: 100,
+						height: 100,
+					},
+					{
+						id: "assistant1",
+						type: "file",
+						file: "assistant1.md",
+						x: 0,
+						y: 300,
+						width: 100,
+						height: 100,
+					},
+				],
+				edges: [
+					{
+						id: "edge1",
+						fromNode: "system1",
+						toNode: "system2",
+						fromSide: "bottom",
+						toSide: "top",
+					},
+					{
+						id: "edge2",
+						fromNode: "system2",
+						toNode: "user1",
+						fromSide: "bottom",
+						toSide: "top",
+					},
+					{
+						id: "edge3",
+						fromNode: "user1",
+						toNode: "assistant1",
+						fromSide: "bottom",
+						toSide: "top",
+					},
+				],
+			};
+
+			// Mock different frontmatter for each node
+			(mockApp.metadataCache.getFileCache as any)
+				.mockReturnValueOnce({ frontmatter: { role: "system" } }) // system1
+				.mockReturnValueOnce({ frontmatter: { role: "system" } }) // system2
+				.mockReturnValueOnce({ frontmatter: { role: "user" } }) // user1
+				.mockReturnValueOnce({ frontmatter: { role: "assistant" } }); // assistant1
+
+			(mockApp.vault.cachedRead as any)
+				.mockResolvedValueOnce("First system prompt")
+				.mockResolvedValueOnce("Second system prompt")
+				.mockResolvedValueOnce("User question")
+				.mockResolvedValueOnce("Assistant 1 response");
+
+			const result = await canvasGraphWalker("assistant1", canvasData, mockApp);
+
+			// Should include all nodes: system1, system2, user1, assistant1
+			expect(result).toHaveLength(4);
+
+			// Check that we have two system prompts
+			const systemMessages = result.filter((msg: any) => msg.role === "system");
+			expect(systemMessages).toHaveLength(2);
+
+			// Check that system messages come first
+			expect(result[0]?.role).toBe("system");
+			expect(result[1]?.role).toBe("system");
+
+			// Verify content - expected chain order: system1 -> system2 -> user1 -> assistant1
+			expect(result[0]?.content).toBe("First system prompt");
+			expect(result[1]?.content).toBe("Second system prompt");
+			expect(result[2]?.role).toBe("user");
+			expect(result[2]?.content).toBe("User question");
+			expect(result[3]?.role).toBe("assistant");
+			expect(result[3]?.content).toBe("Assistant 1 response");
 		});
 	});
 });
