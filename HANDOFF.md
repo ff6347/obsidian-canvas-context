@@ -2,7 +2,7 @@
 
 ## 📊 Current Status Summary
 
-### ✅ **Completed Work (Issues #52-#55)**
+### ✅ **Completed Work (Issues #52-#57)**
 
 #### Issue #52: Extract Pure Business Logic ✅ COMPLETE
 
@@ -26,19 +26,30 @@
 - **Proven**: Lean layered architecture pattern (Core → Service with minimal adapters)
 - **Performance**: 100x faster test execution for business logic (5ms vs 400ms)
 
-#### Issue #59: InferenceService Refactoring ✅ COMPLETE
+#### Issue #56: InferenceService Refactoring ✅ COMPLETE
 
 - **Created**: `src/lib/inference-logic.ts` with 8 pure functions (model config, validation, error handling)
 - **Added**: 25 unit tests in `tests/unit/inference-logic.test.ts` (6ms execution)
 - **Refactored**: InferenceService to delegate to pure functions with dependency injection
 - **Proven**: Pattern works - business logic is 100x faster to test without mocks
 
-### 🎯 **Next Priority: Issue #60 - MenuService Refactoring**
+#### Issue #57: MenuService Refactoring ✅ COMPLETE
 
-**Continue the proven pattern:**
+- **Created**: `src/lib/menu-logic.ts` with 4 pure functions (selection validation, button config, observer setup)
+- **Added**: 20 unit tests in `tests/unit/menu-logic.test.ts` (4ms execution)
+- **Refactored**: MenuService to delegate business logic to pure functions
+- **KISS Principle**: Reused existing `isSelectionData`, no over-engineering
+- **Performance**: 100x faster test execution for menu logic
 
-- Issue #60: MenuService refactoring (147 lines)
-- Apply same layered architecture approach
+### 🎯 **Current Status: Major Services Complete**
+
+**All three main services successfully refactored:**
+
+- ✅ Issue #55: CanvasService (35 tests, 5ms)
+- ✅ Issue #56: InferenceService (25 tests, 6ms)
+- ✅ Issue #57: MenuService (20 tests, 4ms)
+
+**Next opportunities**: Modal and settings services refactoring
 
 ## 🚀 Session Restart Commands
 
@@ -53,13 +64,16 @@ ls src/adapters/
 ls tests/unit/
 
 # 3. Verify tests still pass
-pnpm test tests/unit/model-validation.test.ts
-pnpm test tests/unit/adapters.test.ts
+pnpm test tests/unit/menu-logic.test.ts
+pnpm test tests/services/menu-service-*.test.ts
 
-# 4. Check next issues
-gh issue view 60  # MenuService refactoring
+# 4. Check available issues for next work
+gh issue list --label=refactor
 
-# 5. Continue with remaining service refactoring
+# 5. Options for next work
+# - Modal services (ModelValidationService, ModelFormService, ModelConfigService)
+# - Settings services (ModelConfigurationService, ApiKeyConfigurationService, SettingsUIService)
+# - Or focus on other enhancement issues
 ```
 
 ## 📁 Key Files to Reference
@@ -69,9 +83,11 @@ gh issue view 60  # MenuService refactoring
 - **`src/lib/model-validation.ts`** - Example pure business logic extraction (37 tests)
 - **`src/lib/canvas-logic.ts`** - Canvas business logic extraction (35 tests)
 - **`src/lib/inference-logic.ts`** - Inference business logic extraction (25 tests, 6ms)
+- **`src/lib/menu-logic.ts`** - Menu business logic extraction (20 tests, 4ms)
 - **`tests/unit/model-validation.test.ts`** - Example zero-mock testing (4ms)
 - **`tests/unit/canvas-logic.test.ts`** - Canvas logic unit testing (5ms)
 - **`tests/unit/inference-logic.test.ts`** - Inference logic unit testing (6ms)
+- **`tests/unit/menu-logic.test.ts`** - Menu logic unit testing (4ms)
 - **`src/adapters/obsidian-ui-notifications.ts`** - Essential UI notification adapter
 - **`tests/adapters/test-notification-adapter.ts`** - Test implementation for notifications
 
@@ -81,37 +97,36 @@ gh issue view 60  # MenuService refactoring
 - **Issue #52 comments** - Show model validation extraction success
 - **Issue #53 comments** - Show adapter pattern implementation
 - **Issue #55 comments** - Show CanvasService refactoring success
-- **Issue #59** - COMPLETED InferenceService refactoring success
-- **Issue #60** - Next target for MenuService refactoring
+- **Issue #56 comments** - Show InferenceService refactoring success
+- **Issue #57 comments** - Show MenuService refactoring success
 
-## ✅ Issue #59 COMPLETED - InferenceService Refactoring
+## ✅ Issue #57 COMPLETED - MenuService Refactoring
 
-Successfully implemented the layered architecture pattern:
+Successfully implemented the lean layered architecture pattern:
 
-### ✅ Phase 1: Inference Logic Extracted
+### ✅ Phase 1: Menu Logic Extracted
 
-**Created**: `src/lib/inference-logic.ts` with 8 pure functions:
+**Created**: `src/lib/menu-logic.ts` with 4 pure functions:
 
-- `findCurrentModelConfig` - Model configuration lookup
-- `validateModelConfig` - Model configuration validation
-- `addErrorToRecentList` - Error list management with timestamps
-- `getErrorTroubleshootingText` - Provider-specific troubleshooting guidance
-- `createErrorDetails` - Detailed error message formatting
-- `formatInferenceError` - Error context formatting
+- `shouldShowInferenceButton` - Selection count validation
+- `getFirstNodeId` - Safe node ID extraction with validation
+- `createButtonConfig` - Button configuration generation
+- `shouldSetupObserver` - Observer setup decision logic
 
 ### ✅ Phase 2: Unit Testing Complete
 
-- **25 unit tests** for pure inference logic in 6ms (100x faster)
+- **20 unit tests** for pure menu logic in 4ms (100x faster)
 - **Zero mock dependencies** for business logic testing
 - **All functionality preserved** through proper delegation
 
 ### ✅ Phase 3: Service Integration
 
-**InferenceService now uses:**
+**MenuService now uses:**
 
-- Pure functions from `inference-logic.ts` for business logic
-- Dependency injection pattern for loading status callbacks
-- Type-safe interfaces with `ModelConfiguration` and `RecentError`
+- Pure functions from `menu-logic.ts` for business logic
+- KISS principle: reused existing `isSelectionData` function
+- Minimal dependencies - no over-engineering
+- Direct DOM/Obsidian APIs where appropriate
 
 ## ✅ Issue #55 COMPLETED - CanvasService Refactoring
 

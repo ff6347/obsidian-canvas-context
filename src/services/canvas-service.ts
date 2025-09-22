@@ -1,3 +1,4 @@
+// oxlint-disable eslint/max-lines-per-function
 import { App, Notice, TextFileView, WorkspaceLeaf } from "obsidian";
 import type { CanvasView, CanvasViewCanvas } from "obsidian-typings";
 
