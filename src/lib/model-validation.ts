@@ -1,4 +1,4 @@
-import type { ModelConfiguration } from "../ui/settings.ts";
+import type { ModelConfiguration } from "src/types/settings-types.ts";
 import type { CurrentProviderType } from "../types/llm-types.ts";
 
 /**
@@ -6,7 +6,7 @@ import type { CurrentProviderType } from "../types/llm-types.ts";
  * No Obsidian dependencies - can be tested without mocks
  */
 
-export interface ValidationResult {
+interface ValidationResult {
 	isValid: boolean;
 	missingFields?: string[] | undefined;
 	errors?: string[] | undefined;
@@ -15,7 +15,9 @@ export interface ValidationResult {
 /**
  * Validates that all required fields are present in a model configuration
  */
-export function validateRequiredFields(config: Partial<ModelConfiguration>): ValidationResult {
+export function validateRequiredFields(
+	config: Partial<ModelConfiguration>,
+): ValidationResult {
 	const missingFields: string[] = [];
 
 	if (!config.name) missingFields.push("name");
@@ -60,7 +62,10 @@ export function canLoadModels(
 	}
 
 	// For OpenAI and OpenRouter, also require API key
-	if ((config.provider === "openai" || config.provider === "openrouter") && !hasApiKey) {
+	if (
+		(config.provider === "openai" || config.provider === "openrouter") &&
+		!hasApiKey
+	) {
 		return false;
 	}
 
@@ -81,7 +86,10 @@ export function validateModelConfiguration(
 	}
 
 	// Check API key requirements
-	const apiKeyValidation = validateApiKeyRequirements(config.provider, hasApiKey);
+	const apiKeyValidation = validateApiKeyRequirements(
+		config.provider,
+		hasApiKey,
+	);
 	if (!apiKeyValidation.isValid) {
 		return apiKeyValidation;
 	}
@@ -99,7 +107,9 @@ export function getProvidersRequiringApiKeys(): CurrentProviderType[] {
 /**
  * Checks if a provider requires an API key
  */
-export function providerRequiresApiKey(provider: CurrentProviderType | undefined): boolean {
+export function providerRequiresApiKey(
+	provider: CurrentProviderType | undefined,
+): boolean {
 	if (!provider) return false;
 	return getProvidersRequiringApiKeys().includes(provider);
 }

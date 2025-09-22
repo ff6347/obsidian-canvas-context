@@ -9,7 +9,7 @@ import {
 	validateModelConfiguration,
 	validateRequiredFields,
 } from "../../src/lib/model-validation.ts";
-import type { ModelConfiguration } from "../../src/ui/settings.ts";
+import type { ModelConfiguration } from "src/types/settings-types.ts";
 
 /**
  * Pure unit tests for model validation logic
@@ -93,7 +93,12 @@ describe("validateRequiredFields", () => {
 
 		const result = validateRequiredFields(config);
 		expect(result.isValid).toBe(false);
-		expect(result.missingFields).toEqual(["name", "provider", "modelName", "baseURL"]);
+		expect(result.missingFields).toEqual([
+			"name",
+			"provider",
+			"modelName",
+			"baseURL",
+		]);
 	});
 
 	it("should handle empty string values as missing", () => {
@@ -144,7 +149,9 @@ describe("validateApiKeyRequirements", () => {
 	it("should reject OpenRouter without API key", () => {
 		const result = validateApiKeyRequirements("openrouter", false);
 		expect(result.isValid).toBe(false);
-		expect(result.errors).toEqual(["API Key is required for openrouter provider"]);
+		expect(result.errors).toEqual([
+			"API Key is required for openrouter provider",
+		]);
 	});
 
 	it("should handle undefined provider", () => {
@@ -330,7 +337,12 @@ describe("edge cases and error conditions", () => {
 
 		const result = validateRequiredFields(config);
 		expect(result.isValid).toBe(false);
-		expect(result.missingFields).toEqual(["name", "provider", "modelName", "baseURL"]);
+		expect(result.missingFields).toEqual([
+			"name",
+			"provider",
+			"modelName",
+			"baseURL",
+		]);
 	});
 
 	it("should handle whitespace-only values", () => {
