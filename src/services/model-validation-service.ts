@@ -1,15 +1,17 @@
 import { ButtonComponent, Notice } from "obsidian";
-import type { ModelConfiguration } from "../ui/settings.ts";
 import { providers } from "../llm/providers/providers.ts";
 import {
 	canLoadModels,
 	providerRequiresApiKey,
 	validateModelConfiguration,
 } from "../lib/model-validation.ts";
+import type { ModelConfiguration } from "src/types/settings-types.ts";
 
 export class ModelValidationService {
 	constructor(
-		private getResolvedApiKey: (config: Partial<ModelConfiguration>) => string | undefined,
+		private getResolvedApiKey: (
+			config: Partial<ModelConfiguration>,
+		) => string | undefined,
 	) {}
 
 	validateRequiredFields(config: Partial<ModelConfiguration>): boolean {
@@ -22,7 +24,7 @@ export class ModelValidationService {
 				new Notice("Please fill in all required fields.");
 			} else if (validation.errors && validation.errors.length > 0) {
 				// oxlint-disable-next-line no-new
-				new Notice(validation.errors[0]);
+				new Notice(validation.errors[0] || "Validation error");
 			}
 			return false;
 		}
@@ -58,9 +60,10 @@ export class ModelValidationService {
 			// For providers requiring API keys, pass the API key as the first parameter
 			const resolvedApiKey = this.getResolvedApiKey(config);
 			const needsApiKey = providerRequiresApiKey(config.provider);
-			const models = needsApiKey && resolvedApiKey
-				? await providerGenerator.listModels(resolvedApiKey, config.baseURL!)
-				: await providerGenerator.listModels(config.baseURL!);
+			const models =
+				needsApiKey && resolvedApiKey
+					? await providerGenerator.listModels(resolvedApiKey, config.baseURL!)
+					: await providerGenerator.listModels(config.baseURL!);
 
 			// oxlint-disable-next-line no-new
 			new Notice(`Connection successful! Found ${models.length} models.`);
@@ -114,9 +117,10 @@ export class ModelValidationService {
 			// For providers requiring API keys, pass the API key as the first parameter
 			const resolvedApiKey = this.getResolvedApiKey(config);
 			const needsApiKey = providerRequiresApiKey(config.provider);
-			const models = needsApiKey && resolvedApiKey
-				? await providerGenerator.listModels(resolvedApiKey, config.baseURL!)
-				: await providerGenerator.listModels(config.baseURL!);
+			const models =
+				needsApiKey && resolvedApiKey
+					? await providerGenerator.listModels(resolvedApiKey, config.baseURL!)
+					: await providerGenerator.listModels(config.baseURL!);
 
 			// Populate dropdown with models
 			modelDropdown.innerHTML = "";
