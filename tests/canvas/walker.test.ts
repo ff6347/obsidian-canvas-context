@@ -359,20 +359,21 @@ describe("Canvas Tree Walker", () => {
 				(path: string) => createMockFile(path),
 			);
 
-			// Mock in the order they will be processed: parent chain first, then horizontal context
+			// Mock in the new processing order: inline horizontal context with parent nodes
+			// Processing order: context1 -> system -> user1 -> context2 (horizontal to user1) -> assistant1
 			(mockApp.metadataCache.getFileCache as any)
 				.mockReturnValueOnce({ frontmatter: { role: "user" } }) // context1
 				.mockReturnValueOnce({ frontmatter: { role: "system" } }) // system
 				.mockReturnValueOnce({ frontmatter: { role: "user" } }) // user1
-				.mockReturnValueOnce({ frontmatter: { role: "assistant" } }) // assistant1
-				.mockReturnValueOnce({ frontmatter: { role: "user" } }); // context2
+				.mockReturnValueOnce({ frontmatter: { role: "user" } }) // context2 (horizontal to user1)
+				.mockReturnValueOnce({ frontmatter: { role: "assistant" } }); // assistant1
 
 			(mockApp.vault.cachedRead as any)
 				.mockResolvedValueOnce("Context 1 content")
 				.mockResolvedValueOnce("System prompt")
 				.mockResolvedValueOnce("User 1 question")
-				.mockResolvedValueOnce("Assistant 1 response")
-				.mockResolvedValueOnce("Context 2 content");
+				.mockResolvedValueOnce("Context 2 content")
+				.mockResolvedValueOnce("Assistant 1 response");
 
 			const result = await canvasGraphWalker("assistant1", canvasData, mockApp);
 
