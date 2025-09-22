@@ -25,7 +25,7 @@ describe("CanvasService - Response Node", () => {
 		vi.clearAllMocks();
 		mockApp = createMockApp();
 		testNotificationAdapter = new TestNotificationAdapter();
-		service = new CanvasService(mockApp as any, testNotificationAdapter);
+		service = new CanvasService(mockApp as any);
 	});
 
 	afterEach(() => {

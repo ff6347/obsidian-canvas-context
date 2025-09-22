@@ -4,7 +4,6 @@ import { CanvasService } from "../../src/services/canvas-service.ts";
 import { createMockApp } from "../mocks/obsidian-extended.ts";
 import { createMockCanvasData } from "../mocks/factories.ts";
 import type { ExtendedCanvasConnection } from "../../src/types/canvas-types.ts";
-import { TestNotificationAdapter } from "../adapters/test-notification-adapter.ts";
 
 // Mock Obsidian classes
 vi.mock("obsidian", () => ({
@@ -16,13 +15,11 @@ vi.mock("obsidian", () => ({
 describe("CanvasService - Canvas Info", () => {
 	let service: CanvasService;
 	let mockApp: ReturnType<typeof createMockApp>;
-	let testNotificationAdapter: TestNotificationAdapter;
 
 	beforeEach(() => {
 		vi.clearAllMocks();
 		mockApp = createMockApp();
-		testNotificationAdapter = new TestNotificationAdapter();
-		service = new CanvasService(mockApp as any, testNotificationAdapter);
+		service = new CanvasService(mockApp as any);
 	});
 
 	afterEach(() => {

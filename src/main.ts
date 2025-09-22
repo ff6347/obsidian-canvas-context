@@ -68,7 +68,7 @@ export default class CanvasContextPlugin extends Plugin {
 		// Initialize adapters and services
 		this.notificationAdapter = new ObsidianNotificationAdapter();
 
-		this.canvasService = new CanvasService(this.app, this.notificationAdapter);
+		this.canvasService = new CanvasService(this.app);
 		this.statusService = new StatusService(this.addStatusBarItem());
 		this.inferenceService = new InferenceService(
 			this.app,

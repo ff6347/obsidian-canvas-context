@@ -1,3 +1,4 @@
+// oxlint-disable eslint/max-lines-per-function
 import { describe, it, expect } from "vitest";
 import {
 	findCurrentModelConfig,

@@ -1,3 +1,4 @@
+// oxlint-disable eslint/max-classes-per-file eslint/max-lines
 import { vi } from "vitest";
 
 /**
