@@ -3,6 +3,12 @@ import type { CanvasView, CanvasViewCanvas } from "obsidian-typings";
 
 import { PLUGIN_ICON } from "../lib/constants.ts";
 import { isSelectionData } from "../main.ts";
+import {
+	shouldShowInferenceButton,
+	getFirstNodeId,
+	createButtonConfig,
+	shouldSetupObserver,
+} from "../lib/menu-logic.ts";
 
 interface ExtendedCanvasMenu {
 	menuEl?: HTMLElement;
@@ -32,22 +38,19 @@ export class MenuService {
 			const selectedNodes = selectionData.nodes;
 
 			// Only show the button if exactly one node is selected
-			if (selectedNodes.length === 1) {
+			if (shouldShowInferenceButton(selectedNodes.length)) {
 				menu.addItem((item) =>
 					item
 						.setTitle("Canvas Context: Run Inference")
 						.setIcon(PLUGIN_ICON)
 						.onClick(async () => {
-							const selectedNode = selectedNodes[0];
-							if (!selectedNode || !selectedNode.id) {
+							const nodeId = getFirstNodeId(selectedNodes);
+							if (!nodeId) {
 								return;
 							}
 
 							try {
-								await this.onRunInference(
-									selectedNode.id as string,
-									canvasView.canvas,
-								);
+								await this.onRunInference(nodeId, canvasView.canvas);
 							} catch (error) {
 								console.error(
 									"Error running inference from selection menu:",
@@ -93,11 +96,7 @@ export class MenuService {
 		const canvas = canvasView?.canvas;
 
 		const extendedCanvas = canvas as ExtendedCanvasViewCanvas;
-		if (
-			!extendedCanvas ||
-			!extendedCanvas.menu ||
-			extendedCanvas.menu._observerSetup
-		) {
+		if (!shouldSetupObserver(extendedCanvas)) {
 			return;
 		}
 
@@ -149,11 +148,15 @@ export class MenuService {
 			const selectionData = canvasView.canvas.getSelectionData(undefined);
 
 			// Only add button for single node selection
-			if (isSelectionData(selectionData) && selectionData.nodes.length === 1) {
+			if (
+				isSelectionData(selectionData) &&
+				shouldShowInferenceButton(selectionData.nodes.length)
+			) {
+				const buttonConfig = createButtonConfig();
 				const button = document.createElement("button");
-				button.className = "clickable-icon canvas-context-inference-btn";
-				button.setAttribute("aria-label", "Canvas Context: Run Inference");
-				button.setAttribute("data-tooltip-position", "top");
+				button.className = buttonConfig.className;
+				button.setAttribute("aria-label", buttonConfig.ariaLabel);
+				button.setAttribute("data-tooltip-position", buttonConfig.dataTooltipPosition);
 				setIcon(button, PLUGIN_ICON);
 
 				button.addEventListener("click", async (e) => {
@@ -163,13 +166,10 @@ export class MenuService {
 					try {
 						const currentSelection =
 							canvasView.canvas.getSelectionData(undefined);
-						if (
-							isSelectionData(currentSelection) &&
-							currentSelection.nodes.length > 0
-						) {
-							const firstNode = currentSelection.nodes[0];
-							if (firstNode && typeof firstNode.id === "string") {
-								await this.onRunInference(firstNode.id, canvasView.canvas);
+						if (isSelectionData(currentSelection)) {
+							const nodeId = getFirstNodeId(currentSelection.nodes);
+							if (nodeId) {
+								await this.onRunInference(nodeId, canvasView.canvas);
 							}
 						}
 					} catch (error) {
