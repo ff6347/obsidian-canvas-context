@@ -1,6 +1,7 @@
 /* oxlint-disable eslint/max-lines-per-function */
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { MenuService } from "../../src/services/menu-service.ts";
+import { TestNotificationAdapter } from "../adapters/test-notification-adapter.ts";
 
 // Mock Obsidian classes and functions
 vi.mock("obsidian", () => ({
@@ -35,20 +36,20 @@ describe("MenuService - Selection Menu", () => {
 	let mockCanvasView: any;
 	let mockCanvas: any;
 	let mockMenu: any;
+	let testNotificationAdapter: TestNotificationAdapter;
 
 	// Import mocked modules
-	let Notice: any;
 	let isSelectionData: any;
 
 	beforeEach(async () => {
 		vi.clearAllMocks();
 
 		// Import mocked modules
-		({ Notice } = await import("obsidian"));
 		({ isSelectionData } = await import("../../src/main.ts"));
 
 		mockOnRunInference = vi.fn();
-		service = new MenuService(mockOnRunInference);
+		testNotificationAdapter = new TestNotificationAdapter();
+		service = new MenuService(mockOnRunInference, testNotificationAdapter);
 
 		// Setup mock canvas and view
 		mockCanvas = {
@@ -198,9 +199,12 @@ describe("MenuService - Selection Menu", () => {
 				"Error running inference from selection menu:",
 				expect.any(Error),
 			);
-			expect(Notice).toHaveBeenCalledWith(
-				"Failed to run inference. Check console for details.",
-			);
+			expect(testNotificationAdapter.getMessagesOfType("error")).toEqual([
+				{
+					type: "error",
+					message: "Failed to run inference. Check console for details.",
+				},
+			]);
 
 			consoleSpy.mockRestore();
 		});

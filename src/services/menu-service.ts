@@ -1,4 +1,4 @@
-import { Menu, WorkspaceLeaf, setIcon, Notice } from "obsidian";
+import { Menu, WorkspaceLeaf, setIcon } from "obsidian";
 import type { CanvasView, CanvasViewCanvas } from "obsidian-typings";
 
 import { PLUGIN_ICON } from "../lib/constants.ts";
@@ -9,6 +9,7 @@ import {
 	createButtonConfig,
 	shouldSetupObserver,
 } from "../lib/menu-logic.ts";
+import type { UINotificationAdapter } from "../types/adapter-types.ts";
 
 interface ExtendedCanvasMenu {
 	menuEl?: HTMLElement;
@@ -27,6 +28,7 @@ export class MenuService {
 			nodeId: string,
 			canvas?: CanvasViewCanvas,
 		) => Promise<void>,
+		private notificationAdapter?: UINotificationAdapter,
 	) {}
 
 	buildSelectionMenu(menu: Menu, canvasView: CanvasView) {
@@ -56,8 +58,7 @@ export class MenuService {
 									"Error running inference from selection menu:",
 									error,
 								);
-								// oxlint-disable-next-line no-new
-								new Notice(
+								this.notificationAdapter?.showError(
 									"Failed to run inference. Check console for details.",
 								);
 							}

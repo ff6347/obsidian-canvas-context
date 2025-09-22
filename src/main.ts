@@ -76,8 +76,9 @@ export default class CanvasContextPlugin extends Plugin {
 			(text) => this.statusService.showLoadingStatus(text),
 			() => this.statusService.hideLoadingStatus(),
 		);
-		this.menuService = new MenuService((nodeId, canvas) =>
-			this.runInference(nodeId, canvas),
+		this.menuService = new MenuService(
+			(nodeId, canvas) => this.runInference(nodeId, canvas),
+			this.notificationAdapter,
 		);
 		this.nodeActions = new NodeActions(this);
 
