@@ -24,8 +24,8 @@ export class CanvasService {
 					return { canvas: node.canvas, name: view.file.name };
 				}
 			}
-			// If we have a canvas but can't find the name, return with fallback name
-			return { canvas: node.canvas, name: "canvas" };
+			// If we can't find the associated file, something is wrong - return null
+			return null;
 		}
 
 		// Otherwise, get active canvas
