@@ -88,11 +88,13 @@ export class MockSetting {
 		return this;
 	});
 
-	addDropdown = vi.fn((callback?: (dropdown: MockDropdownComponent) => void) => {
-		const dropdownComponent = new MockDropdownComponent();
-		if (callback) callback(dropdownComponent);
-		return this;
-	});
+	addDropdown = vi.fn(
+		(callback?: (dropdown: MockDropdownComponent) => void) => {
+			const dropdownComponent = new MockDropdownComponent();
+			if (callback) callback(dropdownComponent);
+			return this;
+		},
+	);
 
 	addToggle = vi.fn((callback?: (toggle: MockToggleComponent) => void) => {
 		const toggleComponent = new MockToggleComponent();
@@ -215,7 +217,7 @@ export class MockNotice {
 	static notices: string[] = [];
 	message: string;
 
-	constructor(message: string, timeout?: number) {
+	constructor(message: string, _timeout?: number) {
 		this.message = message;
 		MockNotice.notices.push(message);
 	}
@@ -266,9 +268,9 @@ export class MockModal {
 
 	isOpen = false;
 
-	constructor(app?: any) {
-		// Mock constructor
-	}
+	// constructor(_app?: any) {
+	// 	// Mock constructor
+	// }
 
 	open = vi.fn(() => {
 		this.isOpen = true;
