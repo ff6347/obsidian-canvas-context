@@ -26,15 +26,13 @@ export async function canvasGraphWalker(
 		contextNodes.push(...horizontalNodes);
 	}
 
-	// Combine all relevant node IDs
-	const allNodeIds = [...parentChain, ...contextNodes];
-
 	// Separate system messages from other messages
 	const systemMessages: ModelMessage[] = [];
 	const conversationMessages: ModelMessage[] = [];
+	const horizontalContextMessages: ModelMessage[] = [];
 
-	// Convert node IDs to actual nodes and build messages
-	for (const nodeId of allNodeIds) {
+	// Process parent chain first to maintain order
+	for (const nodeId of parentChain) {
 		const node = data.nodes.find((n) => n.id === nodeId);
 		if (node) {
 			const { role, content } = await getNodeContentAndRole(
@@ -46,13 +44,41 @@ export async function canvasGraphWalker(
 				const allowedRoles = ["system", "user", "assistant"];
 				const validRole = role && allowedRoles.includes(role) ? role : "user";
 
-				// Check if this is horizontal context (not in parent chain)
-				const isHorizontalContext =
-					contextNodes.includes(nodeId) && !parentChain.includes(nodeId);
+				// Create properly typed message based on role
+				let message: ModelMessage;
+				if (validRole === "system") {
+					message = { role: "system", content };
+					systemMessages.push(message);
+				} else if (validRole === "assistant") {
+					message = { role: "assistant", content };
+					conversationMessages.push(message);
+				} else {
+					message = { role: "user", content };
+					conversationMessages.push(message);
+				}
+			}
+		}
+	}
+
+	// Process horizontal context nodes separately
+	for (const nodeId of contextNodes) {
+		// Skip if already processed in parent chain
+		if (parentChain.includes(nodeId)) continue;
+
+		const node = data.nodes.find((n) => n.id === nodeId);
+		if (node) {
+			const { role, content } = await getNodeContentAndRole(
+				node as ExtendedCanvasViewDataNode,
+				app,
+			);
+			// Skip nodes with no content (like text nodes)
+			if (content) {
+				const allowedRoles = ["system", "user", "assistant"];
+				const validRole = role && allowedRoles.includes(role) ? role : "user";
 
 				// Wrap horizontal context content
 				const finalContent =
-					isHorizontalContext && validRole === "user"
+					validRole === "user"
 						? `<additional-document>\n${content}\n</additional-document>`
 						: content;
 
@@ -63,17 +89,17 @@ export async function canvasGraphWalker(
 					systemMessages.push(message);
 				} else if (validRole === "assistant") {
 					message = { role: "assistant", content: finalContent };
-					conversationMessages.push(message);
+					horizontalContextMessages.push(message);
 				} else {
 					message = { role: "user", content: finalContent };
-					conversationMessages.push(message);
+					horizontalContextMessages.push(message);
 				}
 			}
 		}
 	}
 
-	// Combine messages with system prompts first
-	messages.push(...systemMessages, ...conversationMessages);
+	// Combine messages: system prompts first, then parent chain conversation, then horizontal context
+	messages.push(...systemMessages, ...conversationMessages, ...horizontalContextMessages);
 
 	return messages;
 }
@@ -99,7 +125,10 @@ function getParentChain(
 }
 
 /**
- * Only gets directly connected nodes not their children or siblings.
+ * Only gets directly connected nodes not their children or siblings
+ * ┌────────────┐      ┌────────────┐      ┌────────────┐      ┌─────────────┐
+ * │  context   │◀─────│    user    │─────▶│  context   │─────▶│Not included │
+ * └────────────┘      └────────────┘      └────────────┘      └─────────────┘
  */
 function getHorizontalContext(
 	nodeId: string,

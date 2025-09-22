@@ -121,20 +121,18 @@ describe("Canvas Tree Walker", () => {
 				],
 			};
 
-			// Mock different frontmatter for each node
+			// Mock different frontmatter for each node (only nodes that will be processed)
 			(mockApp.metadataCache.getFileCache as any)
 				.mockReturnValueOnce({ frontmatter: { role: "system" } }) // system
 				.mockReturnValueOnce({ frontmatter: { role: "user" } }) // user1
 				.mockReturnValueOnce({ frontmatter: { role: "assistant" } }) // assistant1
-				.mockReturnValueOnce({ frontmatter: { role: "user" } }) // user2
-				.mockReturnValueOnce({ frontmatter: { role: "assistant" } }); // assistant2 (shouldn't be called)
+				.mockReturnValueOnce({ frontmatter: { role: "user" } }); // user2
 
 			(mockApp.vault.cachedRead as any)
 				.mockResolvedValueOnce("System prompt content")
 				.mockResolvedValueOnce("User 1 content")
 				.mockResolvedValueOnce("Assistant 1 content")
-				.mockResolvedValueOnce("User 2 content")
-				.mockResolvedValueOnce("Assistant 2 content"); // shouldn't be called
+				.mockResolvedValueOnce("User 2 content");
 
 			const result = await canvasGraphWalker("user2", canvasData, mockApp);
 
@@ -355,19 +353,26 @@ describe("Canvas Tree Walker", () => {
 				],
 			};
 
+			// Reset mocks for this test
+			vi.clearAllMocks();
+			(mockApp.vault.getAbstractFileByPath as any).mockImplementation(
+				(path: string) => createMockFile(path),
+			);
+
+			// Mock in the order they will be processed: parent chain first, then horizontal context
 			(mockApp.metadataCache.getFileCache as any)
-				.mockReturnValueOnce({ frontmatter: { role: "system" } })
 				.mockReturnValueOnce({ frontmatter: { role: "user" } }) // context1
+				.mockReturnValueOnce({ frontmatter: { role: "system" } }) // system
 				.mockReturnValueOnce({ frontmatter: { role: "user" } }) // user1
-				.mockReturnValueOnce({ frontmatter: { role: "user" } }) // context2
-				.mockReturnValueOnce({ frontmatter: { role: "assistant" } }); // assistant1
+				.mockReturnValueOnce({ frontmatter: { role: "assistant" } }) // assistant1
+				.mockReturnValueOnce({ frontmatter: { role: "user" } }); // context2
 
 			(mockApp.vault.cachedRead as any)
-				.mockResolvedValueOnce("System prompt")
 				.mockResolvedValueOnce("Context 1 content")
+				.mockResolvedValueOnce("System prompt")
 				.mockResolvedValueOnce("User 1 question")
-				.mockResolvedValueOnce("Context 2 content")
-				.mockResolvedValueOnce("Assistant 1 response");
+				.mockResolvedValueOnce("Assistant 1 response")
+				.mockResolvedValueOnce("Context 2 content");
 
 			const result = await canvasGraphWalker("assistant1", canvasData, mockApp);
 
@@ -457,7 +462,13 @@ describe("Canvas Tree Walker", () => {
 				],
 			};
 
-			// Mock different frontmatter for each node
+			// Reset mocks for this test
+			vi.clearAllMocks();
+			(mockApp.vault.getAbstractFileByPath as any).mockImplementation(
+				(path: string) => createMockFile(path),
+			);
+
+			// Mock different frontmatter for each node in the order they will be processed
 			(mockApp.metadataCache.getFileCache as any)
 				.mockReturnValueOnce({ frontmatter: { role: "system" } }) // system1
 				.mockReturnValueOnce({ frontmatter: { role: "system" } }) // system2
