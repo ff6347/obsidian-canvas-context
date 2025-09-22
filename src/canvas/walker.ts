@@ -27,64 +27,68 @@ export async function canvasGraphWalker(
 	for (const nodeId of parentChain) {
 		// Process parent chain node
 		const node = data.nodes.find((n) => n.id === nodeId);
-		if (node) {
-			const { role, content } = await getNodeContentAndRole(
-				node as ExtendedCanvasViewDataNode,
-				app,
-			);
-			// Skip nodes with no content (like text nodes)
-			if (content) {
-				const allowedRoles = ["system", "user", "assistant"];
-				const validRole = role && allowedRoles.includes(role) ? role : "user";
+		if (!node) continue;
 
-				// Create properly typed message based on role
-				let message: ModelMessage;
-				if (validRole === "system") {
-					message = { role: "system", content };
-					systemMessages.push(message);
-				} else if (validRole === "assistant") {
-					message = { role: "assistant", content };
-					conversationMessages.push(message);
-				} else {
-					message = { role: "user", content };
-					conversationMessages.push(message);
-				}
-			}
+		const { role, content } = await getNodeContentAndRole(
+			node as ExtendedCanvasViewDataNode,
+			app,
+		);
+		// Skip nodes with no content (like text nodes)
+		if (!content) continue;
+
+		const allowedRoles = ["system", "user", "assistant"];
+		const validRole = role && allowedRoles.includes(role) ? role : "user";
+
+		// Create properly typed message based on role
+		let message: ModelMessage;
+		if (validRole === "system") {
+			message = { role: "system", content };
+			systemMessages.push(message);
+		} else if (validRole === "assistant") {
+			message = { role: "assistant", content };
+			conversationMessages.push(message);
+		} else {
+			message = { role: "user", content };
+			conversationMessages.push(message);
 		}
 
 		// Process horizontal context for this node immediately after
 		const horizontalNodes = getHorizontalContext(nodeId, data, parentChain);
 		for (const contextNodeId of horizontalNodes) {
 			const contextNode = data.nodes.find((n) => n.id === contextNodeId);
-			if (contextNode) {
-				const { role, content } = await getNodeContentAndRole(
-					contextNode as ExtendedCanvasViewDataNode,
-					app,
-				);
-				// Skip nodes with no content (like text nodes)
-				if (content) {
-					const allowedRoles = ["system", "user", "assistant"];
-					const validRole = role && allowedRoles.includes(role) ? role : "user";
+			if (!contextNode) continue;
 
-					// Wrap horizontal context content
-					const finalContent =
-						validRole === "user"
-							? `<additional-document>\n${content}\n</additional-document>`
-							: content;
+			const { role, content } = await getNodeContentAndRole(
+				contextNode as ExtendedCanvasViewDataNode,
+				app,
+			);
+			// Skip nodes with no content (like text nodes)
+			if (!content) continue;
 
-					// Create properly typed message based on role
-					let message: ModelMessage;
-					if (validRole === "system") {
-						message = { role: "system", content: finalContent };
-						systemMessages.push(message);
-					} else if (validRole === "assistant") {
-						message = { role: "assistant", content: finalContent };
-						conversationMessages.push(message);
-					} else {
-						message = { role: "user", content: finalContent };
-						conversationMessages.push(message);
-					}
-				}
+			const allowedRoles = ["system", "user", "assistant"];
+			const validRole = role && allowedRoles.includes(role) ? role : "user";
+
+			// Wrap horizontal context content
+			const finalContent =
+				validRole === "user"
+					? `<additional-document>\n${content}\n</additional-document>`
+					: content;
+
+			// Create properly typed message based on role
+			let message: ModelMessage;
+			switch (validRole) {
+				case "system":
+					message = { role: "system", content: finalContent };
+					systemMessages.push(message);
+					break;
+				case "assistant":
+					message = { role: "assistant", content: finalContent };
+					conversationMessages.push(message);
+					break;
+				default:
+					message = { role: "user", content: finalContent };
+					conversationMessages.push(message);
+					break;
 			}
 		}
 	}
