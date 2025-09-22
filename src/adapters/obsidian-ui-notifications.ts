@@ -1,5 +1,5 @@
 import { Notice } from "obsidian";
-import type { UINotificationAdapter } from "./ui-notifications.ts";
+import type { UINotificationAdapter } from "../types/adapter-types.ts";
 import type { StatusService } from "../services/status-service.ts";
 
 /**
