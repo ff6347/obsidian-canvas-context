@@ -1,8 +1,9 @@
+/* oxlint-disable eslint/max-lines-per-function */
 import { App, ButtonComponent, Modal, Notice, Setting } from "obsidian";
 import type CanvasContextPlugin from "../main.ts";
-import type { ApiKeyConfiguration } from "./settings.ts";
 import type { CurrentProviderType } from "../types/llm-types.ts";
 import { getProviderDocs } from "../llm/providers/providers.ts";
+import type { ApiKeyConfiguration } from "src/types/settings-types.ts";
 
 export class ApiKeyModal extends Modal {
 	plugin: CanvasContextPlugin;

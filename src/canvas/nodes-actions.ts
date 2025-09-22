@@ -9,6 +9,25 @@ export default class NodeActions {
 	constructor(plugin: CanvasContextPlugin) {
 		this.plugin = plugin;
 	}
+
+	private tryGetSelectionData(
+		canvas: any,
+		onSuccess: (nodes: Array<{ id: string; [key: string]: unknown }>) => void,
+	): void {
+		if (
+			canvas.getSelectionData &&
+			typeof canvas.getSelectionData === "function"
+		) {
+			try {
+				const selectionData = canvas.getSelectionData(undefined);
+				if (isSelectionData(selectionData)) {
+					onSuccess(selectionData.nodes);
+				}
+			} catch (e) {
+				console.error("getSelectionData failed:", e);
+			}
+		}
+	}
 	buildNodeMenu(menu: Menu, node: ExtendedCanvasConnection) {
 		menu.addItem((item) =>
 			item
@@ -28,7 +47,6 @@ export default class NodeActions {
 
 				// Try different methods to get selection
 				let selectedCount = 0;
-				let selectedNodes: Array<{ id: string; [key: string]: unknown }> = [];
 
 				// Try using canvas.selection if it exists
 				if (canvas.selection && canvas.selection.size > 0) {
@@ -38,20 +56,9 @@ export default class NodeActions {
 				}
 
 				// Try using getSelectionData if it exists
-				if (
-					canvas.getSelectionData &&
-					typeof canvas.getSelectionData === "function"
-				) {
-					try {
-						const selectionData = canvas.getSelectionData(undefined);
-						if (isSelectionData(selectionData)) {
-							selectedNodes = selectionData.nodes;
-							selectedCount = selectedNodes.length;
-						}
-					} catch (e) {
-						console.error("getSelectionData failed:", e);
-					}
-				}
+				this.tryGetSelectionData(canvas, (nodes) => {
+					selectedCount = nodes.length;
+				});
 
 				if (selectedCount > 1) {
 					menu.addSeparator();

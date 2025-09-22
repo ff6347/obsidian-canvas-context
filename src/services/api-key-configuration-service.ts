@@ -1,15 +1,21 @@
 import { Notice, Setting } from "obsidian";
-import type { ApiKeyConfiguration, ModelConfiguration } from "../ui/settings.ts";
 import { maskApiKey } from "../lib/settings-utils.ts";
 import { ApiKeyModal } from "../ui/api-key-modal.ts";
 import type { App } from "obsidian";
 import type CanvasContextPlugin from "../main.ts";
+import type {
+	ApiKeyConfiguration,
+	ModelConfiguration,
+} from "src/types/settings-types.ts";
 
 export class ApiKeyConfigurationService {
 	constructor(
 		private app: App,
 		private plugin: CanvasContextPlugin,
-		private getSettings: () => { apiKeys: ApiKeyConfiguration[]; modelConfigurations: ModelConfiguration[] },
+		private getSettings: () => {
+			apiKeys: ApiKeyConfiguration[];
+			modelConfigurations: ModelConfiguration[];
+		},
 		private saveSettings: () => Promise<void>,
 		private refreshDisplay: () => void,
 	) {}

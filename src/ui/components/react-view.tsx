@@ -1,3 +1,4 @@
+/* oxlint-disable eslint/max-lines-per-function */
 import { Select } from "@base-ui-components/react/select";
 import { Field } from "@base-ui-components/react/field";
 import { Separator } from "@base-ui-components/react/separator";
@@ -186,24 +187,27 @@ export const ReactView: React.FC<ReactViewProps> = ({ plugin }) => {
 
 					<div className="canvas-context__error-section">
 						<div className="canvas-context__error-title">⚠️ Recent Errors</div>
-						{plugin.getRecentErrors().slice(0, 3).map((error: any, index: number) => (
-							<div key={index} className="canvas-context__error-item">
-								<div className="canvas-context__error-type">
-									{error.errorType || "Unknown"} Error
+						{plugin
+							.getRecentErrors()
+							.slice(0, 3)
+							.map((error: any, index: number) => (
+								<div key={index} className="canvas-context__error-item">
+									<div className="canvas-context__error-type">
+										{error.errorType || "Unknown"} Error
+									</div>
+									<div className="canvas-context__error-message">
+										{error.error}
+									</div>
+									{typeof error === "object" &&
+										error !== null &&
+										"timestamp" in error &&
+										typeof error.timestamp === "number" && (
+											<div className="canvas-context__error-timestamp">
+												{new Date(error.timestamp).toLocaleTimeString()}
+											</div>
+										)}
 								</div>
-								<div className="canvas-context__error-message">
-									{error.error}
-								</div>
-								{typeof error === "object" &&
-									error !== null &&
-									"timestamp" in error &&
-									typeof error.timestamp === "number" && (
-										<div className="canvas-context__error-timestamp">
-											{new Date(error.timestamp).toLocaleTimeString()}
-										</div>
-									)}
-							</div>
-						))}
+							))}
 					</div>
 				</>
 			)}

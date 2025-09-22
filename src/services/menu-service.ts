@@ -17,7 +17,10 @@ export class MenuService {
 	private observers: MutationObserver[] = [];
 
 	constructor(
-		private onRunInference: (nodeId: string, canvas?: CanvasViewCanvas) => Promise<void>,
+		private onRunInference: (
+			nodeId: string,
+			canvas?: CanvasViewCanvas,
+		) => Promise<void>,
 	) {}
 
 	buildSelectionMenu(menu: Menu, canvasView: CanvasView) {
@@ -65,7 +68,9 @@ export class MenuService {
 
 	setupCanvasMenuObservers(
 		getCanvasLeaves: () => WorkspaceLeaf[],
-		onActiveLeafChange: (callback: (leaf: WorkspaceLeaf | null) => void) => void,
+		onActiveLeafChange: (
+			callback: (leaf: WorkspaceLeaf | null) => void,
+		) => void,
 	) {
 		const canvasLeaves = getCanvasLeaves();
 

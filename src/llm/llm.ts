@@ -1,12 +1,12 @@
+/* oxlint-disable eslint/max-lines-per-function */
 import { type ModelMessage, generateText } from "ai";
-import type { CurrentProviderType } from "../types/llm-types.ts";
-import { type ProviderConfig, providers } from "./providers/providers.ts";
-export interface InferenceResult {
-	success: boolean;
-	text: string;
-	error?: string;
-	errorType?: "connection" | "model" | "provider" | "unknown";
-}
+import type {
+	CurrentProviderType,
+	ProviderConfig,
+} from "../types/llm-types.ts";
+import type { InferenceResult } from "../types/inference-types.ts";
+import { providers } from "./providers/providers.ts";
+// Re-export from types directory
 
 export async function inference({
 	messages,

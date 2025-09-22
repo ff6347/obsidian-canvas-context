@@ -1,4 +1,5 @@
-import { Events, Menu, Notice, Plugin, WorkspaceLeaf } from "obsidian";
+/* oxlint-disable eslint/max-lines */
+import { Events, Menu, Plugin, WorkspaceLeaf } from "obsidian";
 
 import type {
 	CanvasConnection,
@@ -11,21 +12,19 @@ import {
 	PLUGIN_ICON,
 	VIEW_TYPE_CANVAS_CONTEXT,
 } from "./lib/constants.ts";
-import type { InferenceResult } from "./llm/llm.ts";
 import { InferenceService } from "./services/inference-service.ts";
 import { CanvasService } from "./services/canvas-service.ts";
 import { MenuService } from "./services/menu-service.ts";
 import { StatusService } from "./services/status-service.ts";
+import { ObsidianNotificationAdapter } from "./adapters/obsidian-ui-notifications.ts";
 import type {
 	ExtendedCanvasConnection,
 	InferenceContext,
 } from "./types/canvas-types.ts";
-import {
-	CanvasContextSettingTab,
-	type CanvasContextSettings,
-	DEFAULT_SETTINGS,
-} from "./ui/settings.ts";
+import { CanvasContextSettingTab, DEFAULT_SETTINGS } from "./ui/settings.ts";
 import { CanvasContextView } from "./ui/view.tsx";
+import type { InferenceResult, RecentError } from "./types/inference-types.ts";
+import type { CanvasContextSettings } from "./types/settings-types.ts";
 
 interface SelectionData {
 	nodes: Array<{ id: string; [key: string]: unknown }>;
@@ -49,6 +48,7 @@ export default class CanvasContextPlugin extends Plugin {
 	private canvasService!: CanvasService;
 	private menuService!: MenuService;
 	private statusService!: StatusService;
+	private notificationAdapter!: ObsidianNotificationAdapter;
 
 	override async onload() {
 		await this.loadSettings();
@@ -65,8 +65,10 @@ export default class CanvasContextPlugin extends Plugin {
 			},
 		);
 
-		// Initialize services
-		this.canvasService = new CanvasService(this.app);
+		// Initialize adapters and services
+		this.notificationAdapter = new ObsidianNotificationAdapter();
+
+		this.canvasService = new CanvasService(this.app, this.notificationAdapter);
 		this.statusService = new StatusService(this.addStatusBarItem());
 		this.inferenceService = new InferenceService(
 			this.app,
@@ -171,14 +173,12 @@ export default class CanvasContextPlugin extends Plugin {
 		);
 
 		if (!canvasInfo) {
-			// oxlint-disable-next-line no-new
-			new Notice("No canvas available for inference.");
+			this.notificationAdapter.showError("No canvas available for inference.");
 			return;
 		}
 
 		if (!canvasInfo.canvas?.data) {
-			// oxlint-disable-next-line no-new
-			new Notice("No canvas data available.");
+			this.notificationAdapter.showError("No canvas data available.");
 			return;
 		}
 
@@ -193,8 +193,7 @@ export default class CanvasContextPlugin extends Plugin {
 			);
 		} catch (error) {
 			console.error("Error capturing inference context:", error);
-			// oxlint-disable-next-line no-new
-			new Notice(
+			this.notificationAdapter.showError(
 				"Error setting up inference context. Check console for details.",
 			);
 			return;
@@ -215,20 +214,19 @@ export default class CanvasContextPlugin extends Plugin {
 					false,
 					(length) => this.generateId(length),
 				);
-				// oxlint-disable-next-line no-new
-				new Notice(
+				this.notificationAdapter.showSuccess(
 					`LLM response added to "${inferenceContext.canvasFileName}".`,
 				);
 			} else {
 				this.inferenceService.addRecentError(result);
 				await this.createErrorNodeWithContext(inferenceContext, result);
-				// oxlint-disable-next-line no-new
-				new Notice(`Inference failed: ${result.error}`, 5000);
+				this.notificationAdapter.showError(`Inference failed: ${result.error}`);
 			}
 		} catch (error) {
 			console.error("Inference error:", error);
-			// oxlint-disable-next-line no-new
-			new Notice("Error during LLM inference. Check console for details.");
+			this.notificationAdapter.showError(
+				"Error during LLM inference. Check console for details.",
+			);
 		} finally {
 			// Clean up context
 			this.activeInferences.delete(inferenceContext.id);
@@ -270,17 +268,18 @@ export default class CanvasContextPlugin extends Plugin {
 		);
 	}
 
-	getRecentErrors(): InferenceResult[] {
+	getRecentErrors(): RecentError[] {
 		return this.inferenceService.getRecentErrors();
 	}
-
+	//oxlint-disable-next-line eslint/max-lines-per-function
 	async runInferenceFromSidebar(): Promise<boolean> {
 		// For sidebar inference, we need to find a canvas with selection
 		const canvasLeaves = this.app.workspace.getLeavesOfType("canvas");
 
 		if (canvasLeaves.length === 0) {
-			// oxlint-disable-next-line no-new
-			new Notice("Please open a canvas to run inference.");
+			this.notificationAdapter.showInfo(
+				"Please open a canvas to run inference.",
+			);
 			return false;
 		}
 
@@ -311,14 +310,14 @@ export default class CanvasContextPlugin extends Plugin {
 		}
 
 		if (!canvasInfo) {
-			// oxlint-disable-next-line no-new
-			new Notice("Please select a node in a canvas to run inference.");
+			this.notificationAdapter.showInfo(
+				"Please select a node in a canvas to run inference.",
+			);
 			return false;
 		}
 
 		if (!canvasInfo.canvas.selection) {
-			// oxlint-disable-next-line no-new
-			new Notice(
+			this.notificationAdapter.showInfo(
 				"Canvas selection not available. Please ensure you have a canvas open.",
 			);
 			return false;
@@ -333,23 +332,24 @@ export default class CanvasContextPlugin extends Plugin {
 			selectedNodes = selectionData.nodes;
 		} catch (error) {
 			console.error("Error getting selection data:", error);
-			// oxlint-disable-next-line no-new
-			new Notice(
+			this.notificationAdapter.showError(
 				"Error accessing canvas selection. Please try selecting a node again.",
 			);
 			return false;
 		}
 
 		if (selectedNodes.length === 0) {
-			// oxlint-disable-next-line no-new
-			new Notice("Please select a node in the canvas to run inference.");
+			this.notificationAdapter.showInfo(
+				"Please select a node in the canvas to run inference.",
+			);
 			return false;
 		}
 
 		const selectedNodeData = selectedNodes[0];
 		if (!selectedNodeData || !selectedNodeData.id) {
-			// oxlint-disable-next-line no-new
-			new Notice("Selected node is not valid for inference.");
+			this.notificationAdapter.showError(
+				"Selected node is not valid for inference.",
+			);
 			return false;
 		}
 
@@ -358,8 +358,9 @@ export default class CanvasContextPlugin extends Plugin {
 			return true;
 		} catch (error) {
 			console.error("Error running inference from sidebar:", error);
-			// oxlint-disable-next-line no-new
-			new Notice("Failed to run inference. Check console for details.");
+			this.notificationAdapter.showError(
+				"Failed to run inference. Check console for details.",
+			);
 			return false;
 		}
 	}

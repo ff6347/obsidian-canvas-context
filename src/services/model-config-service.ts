@@ -1,19 +1,10 @@
 import { Notice } from "obsidian";
-import type { ModelConfiguration } from "../ui/settings.ts";
 import type { CurrentProviderType } from "../types/llm-types.ts";
-
-export interface ApiKeyConfiguration {
-	id: string;
-	name: string;
-	provider: CurrentProviderType | undefined;
-	apiKey: string;
-}
-
-export interface CanvasContextSettings {
-	currentModel: string;
-	modelConfigurations: ModelConfiguration[];
-	apiKeys: ApiKeyConfiguration[];
-}
+import type {
+	ApiKeyConfiguration,
+	CanvasContextSettings,
+	ModelConfiguration,
+} from "src/types/settings-types.ts";
 
 export class ModelConfigService {
 	constructor(
@@ -61,9 +52,7 @@ export class ModelConfigService {
 		await this.saveSettings();
 		// oxlint-disable-next-line no-new
 		new Notice(
-			isEditing
-				? "Model configuration updated!"
-				: "Model configuration added!",
+			isEditing ? "Model configuration updated!" : "Model configuration added!",
 		);
 		onSuccess();
 	}
@@ -89,7 +78,8 @@ export class ModelConfigService {
 			openrouter: "https://openrouter.ai/api/v1",
 		};
 
-		const newBaseURL = placeholders[provider as keyof typeof placeholders] || "";
+		const newBaseURL =
+			placeholders[provider as keyof typeof placeholders] || "";
 
 		// Update the baseURL to match the provider, unless user has manually customized it
 		const currentValue = config.baseURL;
@@ -103,11 +93,15 @@ export class ModelConfigService {
 		return config;
 	}
 
-	getApiKeysForProvider(provider: CurrentProviderType | undefined): ApiKeyConfiguration[] {
+	getApiKeysForProvider(
+		provider: CurrentProviderType | undefined,
+	): ApiKeyConfiguration[] {
 		if (!provider || (provider !== "openai" && provider !== "openrouter")) {
 			return [];
 		}
 
-		return this.getSettings().apiKeys.filter((key) => key.provider === provider);
+		return this.getSettings().apiKeys.filter(
+			(key) => key.provider === provider,
+		);
 	}
 }

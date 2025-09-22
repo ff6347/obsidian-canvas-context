@@ -1,24 +1,13 @@
 import { ButtonComponent, Setting } from "obsidian";
-import type { ModelConfiguration } from "../ui/settings.ts";
 import type { CurrentProviderType } from "../types/llm-types.ts";
 import { getProviderDocs } from "../llm/providers/providers.ts";
 import { computeDisplayName } from "../lib/settings-utils.ts";
+import type {
+	ApiKeyConfiguration,
+	ModelConfiguration,
+} from "src/types/settings-types.ts";
 
-export interface ModelFormElements {
-	nameInput: HTMLInputElement | null;
-	modelDropdown: HTMLSelectElement | null;
-	apiKeySetting: Setting | null;
-	apiKeyDropdown: HTMLSelectElement | null;
-	providerDocsButton: ButtonComponent | null;
-	baseURLInput: HTMLInputElement | null;
-}
-
-export interface ApiKeyConfiguration {
-	id: string;
-	name: string;
-	provider: CurrentProviderType | undefined;
-	apiKey: string;
-}
+// Re-export from types directory
 
 export class ModelFormService {
 	constructor(
@@ -81,7 +70,9 @@ export class ModelFormService {
 
 		// Add named API keys for the current provider
 		if (provider === "openai" || provider === "openrouter") {
-			const relevantKeys = this.apiKeys.filter((key) => key.provider === provider);
+			const relevantKeys = this.apiKeys.filter(
+				(key) => key.provider === provider,
+			);
 
 			relevantKeys.forEach((key) => {
 				const option = apiKeyDropdown.createEl("option", {

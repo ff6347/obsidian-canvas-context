@@ -1,17 +1,21 @@
+/* oxlint-disable eslint/max-lines-per-function */
 import { ButtonComponent, Notice, Setting } from "obsidian";
-import type { ModelConfiguration } from "../ui/settings.ts";
 import { providers } from "../llm/providers/providers.ts";
 import { getModelPageUrl } from "../llm/providers/providers.ts";
 import { maskApiKey } from "../lib/settings-utils.ts";
 import { AddModelModal } from "../ui/add-model-modal.ts";
 import type { App } from "obsidian";
 import type CanvasContextPlugin from "../main.ts";
+import type { ModelConfiguration } from "src/types/settings-types.ts";
 
 export class ModelConfigurationService {
 	constructor(
 		private app: App,
 		private plugin: CanvasContextPlugin,
-		private getSettings: () => { modelConfigurations: ModelConfiguration[]; apiKeys: Array<{ id: string; name: string }> },
+		private getSettings: () => {
+			modelConfigurations: ModelConfiguration[];
+			apiKeys: Array<{ id: string; name: string }>;
+		},
 		private saveSettings: () => Promise<void>,
 		private generateId: () => string,
 		private resolveApiKey: (config: ModelConfiguration) => string | undefined,
@@ -144,11 +148,17 @@ export class ModelConfigurationService {
 		new Notice("Model configuration duplicated.");
 	}
 
-	private async deleteModelConfiguration(config: ModelConfiguration, index: number) {
+	private async deleteModelConfiguration(
+		config: ModelConfiguration,
+		index: number,
+	) {
 		const settings = this.getSettings();
 
 		// If this is the current model, clear the selection
-		if ((this.plugin.settings as { currentModel: string }).currentModel === config.id) {
+		if (
+			(this.plugin.settings as { currentModel: string }).currentModel ===
+			config.id
+		) {
 			(this.plugin.settings as { currentModel: string }).currentModel = "";
 		}
 

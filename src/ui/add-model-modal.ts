@@ -1,10 +1,19 @@
+/* oxlint-disable eslint/max-lines eslint/max-lines-per-function */
 import { App, ButtonComponent, Modal, Setting } from "obsidian";
 import type CanvasContextPlugin from "../main.ts";
-import type { ModelConfiguration } from "./settings.ts";
 import type { CurrentProviderType } from "../types/llm-types.ts";
 import { ModelValidationService } from "../services/model-validation-service.ts";
-import { ModelFormService, type ModelFormElements } from "../services/model-form-service.ts";
+import { ModelFormService } from "../services/model-form-service.ts";
 import { ModelConfigService } from "../services/model-config-service.ts";
+import type { ModelConfiguration } from "src/types/settings-types.ts";
+interface ModelFormElements {
+	nameInput: HTMLInputElement | null;
+	modelDropdown: HTMLSelectElement | null;
+	apiKeySetting: Setting | null;
+	apiKeyDropdown: HTMLSelectElement | null;
+	providerDocsButton: ButtonComponent | null;
+	baseURLInput: HTMLInputElement | null;
+}
 
 export class AddModelModal extends Modal {
 	plugin: CanvasContextPlugin;
@@ -49,8 +58,8 @@ export class AddModelModal extends Modal {
 			(length) => this.plugin.generateId(length),
 		);
 
-		this.validationService = new ModelValidationService(
-			(config) => this.configService.getResolvedApiKey(config),
+		this.validationService = new ModelValidationService((config) =>
+			this.configService.getResolvedApiKey(config),
 		);
 
 		this.formService = new ModelFormService(
@@ -83,11 +92,13 @@ export class AddModelModal extends Modal {
 			.setDesc("Auto-computed from provider:model, or set custom name")
 			.addText((text) => {
 				this.formElements.nameInput = text.inputEl;
-				text.setValue(this.formService.getDisplayName(this.modelConfig)).onChange((value) => {
-					if (this.modelConfig.useCustomDisplayName) {
-						this.modelConfig.name = value;
-					}
-				});
+				text
+					.setValue(this.formService.getDisplayName(this.modelConfig))
+					.onChange((value) => {
+						if (this.modelConfig.useCustomDisplayName) {
+							this.modelConfig.name = value;
+						}
+					});
 			})
 			.addToggle((toggle) => {
 				toggle
@@ -97,17 +108,28 @@ export class AddModelModal extends Modal {
 						this.modelConfig.useCustomDisplayName = value;
 						if (value) {
 							// Switching to custom - enable input and keep current value
-							this.formService.updateNameFieldState(this.formElements.nameInput, this.modelConfig);
+							this.formService.updateNameFieldState(
+								this.formElements.nameInput,
+								this.modelConfig,
+							);
 						} else {
 							// Switching to auto - recompute and disable input
-							this.modelConfig.name = this.formService.getDisplayName(this.modelConfig);
-							this.formService.updateNameFieldState(this.formElements.nameInput, this.modelConfig);
+							this.modelConfig.name = this.formService.getDisplayName(
+								this.modelConfig,
+							);
+							this.formService.updateNameFieldState(
+								this.formElements.nameInput,
+								this.modelConfig,
+							);
 						}
 					});
 			});
 
 		// Initialize name field state
-		this.formService.updateNameFieldState(this.formElements.nameInput, this.modelConfig);
+		this.formService.updateNameFieldState(
+			this.formElements.nameInput,
+			this.modelConfig,
+		);
 
 		// Provider
 		const providerSetting = new Setting(contentEl)
@@ -128,7 +150,9 @@ export class AddModelModal extends Modal {
 						this.modelConfig.modelName = "";
 						// Clear available models and reset dropdown
 						this.availableModels = [];
-						this.formService.clearModelDropdown(this.formElements.modelDropdown);
+						this.formService.clearModelDropdown(
+							this.formElements.modelDropdown,
+						);
 						if (this.formElements.baseURLInput) {
 							this.formService.updateBaseURLPlaceholder(
 								this.formElements.baseURLInput,
@@ -139,7 +163,8 @@ export class AddModelModal extends Modal {
 								this.modelConfig.provider!,
 							);
 							if (this.formElements.baseURLInput) {
-								this.formElements.baseURLInput.value = this.modelConfig.baseURL || "";
+								this.formElements.baseURLInput.value =
+									this.modelConfig.baseURL || "";
 							}
 						}
 						// Show/hide API key field based on provider
@@ -154,7 +179,10 @@ export class AddModelModal extends Modal {
 							this.modelConfig.apiKeyId,
 						);
 						// Update display name if in auto mode
-						this.formService.updateNameFieldState(this.formElements.nameInput, this.modelConfig);
+						this.formService.updateNameFieldState(
+							this.formElements.nameInput,
+							this.modelConfig,
+						);
 						// Update provider documentation link
 						this.formService.updateProviderDocsLink(
 							this.formElements.providerDocsButton,
@@ -168,10 +196,11 @@ export class AddModelModal extends Modal {
 			});
 
 		// Add provider documentation link button
-		this.formElements.providerDocsButton = this.formService.addProviderDocsButton(
-			providerSetting,
-			this.modelConfig.provider,
-		);
+		this.formElements.providerDocsButton =
+			this.formService.addProviderDocsButton(
+				providerSetting,
+				this.modelConfig.provider,
+			);
 
 		// Base URL
 		new Setting(contentEl)
@@ -242,7 +271,10 @@ export class AddModelModal extends Modal {
 				dropdown.onChange((value) => {
 					this.modelConfig.modelName = value;
 					// Update display name if in auto mode
-					this.formService.updateNameFieldState(this.formElements.nameInput, this.modelConfig);
+					this.formService.updateNameFieldState(
+						this.formElements.nameInput,
+						this.modelConfig,
+					);
 				});
 
 				// Load models if provider and required params are available
@@ -257,7 +289,10 @@ export class AddModelModal extends Modal {
 			.setDesc("Test the connection to the provider")
 			.addButton((button) => {
 				button.setButtonText("Verify Connection").onClick(async () => {
-					await this.validationService.verifyConnection(this.modelConfig, button);
+					await this.validationService.verifyConnection(
+						this.modelConfig,
+						button,
+					);
 				});
 			});
 
@@ -290,7 +325,6 @@ export class AddModelModal extends Modal {
 				}
 			});
 	}
-
 
 	async loadModels() {
 		this.availableModels = await this.validationService.loadModels(

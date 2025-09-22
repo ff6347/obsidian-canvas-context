@@ -1,15 +1,22 @@
 import { Setting } from "obsidian";
-import type { ApiKeyConfiguration, ModelConfiguration } from "../ui/settings.ts";
 import { AddModelModal } from "../ui/add-model-modal.ts";
 import { ApiKeyModal } from "../ui/api-key-modal.ts";
 import type { App } from "obsidian";
 import type CanvasContextPlugin from "../main.ts";
+import type {
+	ApiKeyConfiguration,
+	ModelConfiguration,
+} from "src/types/settings-types.ts";
 
 export class SettingsUIService {
 	constructor(
 		private app: App,
 		private plugin: CanvasContextPlugin,
-		private getSettings: () => { currentModel: string; modelConfigurations: ModelConfiguration[]; apiKeys: ApiKeyConfiguration[] },
+		private getSettings: () => {
+			currentModel: string;
+			modelConfigurations: ModelConfiguration[];
+			apiKeys: ApiKeyConfiguration[];
+		},
 		private saveSettings: () => Promise<void>,
 		private refreshDisplay: () => void,
 	) {}
@@ -23,8 +30,8 @@ export class SettingsUIService {
 				dropdown.addOption("", "Select a model");
 
 				// Add all enabled model configurations
-				this.getSettings().modelConfigurations
-					.filter((config) => config.enabled)
+				this.getSettings()
+					.modelConfigurations.filter((config) => config.enabled)
 					.forEach((config) => {
 						dropdown.addOption(config.id, config.name);
 					});
