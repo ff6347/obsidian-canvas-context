@@ -1,30 +1,28 @@
+/* oxlint-disable eslint/max-lines eslint/max-lines-per-function */
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { StatusService } from "../../src/services/status-service.ts";
 
 describe("StatusService", () => {
 	let service: StatusService;
 	let mockStatusEl: any;
-
 	beforeEach(() => {
 		vi.clearAllMocks();
-
-		// Create mock status element
 		mockStatusEl = {
 			addClass: vi.fn(),
 			empty: vi.fn(),
 			createEl: vi.fn(),
 		};
 	});
-
 	afterEach(() => {
 		vi.resetAllMocks();
 	});
-
 	describe("constructor", () => {
 		it("should initialize with status element and add CSS class", () => {
 			service = new StatusService(mockStatusEl);
 
-			expect(mockStatusEl.addClass).toHaveBeenCalledWith("canvas-context-loading-status");
+			expect(mockStatusEl.addClass).toHaveBeenCalledWith(
+				"canvas-context-loading-status",
+			);
 		});
 
 		it("should handle null status element gracefully", () => {
@@ -105,7 +103,8 @@ describe("StatusService", () => {
 
 			// empty should be called before createEl
 			const emptyCallOrder = mockStatusEl.empty.mock.invocationCallOrder[0];
-			const createElCallOrder = mockStatusEl.createEl.mock.invocationCallOrder[0];
+			const createElCallOrder =
+				mockStatusEl.createEl.mock.invocationCallOrder[0];
 
 			expect(emptyCallOrder).toBeLessThan(createElCallOrder);
 		});
@@ -146,7 +145,14 @@ describe("StatusService", () => {
 
 			// Verify last call has correct text
 			const lastTextCall = mockStatusEl.createEl.mock.calls.find(
-				(call) => call[1]?.text === "Second",
+				(call: unknown[]): call is [string, { text?: string; cls?: string }] =>
+					Array.isArray(call) &&
+					call.length >= 2 &&
+					typeof call[0] === "string" &&
+					typeof call[1] === "object" &&
+					call[1] !== null &&
+					"text" in call[1] &&
+					call[1].text === "Second",
 			);
 			expect(lastTextCall).toBeDefined();
 		});
@@ -206,7 +212,14 @@ describe("StatusService", () => {
 
 			// Verify final state has "Second" text
 			const lastTextCall = mockStatusEl.createEl.mock.calls.find(
-				(call) => call[1]?.text === "Second",
+				(call: unknown[]): call is [string, { text?: string; cls?: string }] =>
+					Array.isArray(call) &&
+					call.length >= 2 &&
+					typeof call[0] === "string" &&
+					typeof call[1] === "object" &&
+					call[1] !== null &&
+					"text" in call[1] &&
+					call[1].text === "Second",
 			);
 			expect(lastTextCall).toBeDefined();
 		});
@@ -256,7 +269,9 @@ describe("StatusService", () => {
 				// Missing createEl method
 			};
 
-			const serviceWithIncompleteEl = new StatusService(incompleteStatusEl as any);
+			const serviceWithIncompleteEl = new StatusService(
+				incompleteStatusEl as any,
+			);
 
 			// Constructor should work
 			expect(incompleteStatusEl.addClass).toHaveBeenCalled();
@@ -290,7 +305,7 @@ describe("StatusService", () => {
 					throw new Error("DOM error");
 				}),
 				createEl: vi.fn(),
-			};
+			} as unknown as HTMLElement;
 
 			const serviceWithThrowingEl = new StatusService(throwingStatusEl);
 

@@ -11,6 +11,8 @@ vi.mock("obsidian", () => ({
 	Modal: vi.fn(),
 	TextComponent: vi.fn(),
 	DropdownComponent: vi.fn(),
+	WorkspaceLeaf: vi.fn(),
+	ItemView: vi.fn(),
 }));
 
 describe("MenuService", () => {
