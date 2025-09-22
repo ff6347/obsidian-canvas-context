@@ -26,7 +26,6 @@ describe("menu-logic", () => {
 		});
 	});
 
-
 	describe("getFirstNodeId", () => {
 		it("returns node ID for valid first node", () => {
 			const nodes = [{ id: "node-1" }, { id: "node-2" }];

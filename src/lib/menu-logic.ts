@@ -16,7 +16,6 @@ export function shouldShowInferenceButton(nodeCount: number): boolean {
 	return nodeCount === 1;
 }
 
-
 /**
  * Safely extract first node ID from nodes array
  */
@@ -48,9 +47,5 @@ export function createButtonConfig(): ButtonConfig {
  * Determine if observer should be set up for canvas
  */
 export function shouldSetupObserver(canvas: any): boolean {
-	return !!(
-		canvas &&
-		canvas.menu &&
-		canvas.menu._observerSetup !== true
-	);
+	return !!(canvas && canvas.menu && canvas.menu._observerSetup !== true);
 }

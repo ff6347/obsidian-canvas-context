@@ -156,7 +156,10 @@ export class MenuService {
 				const button = document.createElement("button");
 				button.className = buttonConfig.className;
 				button.setAttribute("aria-label", buttonConfig.ariaLabel);
-				button.setAttribute("data-tooltip-position", buttonConfig.dataTooltipPosition);
+				button.setAttribute(
+					"data-tooltip-position",
+					buttonConfig.dataTooltipPosition,
+				);
 				setIcon(button, PLUGIN_ICON);
 
 				button.addEventListener("click", async (e) => {

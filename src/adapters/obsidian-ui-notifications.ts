@@ -10,6 +10,11 @@ import type { StatusService } from "../services/status-service.ts";
 export class ObsidianNotificationAdapter implements UINotificationAdapter {
 	constructor(private statusService?: StatusService) {}
 
+	show(message: string): void {
+		// oxlint-disable-next-line no-new
+		new Notice(message);
+	}
+
 	showInfo(message: string): void {
 		// oxlint-disable-next-line no-new
 		new Notice(message);

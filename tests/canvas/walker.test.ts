@@ -645,14 +645,18 @@ describe("Canvas Tree Walker", () => {
 			expect(conversationMessages[0]?.content).toBe("Start content");
 
 			// Then: system_context (wrapped because it's user role and horizontal to system)
-			expect(conversationMessages[1]?.content).toContain("<additional-document>");
+			expect(conversationMessages[1]?.content).toContain(
+				"<additional-document>",
+			);
 			expect(conversationMessages[1]?.content).toContain("System context");
 
 			// Then: user1
 			expect(conversationMessages[2]?.content).toBe("User 1 question");
 
 			// Then: user1_context (wrapped because it's user role and horizontal to user1)
-			expect(conversationMessages[3]?.content).toContain("<additional-document>");
+			expect(conversationMessages[3]?.content).toContain(
+				"<additional-document>",
+			);
 			expect(conversationMessages[3]?.content).toContain("User 1 context");
 
 			// Finally: assistant1

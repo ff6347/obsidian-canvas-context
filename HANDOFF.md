@@ -2,7 +2,7 @@
 
 ## 📊 Current Status Summary
 
-### ✅ **Completed Work (Issues #52-#57)**
+### ✅ **Completed Work (Issues #52-#57, #63-#64)**
 
 #### Issue #52: Extract Pure Business Logic ✅ COMPLETE
 
@@ -41,13 +41,33 @@
 - **KISS Principle**: Reused existing `isSelectionData`, no over-engineering
 - **Performance**: 100x faster test execution for menu logic
 
-### 🎯 **Current Status: Major Services Complete**
+#### Issue #63: Canvas Walker Message Ordering ✅ COMPLETE
+
+- **Fixed**: Multi-system prompt chains returning messages in incorrect order
+- **Root cause**: Parent chain traversal wasn't maintaining proper message sequence
+- **Solution**: Refactored walker to preserve parent-to-child ordering in message array
+- **Testing**: Verified with comprehensive test coverage for multi-system scenarios
+
+#### Issue #64: Horizontal Context Positioning ✅ COMPLETE
+
+- **Fixed**: Horizontal context nodes appearing at end instead of after connected parents
+- **Solution**: Inline processing - horizontal context processed immediately after each parent node
+- **Spatial awareness**: Context now maintains spatial relationships from canvas layout
+- **Testing**: Added 3 comprehensive tests for multiple context scenarios
+- **Performance**: Maintains fast processing while improving context accuracy
+
+### 🎯 **Current Status: Major Services Complete + Canvas Walker Fixed**
 
 **All three main services successfully refactored:**
 
 - ✅ Issue #55: CanvasService (35 tests, 5ms)
 - ✅ Issue #56: InferenceService (25 tests, 6ms)
 - ✅ Issue #57: MenuService (20 tests, 4ms)
+
+**Canvas walker core functionality fixed:**
+
+- ✅ Issue #63: Message ordering for multi-system prompts
+- ✅ Issue #64: Horizontal context spatial positioning
 
 **Next opportunities**: Modal and settings services refactoring
 

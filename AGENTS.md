@@ -48,7 +48,6 @@ This is an Obsidian plugin that transforms canvas into a spatial context-aware L
 - remember to run `pnpm lint` `pnpm test` and `pnpm typecheck` and `pnpm format` after you did changes
 - Dont alter tests just to match the result. Investigate!
 
-
 ## Task Management with GitHub Issues
 
 To manage our tasks throughout our sessions we need to write them down. Using PLAN.md for this is not optimal as it is does not allow for easy tracking of progress. Therefore we use the GitHub issues and the `gh` CLI to manage our tasks.

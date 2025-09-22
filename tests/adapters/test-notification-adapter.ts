@@ -6,6 +6,10 @@ import type { UINotificationAdapter } from "../../src/types/adapter-types.ts";
 export class TestNotificationAdapter implements UINotificationAdapter {
 	public messages: Array<{ type: string; message: string; text?: string }> = [];
 
+	show(message: string): void {
+		this.messages.push({ type: "general", message });
+	}
+
 	showInfo(message: string): void {
 		this.messages.push({ type: "info", message });
 	}

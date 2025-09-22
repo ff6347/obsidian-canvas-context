@@ -5,6 +5,7 @@ import { resolveApiKey } from "../lib/settings-utils.ts";
 import { ModelConfigurationService } from "../services/model-configuration-service.ts";
 import { ApiKeyConfigurationService } from "../services/api-key-configuration-service.ts";
 import { SettingsUIService } from "../services/settings-ui-service.ts";
+import { ObsidianNotificationAdapter } from "../adapters/obsidian-ui-notifications.ts";
 import type {
 	CanvasContextSettings,
 	ModelConfiguration,
@@ -26,9 +27,15 @@ export class CanvasContextSettingTab extends PluginSettingTab {
 	private apiKeyConfigurationService!: ApiKeyConfigurationService;
 	private settingsUIService!: SettingsUIService;
 
+	// Adapters
+	private notificationAdapter!: ObsidianNotificationAdapter;
+
 	constructor(app: App, plugin: CanvasContextPlugin) {
 		super(app, plugin);
 		this.plugin = plugin;
+
+		// Initialize adapters
+		this.notificationAdapter = new ObsidianNotificationAdapter();
 
 		// Initialize services
 		this.modelConfigurationService = new ModelConfigurationService(
@@ -47,6 +54,7 @@ export class CanvasContextSettingTab extends PluginSettingTab {
 			() => this.plugin.settings,
 			() => this.plugin.saveSettings(),
 			() => this.display(),
+			this.notificationAdapter,
 		);
 
 		this.settingsUIService = new SettingsUIService(

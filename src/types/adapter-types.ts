@@ -57,6 +57,11 @@ export interface CanvasOperationAdapter {
 
 export interface UINotificationAdapter {
 	/**
+	 * Show a general message to the user
+	 */
+	show(message: string): void;
+
+	/**
 	 * Show an informational message to the user
 	 */
 	showInfo(message: string): void;
