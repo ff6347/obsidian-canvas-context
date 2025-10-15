@@ -141,7 +141,7 @@ describe("ApiKeyConfigurationService", () => {
 
 			// Verify error notification includes all dependent models
 			expect(notificationAdapter.messages).toHaveLength(1);
-			expect(notificationAdapter.messages[0].message).toBe(
+			expect(notificationAdapter.messages[0]!.message).toBe(
 				'Cannot delete API key "Test API Key". It\'s being used by: GPT-4, GPT-3.5',
 			);
 		});
@@ -161,7 +161,7 @@ describe("ApiKeyConfigurationService", () => {
 			expect(mockSaveSettings).toHaveBeenCalledOnce();
 			expect(mockRefreshDisplay).toHaveBeenCalledOnce();
 			expect(notificationAdapter.messages).toHaveLength(1);
-			expect(notificationAdapter.messages[0].message).toBe("API key deleted.");
+			expect(notificationAdapter.messages[0]!.message).toBe("API key deleted.");
 		});
 	});
 
@@ -174,8 +174,8 @@ describe("ApiKeyConfigurationService", () => {
 
 			// The validation result should prevent deletion and show error
 			expect(notificationAdapter.messages).toHaveLength(1);
-			expect(notificationAdapter.messages[0].type).toBe("general");
-			expect(notificationAdapter.messages[0].message).toContain(
+			expect(notificationAdapter.messages[0]!.type).toBe("general");
+			expect(notificationAdapter.messages[0]!.message).toContain(
 				"Cannot delete API key",
 			);
 		});
