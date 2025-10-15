@@ -1,3 +1,10 @@
+# [1.2.0-beta.2](https://github.com/ff6347/obsidian-canvas-context/compare/v1.2.0-beta.1...v1.2.0-beta.2) (2025-10-15)
+
+
+### Bug Fixes
+
+* include horizontal context regardless of edge direction ([b637856](https://github.com/ff6347/obsidian-canvas-context/commit/b6378567eb83f96ffd1c5d9bbbf1325c2452960e))
+
 # [1.2.0-beta.1](https://github.com/ff6347/obsidian-canvas-context/compare/v1.1.1-beta.4...v1.2.0-beta.1) (2025-10-15)
 
 
