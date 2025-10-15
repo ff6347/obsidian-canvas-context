@@ -48,7 +48,7 @@ export default class CanvasContextPlugin extends Plugin {
 	private canvasService!: CanvasService;
 	private menuService!: MenuService;
 	private statusService!: StatusService;
-	private notificationAdapter!: ObsidianNotificationAdapter;
+	public notificationAdapter!: ObsidianNotificationAdapter;
 
 	override async onload() {
 		await this.loadSettings();

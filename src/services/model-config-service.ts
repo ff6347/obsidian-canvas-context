@@ -1,16 +1,17 @@
-import { Notice } from "obsidian";
 import type { CurrentProviderType } from "../types/llm-types.ts";
 import type {
 	ApiKeyConfiguration,
 	CanvasContextSettings,
 	ModelConfiguration,
 } from "src/types/settings-types.ts";
+import type { UINotificationAdapter } from "../types/adapter-types.ts";
 
 export class ModelConfigService {
 	constructor(
 		private getSettings: () => CanvasContextSettings,
 		private saveSettings: () => Promise<void>,
 		private generateId: (length?: number) => string,
+		private notificationAdapter: UINotificationAdapter,
 	) {}
 
 	getResolvedApiKey(config: Partial<ModelConfiguration>): string | undefined {
@@ -50,8 +51,7 @@ export class ModelConfigService {
 		}
 
 		await this.saveSettings();
-		// oxlint-disable-next-line no-new
-		new Notice(
+		this.notificationAdapter.showSuccess(
 			isEditing ? "Model configuration updated!" : "Model configuration added!",
 		);
 		onSuccess();

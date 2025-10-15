@@ -46,6 +46,7 @@ export class CanvasContextSettingTab extends PluginSettingTab {
 			() => this.plugin.generateId(),
 			(config) => this.resolveApiKey(config),
 			() => this.display(),
+			this.notificationAdapter,
 		);
 
 		this.apiKeyConfigurationService = new ApiKeyConfigurationService(
@@ -63,6 +64,7 @@ export class CanvasContextSettingTab extends PluginSettingTab {
 			() => this.plugin.settings,
 			() => this.plugin.saveSettings(),
 			() => this.display(),
+			this.notificationAdapter,
 		);
 	}
 

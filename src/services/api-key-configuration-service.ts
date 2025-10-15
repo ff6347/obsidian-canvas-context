@@ -54,9 +54,15 @@ export class ApiKeyConfigurationService {
 				.setButtonText(config.editButtonConfig.text)
 				.setTooltip(config.editButtonConfig.tooltip)
 				.onClick(() => {
-					const modal = new ApiKeyModal(this.app, this.plugin, apiKey, () => {
-						this.refreshDisplay(); // Refresh the settings page
-					});
+					const modal = new ApiKeyModal(
+						this.app,
+						this.plugin,
+						this.notificationAdapter,
+						apiKey,
+						() => {
+							this.refreshDisplay(); // Refresh the settings page
+						},
+					);
 					modal.open();
 				});
 		});

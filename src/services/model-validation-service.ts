@@ -1,4 +1,4 @@
-import { ButtonComponent, Notice } from "obsidian";
+import { ButtonComponent } from "obsidian";
 import { providers } from "../llm/providers/providers.ts";
 import {
 	canLoadModels,
@@ -6,12 +6,14 @@ import {
 	validateModelConfiguration,
 } from "../lib/model-validation.ts";
 import type { ModelConfiguration } from "src/types/settings-types.ts";
+import type { UINotificationAdapter } from "../types/adapter-types.ts";
 
 export class ModelValidationService {
 	constructor(
 		private getResolvedApiKey: (
 			config: Partial<ModelConfiguration>,
 		) => string | undefined,
+		private notificationAdapter: UINotificationAdapter,
 	) {}
 
 	validateRequiredFields(config: Partial<ModelConfiguration>): boolean {
@@ -20,11 +22,13 @@ export class ModelValidationService {
 
 		if (!validation.isValid) {
 			if (validation.missingFields) {
-				// oxlint-disable-next-line no-new
-				new Notice("Please fill in all required fields.");
+				this.notificationAdapter.showError(
+					"Please fill in all required fields.",
+				);
 			} else if (validation.errors && validation.errors.length > 0) {
-				// oxlint-disable-next-line no-new
-				new Notice(validation.errors[0] || "Validation error");
+				this.notificationAdapter.showError(
+					validation.errors[0] || "Validation error",
+				);
 			}
 			return false;
 		}
@@ -42,8 +46,9 @@ export class ModelValidationService {
 		button: ButtonComponent,
 	): Promise<void> {
 		if (!this.canLoadModels(config)) {
-			// oxlint-disable-next-line no-new
-			new Notice("Please fill in all required fields first.");
+			this.notificationAdapter.showError(
+				"Please fill in all required fields first.",
+			);
 			return;
 		}
 
@@ -65,13 +70,13 @@ export class ModelValidationService {
 					? await providerGenerator.listModels(resolvedApiKey, config.baseURL!)
 					: await providerGenerator.listModels(config.baseURL!);
 
-			// oxlint-disable-next-line no-new
-			new Notice(`Connection successful! Found ${models.length} models.`);
+			this.notificationAdapter.showSuccess(
+				`Connection successful! Found ${models.length} models.`,
+			);
 			button.setButtonText("✓ Connected");
 		} catch (error) {
 			console.error("Connection verification failed:", error);
-			// oxlint-disable-next-line no-new
-			new Notice(
+			this.notificationAdapter.showError(
 				"Connection failed. Please check the base URL and ensure the provider is running.",
 			);
 			button.setButtonText("✗ Failed");

@@ -7,6 +7,7 @@ import type {
 	ApiKeyConfiguration,
 	ModelConfiguration,
 } from "src/types/settings-types.ts";
+import type { UINotificationAdapter } from "../types/adapter-types.ts";
 
 export class SettingsUIService {
 	constructor(
@@ -19,6 +20,7 @@ export class SettingsUIService {
 		},
 		private saveSettings: () => Promise<void>,
 		private refreshDisplay: () => void,
+		private notificationAdapter: UINotificationAdapter,
 	) {}
 
 	createDefaultModelSelection(containerEl: HTMLElement) {
@@ -63,6 +65,7 @@ export class SettingsUIService {
 						const modal = new ApiKeyModal(
 							this.app,
 							this.plugin,
+							this.notificationAdapter,
 							undefined,
 							() => {
 								this.refreshDisplay(); // Refresh the settings page

@@ -1,5 +1,5 @@
 /* oxlint-disable eslint/max-lines-per-function */
-import { ButtonComponent, Notice, Setting } from "obsidian";
+import { ButtonComponent, Setting } from "obsidian";
 import { providers } from "../llm/providers/providers.ts";
 import { getModelPageUrl } from "../llm/providers/providers.ts";
 import { maskApiKey } from "../lib/settings-utils.ts";
@@ -7,6 +7,7 @@ import { AddModelModal } from "../ui/add-model-modal.ts";
 import type { App } from "obsidian";
 import type CanvasContextPlugin from "../main.ts";
 import type { ModelConfiguration } from "src/types/settings-types.ts";
+import type { UINotificationAdapter } from "../types/adapter-types.ts";
 
 export class ModelConfigurationService {
 	constructor(
@@ -20,6 +21,7 @@ export class ModelConfigurationService {
 		private generateId: () => string,
 		private resolveApiKey: (config: ModelConfiguration) => string | undefined,
 		private refreshDisplay: () => void,
+		private notificationAdapter: UINotificationAdapter,
 	) {}
 
 	renderModelConfiguration(
@@ -144,8 +146,7 @@ export class ModelConfigurationService {
 		settings.modelConfigurations.push(duplicatedConfig);
 		this.saveSettings();
 		this.refreshDisplay(); // Refresh the settings page
-		// oxlint-disable-next-line no-new
-		new Notice("Model configuration duplicated.");
+		this.notificationAdapter.showSuccess("Model configuration duplicated.");
 	}
 
 	private async deleteModelConfiguration(
@@ -166,8 +167,7 @@ export class ModelConfigurationService {
 		settings.modelConfigurations.splice(index, 1);
 		await this.saveSettings();
 		this.refreshDisplay(); // Refresh the settings page
-		// oxlint-disable-next-line no-new
-		new Notice("Model configuration deleted.");
+		this.notificationAdapter.showSuccess("Model configuration deleted.");
 	}
 
 	async verifyModelConfiguration(
@@ -194,15 +194,13 @@ export class ModelConfigurationService {
 				resolvedApiKey
 					? await providerGenerator.listModels(resolvedApiKey, config.baseURL)
 					: await providerGenerator.listModels(config.baseURL);
-			// oxlint-disable-next-line no-new
-			new Notice(
+			this.notificationAdapter.showSuccess(
 				`${config.name}: Connection successful! Found ${models.length} models.`,
 			);
 			button.setButtonText("✓");
 		} catch (error) {
 			console.error("Connection verification failed:", error);
-			// oxlint-disable-next-line no-new
-			new Notice(
+			this.notificationAdapter.showError(
 				`${config.name}: Connection failed. Please check the configuration.`,
 			);
 			button.setButtonText("✗");

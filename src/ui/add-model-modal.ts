@@ -56,10 +56,12 @@ export class AddModelModal extends Modal {
 			() => this.plugin.settings,
 			() => this.plugin.saveSettings(),
 			(length) => this.plugin.generateId(length),
+			this.plugin.notificationAdapter,
 		);
 
-		this.validationService = new ModelValidationService((config) =>
-			this.configService.getResolvedApiKey(config),
+		this.validationService = new ModelValidationService(
+			(config) => this.configService.getResolvedApiKey(config),
+			this.plugin.notificationAdapter,
 		);
 
 		this.formService = new ModelFormService(
