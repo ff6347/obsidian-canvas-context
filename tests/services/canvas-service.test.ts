@@ -12,11 +12,19 @@ vi.mock("obsidian", () => ({
 describe("CanvasService", () => {
 	let service: CanvasService;
 	let mockApp: ReturnType<typeof createMockApp>;
+	const mockNotificationAdapter = {
+		showError: vi.fn(),
+		show: vi.fn(),
+		showInfo: vi.fn(),
+		showSuccess: vi.fn(),
+		showLoading: vi.fn(),
+		hideLoading: vi.fn(),
+	};
 
 	beforeEach(() => {
 		vi.clearAllMocks();
 		mockApp = createMockApp();
-		service = new CanvasService(mockApp as any);
+		service = new CanvasService(mockApp as any, mockNotificationAdapter);
 	});
 
 	it("should initialize with app reference", () => {

@@ -1,7 +1,8 @@
 // oxlint-disable eslint/max-lines-per-function
-import { App, Notice, TextFileView, WorkspaceLeaf } from "obsidian";
+import { App, TextFileView, WorkspaceLeaf } from "obsidian";
 import type { CanvasView, CanvasViewCanvas } from "obsidian-typings";
 
+import type { UINotificationAdapter } from "../types/adapter-types.ts";
 import type {
 	CanvasData,
 	CanvasNodeData,
@@ -11,7 +12,10 @@ import type {
 } from "../types/canvas-types.ts";
 
 export class CanvasService {
-	constructor(private app: App) {}
+	constructor(
+		private app: App,
+		private notificationAdapter: UINotificationAdapter,
+	) {}
 
 	getCanvasInfo(
 		node?: ExtendedCanvasConnection,
@@ -97,12 +101,17 @@ export class CanvasService {
 			(n: CanvasNodeData) => n.id === sourceNode.id,
 		);
 
+		if (!sourceNodeData) {
+			this.notificationAdapter.showError("Source node not found in canvas");
+			return;
+		}
+
 		const responseNodeData: CanvasTextData = {
 			type: "text",
 			text: `---\nrole: ${isError ? "error" : "assistant"}\n\n---\n\n${response}`,
 			id: responseId,
-			x: sourceNodeData?.x ?? 100,
-			y: (sourceNodeData?.y ?? 50) + (sourceNodeData?.height ?? 50) + 50,
+			x: sourceNodeData.x,
+			y: sourceNodeData.y + sourceNodeData.height + 50,
 			width: 400,
 			height: 200,
 			color: isError ? "1" : "3",
@@ -163,8 +172,7 @@ export class CanvasService {
 		}
 
 		if (!targetLeaf) {
-			// oxlint-disable-next-line no-new
-			new Notice(
+			this.notificationAdapter.showError(
 				`Canvas "${context.canvasFileName}" could not be opened for response placement`,
 			);
 			return;
@@ -223,8 +231,7 @@ export class CanvasService {
 			}
 		} catch (error) {
 			console.error("Failed to save canvas:", error);
-			// oxlint-disable-next-line no-new
-			new Notice(
+			this.notificationAdapter.showError(
 				"Response added but canvas save failed. Please save manually.",
 			);
 		}
