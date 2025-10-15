@@ -142,12 +142,33 @@ function getHorizontalContext(
 			edge.fromNode === nodeId ? edge.toNode : edge.fromNode;
 
 		// Skip if already in excludeNodes (parent chain)
-		if (!excludeNodes.includes(connectedNodeId)) {
-			// Only add edges that point TO this node (not FROM this node to children)
-			// This ensures we only get horizontal context, not child nodes
-			if (edge.toNode === nodeId) {
-				horizontalNodes.push(connectedNodeId);
-			}
+		if (excludeNodes.includes(connectedNodeId)) {
+			continue;
+		}
+
+		// Determine if this is a horizontal connection by checking edge sides
+		// Horizontal: left/right sides
+		// Vertical (parent/child): top/bottom sides
+		const isHorizontalEdge =
+			(edge.fromSide === "left" || edge.fromSide === "right") &&
+			(edge.toSide === "left" || edge.toSide === "right");
+
+		if (!isHorizontalEdge) {
+			continue;
+		}
+
+		// Check if this node has incoming edges from other context nodes (chained context)
+		const incomingEdges = data.edges.filter(
+			(e) => e.toNode === connectedNodeId && e.fromNode !== nodeId,
+		);
+
+		const hasChainedContext = incomingEdges.some(
+			(e) => !excludeNodes.includes(e.fromNode),
+		);
+
+		// Only include if it's not chained from another context node
+		if (!hasChainedContext) {
+			horizontalNodes.push(connectedNodeId);
 		}
 	}
 

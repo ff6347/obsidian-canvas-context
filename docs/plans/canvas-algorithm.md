@@ -59,6 +59,7 @@ graph TD
 ```
 
 **Legend:**
+
 - 🔧 System prompts
 - 👤 User messages
 - 🤖 Assistant responses
@@ -67,6 +68,7 @@ graph TD
 - Dashed lines: Excluded sibling branches
 
 **Context Collection for Right-Clicked Node**:
+
 - **Main Thread**: System → User: What is ML? → Assistant: ML is... → User: What about deep learning?
 - **Context Included**: ML basics (after System) + Wikipedia ML (after first User) + Deep learning guide (after Assistant)
 - **Excluded**: "Tell more about supervised learning" (sibling branch) and its responses
@@ -125,6 +127,7 @@ tags: ["context"] # Identifies as context material
 ## Implementation Details
 
 ### Canvas Walker (`src/canvas/walker.ts`)
+
 - Parent chain traversal with cycle detection
 - Horizontal context collection inline with parent nodes
 - File node content extraction using Obsidian's metadata cache
@@ -134,6 +137,7 @@ tags: ["context"] # Identifies as context material
 - Horizontal context wrapped in `<additional-document>` tags
 
 ### Response Node Creation (`src/services/canvas-service.ts`)
+
 - Automatic assistant node creation below source
 - Proper canvas connections (bottom-to-top)
 - Color coding for visual distinction
@@ -141,6 +145,7 @@ tags: ["context"] # Identifies as context material
 - Canvas file persistence with `app.vault.modify()`
 
 ### Context Capture (`src/lib/canvas-logic.ts`)
+
 - Immutable inference context snapshots
 - Source node position preservation
 - Canvas file name tracking

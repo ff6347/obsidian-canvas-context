@@ -47,9 +47,11 @@ Latest: **2025-10-15** - Completed Issue #66 (CanvasService UINotificationAdapte
 All work tracked in [GitHub Issues](https://github.com/ff6347/obsidian-canvas-context/issues):
 
 **Refactoring in Progress:**
+
 - [Issue #67](https://github.com/ff6347/obsidian-canvas-context/issues/67) - Replace remaining direct Notice usage
 
 **Enhancement Backlog:**
+
 - [Issue #42](https://github.com/ff6347/obsidian-canvas-context/issues/42) - Additional provider support (Claude, Gemini, Mistral)
 - [Issue #43](https://github.com/ff6347/obsidian-canvas-context/issues/43) - Enhanced UI components
 - [Issue #44](https://github.com/ff6347/obsidian-canvas-context/issues/44) - Context preview before inference

@@ -7,6 +7,7 @@ The codebase follows a service-based architecture where the main plugin class (`
 ## Core Services
 
 ### 1. InferenceService (`src/services/inference-service.ts`)
+
 - **Responsibility**: LLM operations and error management
 - **Key Features**:
   - Executes inference with model configuration
@@ -16,6 +17,7 @@ The codebase follows a service-based architecture where the main plugin class (`
 - **Dependencies**: App instance, settings accessor, UI callbacks
 
 ### 2. CanvasService (`src/services/canvas-service.ts`)
+
 - **Responsibility**: Canvas operations and node management
 - **Key Features**:
   - Canvas discovery and file operations
@@ -26,6 +28,7 @@ The codebase follows a service-based architecture where the main plugin class (`
 - **Dependencies**: App instance, UINotificationAdapter
 
 ### 3. MenuService (`src/services/menu-service.ts`)
+
 - **Responsibility**: Canvas menu management and UI integration
 - **Key Features**:
   - Selection menu building for canvas toolbar
@@ -35,6 +38,7 @@ The codebase follows a service-based architecture where the main plugin class (`
 - **Dependencies**: Inference callback function, UINotificationAdapter
 
 ### 4. StatusService (`src/services/status-service.ts`)
+
 - **Responsibility**: Status bar management
 - **Key Features**:
   - Loading status display with custom text
@@ -65,10 +69,7 @@ export default class CanvasContextPlugin extends Plugin {
 		this.notificationAdapter = new ObsidianNotificationAdapter();
 
 		// Initialize services with dependency injection
-		this.canvasService = new CanvasService(
-			this.app,
-			this.notificationAdapter,
-		);
+		this.canvasService = new CanvasService(this.app, this.notificationAdapter);
 		this.statusService = new StatusService(this.addStatusBarItem());
 		this.inferenceService = new InferenceService(
 			this.app,
@@ -96,6 +97,7 @@ export default class CanvasContextPlugin extends Plugin {
 Services are further organized into layers for improved testability:
 
 ### Core Layer (Pure Business Logic)
+
 - `src/lib/canvas-logic.ts` - Node positioning, edge creation, context capture
 - `src/lib/inference-logic.ts` - Model config, validation, error handling
 - `src/lib/menu-logic.ts` - Selection validation, button config
@@ -103,22 +105,27 @@ Services are further organized into layers for improved testability:
 - `src/lib/settings-utils.ts` - Settings utility functions
 
 Pure functions with:
+
 - Zero external dependencies
 - 100% testable without mocks
 - ~5ms test execution time
 - Functional, immutable approach
 
 ### Adapter Layer (Platform Integration)
+
 - `src/adapters/obsidian-ui-notifications.ts` - UINotificationAdapter implementation
 - Direct Obsidian API integration where needed
 
 Minimal adapters that:
+
 - Abstract platform-specific APIs
 - Enable dependency injection
 - Support test doubles
 
 ### Service Layer (Orchestration)
+
 Services delegate to pure functions and adapters:
+
 - Receive dependencies via constructor injection
 - Coordinate between core logic and adapters
 - Handle async operations and error boundaries
@@ -157,24 +164,28 @@ Services delegate to pure functions and adapters:
 ## Implementation Patterns
 
 ### API Key Management
+
 - **Reference Pattern**: Use ID-based references for sensitive data
 - **Validation Strategy**: Check dependencies before deletions
 - **Migration Approach**: Support old and new patterns simultaneously
 - **Security Best Practices**: Consistent masking for display
 
 ### Obsidian UI Development
+
 - **DOM Manipulation**: Direct DOM APIs over React for modals
 - **Line Breaks**: Use `descEl.createDiv()` not string concatenation
 - **TypeScript Strict Mode**: Use `delete` operator for optional properties
 - **State Management**: Store UI references as class properties
 
 ### User Experience Patterns
+
 - **Progressive Enhancement**: Advanced features with simple alternatives
 - **Contextual Help**: Documentation links in relevant UI sections
 - **Visual Consistency**: Standardized spacing, sizing, layout
 - **Error Prevention**: Disable conflicting options vs error messages
 
 ### Code Architecture Patterns
+
 - **Service Extraction**: Break classes at ~300-400 lines
 - **Constructor Injection**: Pass dependencies through constructors
 - **Interface Consistency**: Minimal public APIs per service

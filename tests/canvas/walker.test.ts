@@ -770,6 +770,79 @@ describe("Canvas Tree Walker", () => {
 			);
 			expect(wrappedMessages).toHaveLength(1);
 		});
+
+		it("should include horizontal context regardless of edge direction", async () => {
+			const canvasData: CanvasViewData = {
+				nodes: [
+					{
+						id: "center",
+						type: "text",
+						text: "This is the center info\nvalue 5",
+						x: 0,
+						y: 0,
+						width: 250,
+						height: 60,
+					} as any,
+					{
+						id: "sidenote",
+						type: "text",
+						text: "This is a sidenote (it should be included)\nvalue 3",
+						x: 300,
+						y: 0,
+						width: 250,
+						height: 60,
+					} as any,
+					{
+						id: "sidenote_chain",
+						type: "text",
+						text: "This is a sidenote of a sidenote. It should not be included.\nvalue 23",
+						x: 600,
+						y: 0,
+						width: 250,
+						height: 170,
+					} as any,
+					{
+						id: "request",
+						type: "text",
+						text: "We are evaluating which information are added to your context. List me all values I provided.",
+						x: 0,
+						y: 100,
+						width: 250,
+						height: 120,
+					} as any,
+				],
+				edges: [
+					{
+						id: "edge1",
+						fromNode: "center",
+						toNode: "sidenote",
+						fromSide: "right",
+						toSide: "left",
+					},
+					{
+						id: "edge2",
+						fromNode: "sidenote",
+						toNode: "sidenote_chain",
+						fromSide: "right",
+						toSide: "left",
+					},
+					{
+						id: "edge3",
+						fromNode: "center",
+						toNode: "request",
+						fromSide: "bottom",
+						toSide: "top",
+					},
+				],
+			};
+
+			const result = await canvasGraphWalker("request", canvasData, mockApp);
+
+			const allContent = result.map((msg: any) => msg.content).join(" ");
+			expect(allContent).toContain("value 5");
+			expect(allContent).toContain("value 3");
+			expect(allContent).not.toContain("value 23");
+		});
 	});
 
 	describe("Multiple System Prompts", () => {
