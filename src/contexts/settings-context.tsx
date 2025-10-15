@@ -7,7 +7,7 @@ import {
 	useState,
 } from "react";
 import type CanvasContextPlugin from "../main.ts";
-import type { CanvasContextSettings } from "src/types/settings-types.ts";
+import type { CanvasContextSettings } from "../types/settings-types.ts";
 
 interface SettingsContextType {
 	settings: CanvasContextSettings;

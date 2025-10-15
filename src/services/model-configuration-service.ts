@@ -6,7 +6,7 @@ import { maskApiKey } from "../lib/settings-utils.ts";
 import { AddModelModal } from "../ui/add-model-modal.ts";
 import type { App } from "obsidian";
 import type CanvasContextPlugin from "../main.ts";
-import type { ModelConfiguration } from "src/types/settings-types.ts";
+import type { ModelConfiguration } from "../types/settings-types.ts";
 import type { UINotificationAdapter } from "../types/adapter-types.ts";
 
 export class ModelConfigurationService {

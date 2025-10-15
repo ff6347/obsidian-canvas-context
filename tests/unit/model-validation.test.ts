@@ -9,7 +9,7 @@ import {
 	validateModelConfiguration,
 	validateRequiredFields,
 } from "../../src/lib/model-validation.ts";
-import type { ModelConfiguration } from "src/types/settings-types.ts";
+import type { ModelConfiguration } from "../../src/types/settings-types.ts";
 
 /**
  * Pure unit tests for model validation logic

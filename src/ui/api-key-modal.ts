@@ -3,7 +3,7 @@ import { App, ButtonComponent, Modal, Setting } from "obsidian";
 import type CanvasContextPlugin from "../main.ts";
 import type { CurrentProviderType } from "../types/llm-types.ts";
 import { getProviderDocs } from "../llm/providers/providers.ts";
-import type { ApiKeyConfiguration } from "src/types/settings-types.ts";
+import type { ApiKeyConfiguration } from "../types/settings-types.ts";
 import type { UINotificationAdapter } from "../types/adapter-types.ts";
 
 export class ApiKeyModal extends Modal {

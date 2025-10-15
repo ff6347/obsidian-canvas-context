@@ -1,4 +1,4 @@
-import type { ModelConfiguration } from "src/types/settings-types.ts";
+import type { ModelConfiguration } from "../types/settings-types.ts";
 import type { CurrentProviderType } from "../types/llm-types.ts";
 
 /**

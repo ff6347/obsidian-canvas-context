@@ -5,7 +5,7 @@ import {
 	providerRequiresApiKey,
 	validateModelConfiguration,
 } from "../lib/model-validation.ts";
-import type { ModelConfiguration } from "src/types/settings-types.ts";
+import type { ModelConfiguration } from "../types/settings-types.ts";
 import type { UINotificationAdapter } from "../types/adapter-types.ts";
 
 export class ModelValidationService {

@@ -5,7 +5,7 @@ import type { CurrentProviderType } from "../types/llm-types.ts";
 import { ModelValidationService } from "../services/model-validation-service.ts";
 import { ModelFormService } from "../services/model-form-service.ts";
 import { ModelConfigService } from "../services/model-config-service.ts";
-import type { ModelConfiguration } from "src/types/settings-types.ts";
+import type { ModelConfiguration } from "../types/settings-types.ts";
 interface ModelFormElements {
 	nameInput: HTMLInputElement | null;
 	modelDropdown: HTMLSelectElement | null;
