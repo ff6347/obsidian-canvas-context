@@ -1,6 +1,5 @@
 import type { CanvasConnection, CanvasViewCanvas } from "obsidian-typings";
 
-// }
 export interface ExtendedCanvasConnection extends CanvasConnection {
 	id?: string;
 	canvas?: CanvasViewCanvas;
@@ -17,6 +16,7 @@ export interface CanvasNodeData {
 	y: number;
 	width: number;
 	height: number;
+	text?: string;
 	type: "text" | "file" | "group";
 	color?: string;
 }

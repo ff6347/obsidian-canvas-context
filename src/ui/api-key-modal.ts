@@ -1,23 +1,28 @@
-import { App, ButtonComponent, Modal, Notice, Setting } from "obsidian";
+/* oxlint-disable eslint/max-lines-per-function */
+import { App, ButtonComponent, Modal, Setting } from "obsidian";
 import type CanvasContextPlugin from "../main.ts";
-import type { ApiKeyConfiguration } from "./settings.ts";
 import type { CurrentProviderType } from "../types/llm-types.ts";
 import { getProviderDocs } from "../llm/providers/providers.ts";
+import type { ApiKeyConfiguration } from "../types/settings-types.ts";
+import type { UINotificationAdapter } from "../types/adapter-types.ts";
 
 export class ApiKeyModal extends Modal {
 	plugin: CanvasContextPlugin;
 	apiKeyConfig: Partial<ApiKeyConfiguration>;
 	isEditing: boolean;
 	onSave: () => void;
+	notificationAdapter: UINotificationAdapter;
 
 	constructor(
 		app: App,
 		plugin: CanvasContextPlugin,
+		notificationAdapter: UINotificationAdapter,
 		apiKeyConfig?: ApiKeyConfiguration,
 		onSave?: () => void,
 	) {
 		super(app);
 		this.plugin = plugin;
+		this.notificationAdapter = notificationAdapter;
 		this.isEditing = !!apiKeyConfig;
 		this.apiKeyConfig = apiKeyConfig
 			? { ...apiKeyConfig }
@@ -164,8 +169,7 @@ export class ApiKeyModal extends Modal {
 			!this.apiKeyConfig.provider ||
 			!this.apiKeyConfig.apiKey
 		) {
-			// oxlint-disable-next-line no-new
-			new Notice("Please fill in all required fields.");
+			this.notificationAdapter.showError("Please fill in all required fields.");
 			return;
 		}
 
@@ -174,8 +178,7 @@ export class ApiKeyModal extends Modal {
 			this.apiKeyConfig.provider !== "openai" &&
 			this.apiKeyConfig.provider !== "openrouter"
 		) {
-			// oxlint-disable-next-line no-new
-			new Notice(
+			this.notificationAdapter.showError(
 				"API keys are only supported for OpenAI and OpenRouter providers.",
 			);
 			return;
@@ -187,8 +190,9 @@ export class ApiKeyModal extends Modal {
 				key.id !== this.apiKeyConfig.id && key.name === this.apiKeyConfig.name,
 		);
 		if (existingKeys.length > 0) {
-			// oxlint-disable-next-line no-new
-			new Notice(`API key name "${this.apiKeyConfig.name}" is already in use.`);
+			this.notificationAdapter.showError(
+				`API key name "${this.apiKeyConfig.name}" is already in use.`,
+			);
 			return;
 		}
 
@@ -213,8 +217,9 @@ export class ApiKeyModal extends Modal {
 		}
 
 		await this.plugin.saveSettings();
-		// oxlint-disable-next-line no-new
-		new Notice(this.isEditing ? "API key updated!" : "API key added!");
+		this.notificationAdapter.showSuccess(
+			this.isEditing ? "API key updated!" : "API key added!",
+		);
 		this.onSave();
 		this.close();
 	}

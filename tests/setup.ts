@@ -1,3 +1,4 @@
+/* oxlint-disable eslint/max-classes-per-file */
 import { beforeAll, vi } from "vitest";
 
 // Mock Obsidian API

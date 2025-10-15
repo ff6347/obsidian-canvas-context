@@ -71,9 +71,7 @@ export const providers = {
 	},
 } as const;
 
-type ProvidersType = typeof providers;
-type ProviderKey = keyof ProvidersType;
-export type ProviderConfig = ProvidersType[ProviderKey];
+// Re-export from types directory
 
 export function getProviderDocs(
 	provider: CurrentProviderType | undefined,

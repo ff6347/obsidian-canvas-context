@@ -1,8 +1,8 @@
+import type { CurrentProviderType } from "../types/llm-types.ts";
 import type {
 	ApiKeyConfiguration,
 	ModelConfiguration,
-} from "../ui/settings.ts";
-import type { CurrentProviderType } from "../types/llm-types.ts";
+} from "src/types/settings-types.ts";
 
 /**
  * Masks an API key by showing only the last 4 characters and 8 dots

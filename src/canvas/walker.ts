@@ -19,60 +19,81 @@ export async function canvasGraphWalker(
 	// Get parent chain by walking UP the connections
 	const parentChain = getParentChain(currentNodeId, data, visited);
 
-	// For each node in parent chain, collect horizontal context
-	const contextNodes: string[] = [];
-	for (const nodeId of parentChain) {
-		const horizontalNodes = getHorizontalContext(nodeId, data, parentChain);
-		contextNodes.push(...horizontalNodes);
-	}
-
-	// Combine all relevant node IDs
-	const allNodeIds = [...parentChain, ...contextNodes];
-
-	// Separate system messages from other messages
+	// Separate system messages from conversation messages
 	const systemMessages: ModelMessage[] = [];
 	const conversationMessages: ModelMessage[] = [];
 
-	// Convert node IDs to actual nodes and build messages
-	for (const nodeId of allNodeIds) {
+	// Process parent chain with inline horizontal context
+	for (const nodeId of parentChain) {
+		// Process parent chain node
 		const node = data.nodes.find((n) => n.id === nodeId);
-		if (node) {
+		if (!node) continue;
+
+		const { role, content } = await getNodeContentAndRole(
+			node as ExtendedCanvasViewDataNode,
+			app,
+		);
+		// Skip nodes with no content (like text nodes)
+		if (!content) continue;
+
+		const allowedRoles = ["system", "user", "assistant"];
+		const validRole = role && allowedRoles.includes(role) ? role : "user";
+
+		// Create properly typed message based on role
+		let message: ModelMessage;
+		if (validRole === "system") {
+			message = { role: "system", content };
+			systemMessages.push(message);
+		} else if (validRole === "assistant") {
+			message = { role: "assistant", content };
+			conversationMessages.push(message);
+		} else {
+			message = { role: "user", content };
+			conversationMessages.push(message);
+		}
+
+		// Process horizontal context for this node immediately after
+		const horizontalNodes = getHorizontalContext(nodeId, data, parentChain);
+		for (const contextNodeId of horizontalNodes) {
+			const contextNode = data.nodes.find((n) => n.id === contextNodeId);
+			if (!contextNode) continue;
+
 			const { role, content } = await getNodeContentAndRole(
-				node as ExtendedCanvasViewDataNode,
+				contextNode as ExtendedCanvasViewDataNode,
 				app,
 			);
 			// Skip nodes with no content (like text nodes)
-			if (content) {
-				const allowedRoles = ["system", "user", "assistant"];
-				const validRole = role && allowedRoles.includes(role) ? role : "user";
+			if (!content) continue;
 
-				// Check if this is horizontal context (not in parent chain)
-				const isHorizontalContext =
-					contextNodes.includes(nodeId) && !parentChain.includes(nodeId);
+			const allowedRoles = ["system", "user", "assistant"];
+			const validRole = role && allowedRoles.includes(role) ? role : "user";
 
-				// Wrap horizontal context content
-				const finalContent =
-					isHorizontalContext && validRole === "user"
-						? `<additional-document>\n${content}\n</additional-document>`
-						: content;
+			// Wrap horizontal context content
+			const finalContent =
+				validRole === "user"
+					? `<additional-document>\n${content}\n</additional-document>`
+					: content;
 
-				// Create properly typed message based on role
-				let message: ModelMessage;
-				if (validRole === "system") {
+			// Create properly typed message based on role
+			let message: ModelMessage;
+			switch (validRole) {
+				case "system":
 					message = { role: "system", content: finalContent };
 					systemMessages.push(message);
-				} else if (validRole === "assistant") {
+					break;
+				case "assistant":
 					message = { role: "assistant", content: finalContent };
 					conversationMessages.push(message);
-				} else {
+					break;
+				default:
 					message = { role: "user", content: finalContent };
 					conversationMessages.push(message);
-				}
+					break;
 			}
 		}
 	}
 
-	// Combine messages with system prompts first
+	// Combine messages: system prompts first, then conversation messages (which now include inline horizontal context)
 	messages.push(...systemMessages, ...conversationMessages);
 
 	return messages;
@@ -99,7 +120,10 @@ function getParentChain(
 }
 
 /**
- * Only gets directly connected nodes not their children or siblings.
+ * Only gets directly connected nodes not their children or siblings
+ * ┌────────────┐      ┌────────────┐      ┌────────────┐      ┌─────────────┐
+ * │  context   │◀─────│    user    │─────▶│  context   │─────▶│Not included │
+ * └────────────┘      └────────────┘      └────────────┘      └─────────────┘
  */
 function getHorizontalContext(
 	nodeId: string,

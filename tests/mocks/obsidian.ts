@@ -1,3 +1,4 @@
+/* oxlint-disable eslint/max-classes-per-file */
 import { vi } from "vitest";
 
 // Mock Obsidian classes and interfaces
@@ -66,6 +67,44 @@ export function getFrontMatterInfo(content: string) {
 		to: 0,
 		contentStart: 0,
 	};
+}
+
+export class WorkspaceLeaf {
+	containerEl: HTMLElement;
+
+	constructor() {
+		this.containerEl = document.createElement("div");
+	}
+}
+
+export class ItemView {
+	leaf: WorkspaceLeaf;
+	contentEl: HTMLElement;
+
+	constructor(leaf: WorkspaceLeaf) {
+		this.leaf = leaf;
+		this.contentEl = document.createElement("div");
+	}
+
+	getViewType(): string {
+		return "mock-view";
+	}
+
+	getDisplayText(): string {
+		return "Mock View";
+	}
+
+	getIcon(): string {
+		return "mock-icon";
+	}
+
+	onOpen(): Promise<void> {
+		return Promise.resolve();
+	}
+
+	onClose(): Promise<void> {
+		return Promise.resolve();
+	}
 }
 
 // Mock other common exports

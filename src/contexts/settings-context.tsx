@@ -6,8 +6,8 @@ import {
 	useMemo,
 	useState,
 } from "react";
-import type { CanvasContextSettings } from "../ui/settings.ts";
 import type CanvasContextPlugin from "../main.ts";
+import type { CanvasContextSettings } from "../types/settings-types.ts";
 
 interface SettingsContextType {
 	settings: CanvasContextSettings;

@@ -1,3 +1,4 @@
+/* oxlint-disable eslint/max-lines-per-function */
 import { describe, expect, it } from "vitest";
 import { server } from "../mocks/server.ts";
 import { HttpResponse, http } from "msw";
