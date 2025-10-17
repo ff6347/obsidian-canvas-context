@@ -5,9 +5,10 @@ Quick navigation for working on this project.
 ## Understanding the Project
 
 - **[SPEC.md](SPEC.md)** - What this project is, current status, and roadmap
-- **[plans/architecture.md](plans/architecture.md)** - Service architecture and design patterns
-- **[plans/canvas-algorithm.md](plans/canvas-algorithm.md)** - How the canvas walker works
-- **[plans/testing-strategy.md](plans/testing-strategy.md)** - Testing approach and refactoring process
+- **[structure/architecture.md](structure/architecture.md)** - Service architecture and design patterns
+- **[structure/canvas-algorithm.md](structure/canvas-algorithm.md)** - How the canvas walker works
+- **[structure/testing-strategy.md](structure/testing-strategy.md)** - Testing approach and refactoring process
+- **[structure/providers.md](structure/providers.md)** - LLM provider architecture and integration
 
 ## Working on the Project
 

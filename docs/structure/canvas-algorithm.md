@@ -89,8 +89,6 @@ tags: ["context", "research", "sibling-branch"]
 
 ```yaml
 role: system
-model: "llama3.1" # Optional, defaults to plugin setting (not yet implemented)
-temperature: 0.7 # Optional, defaults to plugin setting (not yet implemented)
 ```
 
 ### Context Materials

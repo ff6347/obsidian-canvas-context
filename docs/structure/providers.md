@@ -241,11 +241,3 @@ export function getErrorTroubleshootingText(
 }
 ```
 
-## Future Enhancements
-
-See [Issue #42](https://github.com/ff6347/obsidian-canvas-context/issues/42) for planned provider additions:
-
-- Anthropic Claude
-- Google Gemini
-- Mistral AI
-- Other community-requested providers

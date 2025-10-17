@@ -318,18 +318,9 @@ it("calculates total correctly", () => {
 });
 ```
 
-## Future Work
-
-See GitHub Issues for remaining refactoring opportunities:
-
-- [Issue #67](https://github.com/ff6347/obsidian-canvas-context/issues/67): Replace remaining direct Notice usage
-- Apply pattern to remaining modal services
-- Apply pattern to remaining settings services
-- Update test structure organization
-
 ## References
 
 - **Implementation Examples**: `src/lib/` directory
 - **Test Examples**: `tests/unit/` directory
-- **Architecture**: `docs/plans/architecture.md`
+- **Architecture**: `docs/structure/architecture.md`
 - **GitHub Issues**: #55, #56, #57, #60, #65
