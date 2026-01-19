@@ -61,9 +61,9 @@ export async function inference({
 			: providerGenerator.createProvider(baseURL);
 	try {
 		const { text } = await generateText({
-			// Type casting to 'any' is necessary due to a version mismatch 
-			// between the existing AI SDK (v2) and the new Google provider (v3).
-			// This allows support for Gemini without forcing a major dependency upgrade.
+			// Type casting to 'any' is still needed because different providers 
+			// (OpenAI, Google, Ollama, etc.) may return slightly different model type 
+			// versions that don't perfectly unify into a single LanguageModel type.
 			model: provider(currentModelName) as any,
 			messages,
 		});
