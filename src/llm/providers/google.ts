@@ -52,7 +52,6 @@ export async function listModels(
 
         // 1. Filter for models that support 'generateContent' (response generation)
         // 2. Remove the 'models/' prefix from the model name (e.g., 'models/gemini-3-flash-preview-> 'gemini-3-flash-preview')
-        console.log(data.models)
         return data.models
             .filter((model) =>
                 model.supportedGenerationMethods.includes("generateContent"),
