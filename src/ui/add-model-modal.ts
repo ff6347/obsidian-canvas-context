@@ -32,13 +32,13 @@ export class AddModelModal extends Modal {
 		this.modelConfig = modelConfig
 			? { ...modelConfig }
 			: {
-					name: "",
-					provider: undefined,
-					modelName: "",
-					baseURL: "",
-					enabled: true,
-				};
-		this.onSave = onSave || (() => {});
+				name: "",
+				provider: undefined,
+				modelName: "",
+				baseURL: "",
+				enabled: true,
+			};
+		this.onSave = onSave || (() => { });
 	}
 
 	onOpen() {
@@ -95,6 +95,7 @@ export class AddModelModal extends Modal {
 					.addOption("lmstudio", "LM Studio")
 					.addOption("openai", "OpenAI")
 					.addOption("openrouter", "OpenRouter")
+					.addOption("google", "Google")
 					.setValue(this.modelConfig.provider || "")
 					.onChange((value) => {
 						this.modelConfig.provider =
@@ -238,6 +239,7 @@ export class AddModelModal extends Modal {
 				lmstudio: "http://localhost:1234",
 				openai: "https://api.openai.com",
 				openrouter: "https://openrouter.ai/api/v1",
+				google: "https://generativelanguage.googleapis.com/v1beta",
 			};
 			const placeholder =
 				placeholders[this.modelConfig.provider as keyof typeof placeholders] ||
@@ -273,16 +275,17 @@ export class AddModelModal extends Modal {
 				throw new Error("Provider not found");
 			}
 
-			// For OpenAI and OpenRouter, pass the API key as the first parameter
+			// For OpenAI and OpenRouter and Google pass the API key as the first parameter
 			const resolvedApiKey = this.getResolvedApiKey();
 			const models =
 				(this.modelConfig.provider === "openai" ||
-					this.modelConfig.provider === "openrouter") &&
-				resolvedApiKey
+					this.modelConfig.provider === "openrouter" ||
+					this.modelConfig.provider === "google") &&
+					resolvedApiKey
 					? await providerGenerator.listModels(
-							resolvedApiKey,
-							this.modelConfig.baseURL!,
-						)
+						resolvedApiKey,
+						this.modelConfig.baseURL!,
+					)
 					: await providerGenerator.listModels(this.modelConfig.baseURL!);
 			new Notice(`Connection successful! Found ${models.length} models.`);
 			button.setButtonText("✓ Connected");
@@ -315,10 +318,11 @@ export class AddModelModal extends Modal {
 		// Validate API key for OpenAI and OpenRouter
 		if (
 			(this.modelConfig.provider === "openai" ||
-				this.modelConfig.provider === "openrouter") &&
+				this.modelConfig.provider === "openrouter" ||
+				this.modelConfig.provider === "google") &&
 			!this.getResolvedApiKey()
 		) {
-			new Notice("API Key is required for OpenAI and OpenRouter providers.");
+			new Notice("API Key is required for OpenAI, OpenRouter and Google providers.");
 			return;
 		}
 
@@ -383,12 +387,13 @@ export class AddModelModal extends Modal {
 			const resolvedApiKey = this.getResolvedApiKey();
 			const models =
 				(this.modelConfig.provider === "openai" ||
-					this.modelConfig.provider === "openrouter") &&
-				resolvedApiKey
+					this.modelConfig.provider === "openrouter" ||
+					this.modelConfig.provider === "google") &&
+					resolvedApiKey
 					? await providerGenerator.listModels(
-							resolvedApiKey,
-							this.modelConfig.baseURL!,
-						)
+						resolvedApiKey,
+						this.modelConfig.baseURL!,
+					)
 					: await providerGenerator.listModels(this.modelConfig.baseURL!);
 			this.availableModels = models;
 
@@ -436,7 +441,8 @@ export class AddModelModal extends Modal {
 
 		if (
 			this.modelConfig.provider === "openai" ||
-			this.modelConfig.provider === "openrouter"
+			this.modelConfig.provider === "openrouter" ||
+			this.modelConfig.provider === "google"
 		) {
 			this.apiKeySetting.settingEl.style.display = "";
 		} else {
@@ -452,7 +458,8 @@ export class AddModelModal extends Modal {
 		// For OpenAI and OpenRouter, also require API key
 		if (
 			(this.modelConfig.provider === "openai" ||
-				this.modelConfig.provider === "openrouter") &&
+				this.modelConfig.provider === "openrouter" ||
+				this.modelConfig.provider === "google") &&
 			!this.getResolvedApiKey()
 		) {
 			return false;
@@ -508,7 +515,8 @@ export class AddModelModal extends Modal {
 		// Add named API keys for the current provider
 		if (
 			this.modelConfig.provider === "openai" ||
-			this.modelConfig.provider === "openrouter"
+			this.modelConfig.provider === "openrouter" ||
+			this.modelConfig.provider === "google"
 		) {
 			const relevantKeys = this.plugin.settings.apiKeys.filter(
 				(key) => key.provider === this.modelConfig.provider,

@@ -19,6 +19,12 @@ import {
 	createProvider as createOpenRouterProvider,
 	listModels as listOpenRouterModels,
 } from "./openrouter.ts";
+import {
+	providerName as googleProviderName,
+	createProvider as createGoogleProvider,
+	listModels as listGoogleModels,
+} from "./google.ts";
+
 
 export interface ProviderDocumentation {
 	displayName: string;
@@ -69,6 +75,16 @@ export const providers = {
 		description: "Universal API for 500+ AI models from top providers",
 		requiresApiKey: true,
 	},
+	google: {
+		name: googleProviderName,
+		createProvider: createGoogleProvider,
+		listModels: listGoogleModels,
+		displayName: "Google",
+		docsUrl: "https://ai.google.dev/gemini-api/docs",
+		modelsUrl: "https://ai.google.dev/gemini-api/docs/models",
+		description: "Gemini brings reasoning and intelligence to your daily life",
+		requiresApiKey: true,
+	},
 } as const;
 
 export type ProvidersType = typeof providers;
@@ -104,6 +120,10 @@ export function getModelPageUrl(
 			return docs.modelsUrl;
 		case "openrouter":
 			return modelName ? `https://openrouter.ai/${modelName}` : docs.modelsUrl;
+		case "google":
+			return modelName
+				? `${docs.modelsUrl}#${modelName}`
+				: docs.modelsUrl;
 		default:
 			return docs.modelsUrl;
 	}

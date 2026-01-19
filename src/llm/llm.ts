@@ -51,16 +51,20 @@ export async function inference({
 		};
 	}
 
-	// For OpenAI and OpenRouter, pass the API key as the first parameter
+	// For OpenAI, OpenRouter, and Google, pass the API key as the first 
 	const provider =
 		(currentProviderName === "openai" ||
-			currentProviderName === "openrouter") &&
-		apiKey
+			currentProviderName === "openrouter" ||
+			currentProviderName === "google") &&
+			apiKey
 			? providerGenerator.createProvider(apiKey, baseURL)
 			: providerGenerator.createProvider(baseURL);
 	try {
 		const { text } = await generateText({
-			model: provider(currentModelName),
+			// Type casting to 'any' is still needed because different providers 
+			// (OpenAI, Google, Ollama, etc.) may return slightly different model type 
+			// versions that don't perfectly unify into a single LanguageModel type.
+			model: provider(currentModelName) as any,
 			messages,
 		});
 		return {
