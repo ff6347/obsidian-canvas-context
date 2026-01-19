@@ -18,6 +18,7 @@ const config = {
 		file: "main.js",
 		format: "cjs",
 		sourcemap: prod ? false : "inline",
+		inlineDynamicImports: true,
 	},
 	external: [
 		"obsidian",
