@@ -51,16 +51,20 @@ export async function inference({
 		};
 	}
 
-	// For OpenAI and OpenRouter, pass the API key as the first parameter
+	// For OpenAI, OpenRouter, and Google, pass the API key as the first 
 	const provider =
 		(currentProviderName === "openai" ||
-			currentProviderName === "openrouter") &&
-		apiKey
+			currentProviderName === "openrouter" ||
+			currentProviderName === "google") &&
+			apiKey
 			? providerGenerator.createProvider(apiKey, baseURL)
 			: providerGenerator.createProvider(baseURL);
 	try {
 		const { text } = await generateText({
-			model: provider(currentModelName),
+			// Type casting to 'any' is necessary due to a version mismatch 
+			// between the existing AI SDK (v2) and the new Google provider (v3).
+			// This allows support for Gemini without forcing a major dependency upgrade.
+			model: provider(currentModelName) as any,
 			messages,
 		});
 		return {
