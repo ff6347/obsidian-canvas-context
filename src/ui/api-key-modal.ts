@@ -22,12 +22,12 @@ export class ApiKeyModal extends Modal {
 		this.apiKeyConfig = apiKeyConfig
 			? { ...apiKeyConfig }
 			: {
-					name: "",
-					provider: undefined,
-					apiKey: "",
-					description: "",
-				};
-		this.onSave = onSave || (() => {});
+				name: "",
+				provider: undefined,
+				apiKey: "",
+				description: "",
+			};
+		this.onSave = onSave || (() => { });
 	}
 
 	onOpen() {
@@ -62,6 +62,7 @@ export class ApiKeyModal extends Modal {
 					.addOption("", "Select a provider")
 					.addOption("openai", "OpenAI")
 					.addOption("openrouter", "OpenRouter")
+					.addOption("google", "Google")
 					.setValue(this.apiKeyConfig.provider || "")
 					.onChange((value) => {
 						this.apiKeyConfig.provider =
@@ -169,7 +170,8 @@ export class ApiKeyModal extends Modal {
 		// Validate provider
 		if (
 			this.apiKeyConfig.provider !== "openai" &&
-			this.apiKeyConfig.provider !== "openrouter"
+			this.apiKeyConfig.provider !== "openrouter" &&
+			this.apiKeyConfig.provider !== "google"
 		) {
 			new Notice(
 				"API keys are only supported for OpenAI and OpenRouter providers.",
