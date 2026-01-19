@@ -193,7 +193,9 @@ export class CanvasContextSettingTab extends PluginSettingTab {
 		// Show API key information (new system or legacy)
 		const resolvedApiKey = this.resolveApiKey(config);
 		if (
-			(config.provider === "openai" || config.provider === "openrouter") &&
+			(config.provider === "openai" ||
+				config.provider === "openrouter" ||
+				config.provider === "google") &&
 			resolvedApiKey
 		) {
 			if (config.apiKeyId) {
@@ -383,8 +385,10 @@ export class CanvasContextSettingTab extends PluginSettingTab {
 
 			// For OpenAI and OpenRouter, pass the API key as the first parameter
 			const models =
-				(config.provider === "openai" || config.provider === "openrouter") &&
-				resolvedApiKey
+				(config.provider === "openai" ||
+					config.provider === "openrouter" ||
+					config.provider === "google") &&
+					resolvedApiKey
 					? await providerGenerator.listModels(resolvedApiKey, config.baseURL)
 					: await providerGenerator.listModels(config.baseURL);
 			new Notice(
