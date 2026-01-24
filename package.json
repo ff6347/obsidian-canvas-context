@@ -16,7 +16,7 @@
 	"keywords": [],
 	"author": "ff6347 <hash@ff6347.email>",
 	"license": "GPL-3.0",
-	"packageManager": "pnpm@10.15.1",
+	"packageManager": "pnpm@10.28.0",
 	"type": "module",
 	"private": true,
 	"devDependencies": {
