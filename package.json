@@ -24,18 +24,18 @@
 		"@types/node": "24.10.7",
 		"@types/react": "19.2.8",
 		"@types/react-dom": "19.2.3",
-		"@vitest/ui": "3.2.4",
+		"@vitest/ui": "4.0.17",
 		"builtin-modules": "5.0.0",
 		"eslint": "9.39.2",
-		"happy-dom": "18.0.1",
-		"jsdom": "26.1.0",
+		"happy-dom": "20.3.0",
+		"jsdom": "27.4.0",
 		"msw": "2.12.7",
 		"obsidian": "1.11.4",
 		"prettier": "3.7.4",
 		"rolldown": "1.0.0-beta.9-commit.d91dfb5",
-		"semantic-release": "24.2.9",
+		"semantic-release": "25.0.2",
 		"typescript": "5.9.3",
-		"vitest": "3.2.4"
+		"vitest": "4.0.17"
 	},
 	"prettier": {
 		"tabWidth": 2,
