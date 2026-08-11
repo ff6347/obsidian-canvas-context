@@ -31,8 +31,8 @@
 		"jsdom": "26.1.0",
 		"msw": "2.15.0",
 		"obsidian": "1.13.1",
-		"prettier": "3.9.5",
-		"rolldown": "1.1.5",
+		"prettier": "3.9.6",
+		"rolldown": "1.2.0",
 		"semantic-release": "24.2.9",
 		"typescript": "5.9.3",
 		"vitest": "3.2.7"
